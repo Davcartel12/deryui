@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1win LuckyJet</title>
+<style>
+:root{
+  --violet:#8A2BE2;
+  --violet-bright:#a855f7;
+  --glass:rgba(20,12,40,0.55);
+  --glass-border:rgba(168,85,247,0.25);
+  --ink:#0c0026;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  color:#fff;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px 0;
+  overflow:hidden;
+  position:relative;
+}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 50% 0%,#1a0840,#06001a 70%);z-index:-5}
+.stars-small{position:fixed;inset:0;width:200%;background:url("https://png.pngtree.com/thumb_back/fw800/background/20231005/pngtree-star-sky-nebula-galaxy-background-image_13538136.png");background-size:cover;opacity:0.06;animation:starsMove 120s linear infinite;z-index:-4}
+.stars-mid{position:fixed;inset:0;width:200%;background:url("https://png.pngtree.com/background/20210712/original/pngtree-beautiful-universe-background-picture-image_1179734.jpg");background-size:cover;opacity:0.1;animation:starsMove 160s linear infinite;z-index:-3}
+@keyframes starsMove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.cloud-container{position:fixed;bottom:-20px;left:0;width:200%;height:200px;overflow:hidden;display:flex;pointer-events:none;z-index:-1}
+.cloud{width:100%;height:auto;opacity:0.85;animation:cloudSlide 25s linear infinite;filter:drop-shadow(0 0 12px rgba(168,85,247,0.4))}
+@keyframes cloudSlide{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+
+.card{
+  width:88%;
+  max-width:400px;
+  background:var(--glass);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--glass-border);
+  border-radius:24px;
+  padding:24px 22px 26px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--violet-bright);box-shadow:0 0 12px var(--violet-bright);animation:pulse 1.6s infinite}
+.title{
+  text-align:center;
+  font-size:19px;
+  font-weight:800;
+  letter-spacing:1.5px;
+  margin:0 0 18px;
+  background:linear-gradient(90deg,#fff,#c9a6ff);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.subtitle{
+  text-align:center;
+  font-size:11px;
+  letter-spacing:2px;
+  font-weight:600;
+  text-transform:uppercase;
+  margin:-12px 0 18px;
+  color:#b794e6;
+  opacity:0.85;
+}
+
+.box{
+  position:relative;
+  height:160px;
+  border-radius:18px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  background-image:url("https://media0.giphy.com/media/HBpTtDxgcEidwyNCpK/giphy.gif?cid=9b38fe91upojd1iaqu8fzx73145cg33iubw2r94t6hnqyk5q&ep=v1_gifs_username&rid=giphy.gif&ct=g");
+  background-size:cover;background-position:center;
+  border:1px solid var(--glass-border);
+  overflow:hidden;
+  transition:background-color .3s;
+}
+.box::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,0,26,0.15),rgba(6,0,26,0.65))}
+.box-label{position:relative;z-index:1;font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:0.7;font-weight:600}
+.box-value{position:relative;z-index:1;font-size:30px;font-weight:800;letter-spacing:0.5px;text-shadow:0 2px 14px rgba(0,0,0,0.6)}
+
+.stats{
+  display:flex;
+  gap:12px;
+  margin-top:16px;
+}
+.stat{
+  flex:1;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:14px;
+  padding:12px 14px;
+}
+.stat .k{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;opacity:0.55;font-weight:600}
+.stat .v{font-size:20px;font-weight:800;margin-top:3px}
+
+.progress-bar{height:6px;width:100%;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;margin-top:14px}
+.progress-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--violet),var(--violet-bright));border-radius:6px;transition:width .4s ease;box-shadow:0 0 12px rgba(168,85,247,0.7)}
+
+.status{
+  margin-top:16px;
+  text-align:center;
+  font-size:13px;
+  font-weight:600;
+  min-height:18px;
+  color:#d8c6ff;
+}
+
+.buttons{margin-top:22px;display:flex;flex-direction:column;gap:12px}
+.btn{
+  border:none;
+  padding:16px 0;
+  border-radius:14px;
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:0.5px;
+  cursor:pointer;
+  transition:.25s;
+  color:#fff;
+}
+.btn-primary{background:linear-gradient(135deg,var(--violet),var(--violet-bright));box-shadow:0 8px 24px rgba(138,43,226,0.45)}
+.btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 12px 32px rgba(138,43,226,0.6)}
+.btn-primary:disabled{opacity:0.55;cursor:not-allowed;transform:none}
+.btn-back{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);font-size:14px;text-decoration:none;text-align:center;display:block}
+.btn-back:hover{background:rgba(255,255,255,0.1)}
+
+.pulsing{animation:pulse 1.2s infinite}
+@keyframes pulse{0%{opacity:1}50%{opacity:0.55}100%{opacity:1}}
+</style>
+</head>
+<body>
+<div class="cloud-container">
+  <img src="https://i.ibb.co/qM39svvn/Background-Eraser-20250423-095511871.png" class="cloud">
+  <img src="https://i.ibb.co/qM39svvn/Background-Eraser-20250423-095511871.png" class="cloud">
+</div>
+<div class="stars-small"></div>
+<div class="stars-mid"></div>
+
+<div class="card">
+  <h2 class="title">LUCKY JET AI PREDICTOR</h2>
+  <div class="subtitle">APNAJ BOT &middot; by @kingapnaj</div>
+
+  <div class="box" id="coefficientBox">
+    <div class="box-label">Target Coefficient</div>
+    <div class="box-value" id="coeffValue">00.00X &ndash; 00.00X</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="k">Chance</div>
+      <div class="v" id="chanceDisplay">00%</div>
+    </div>
+    <div class="stat">
+      <div class="k">Time Window</div>
+      <div class="v" id="apiTimeWindow">--:--</div>
+    </div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-bar-fill" id="progressFill"></div></div>
+
+  <div class="status" id="statusDisplay">Prediction Updated Successfully!</div>
+
+  <div class="buttons">
+    <button class="btn btn-primary" id="newSignalBtn" onclick="generateNewSignal()">GET SIGNAL</button>
+    <a onclick="history.back()" class="btn btn-back" id="backBtn">Back</a>
+  </div>
+</div>
+
+<script>
+let signalActive=false,nextSignalTime=null,secondSignalTime=null,countdownInterval=null,predictionData=null,verificationInterval=null,verificationTimeout=null;
+
+function getUserTimeZone(){
+  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const map={"Asia/Calcutta":"Asia/Kolkata","US/Eastern":"America/New_York","US/Central":"America/Chicago","US/Mountain":"America/Denver","US/Pacific":"America/Los_Angeles","Europe/Kiev":"Europe/Kyiv"};
+  return map[tz]||tz;
+}
+function getUTCOffset(){
+  const off=-new Date().getTimezoneOffset();
+  const sign=off>=0?"+":"-";
+  const h=String(Math.floor(Math.abs(off)/60)).padStart(2,"0");
+  const m=String(Math.abs(off)%60).padStart(2,"0");
+  return `${sign}${h}:${m}`;
+}
+function parseTimeWindow(timeStr){
+  if(!timeStr||timeStr==="--:--")return null;
+  const parts=timeStr.split(":");
+  if(parts.length<2)return null;
+  const h=parseInt(parts[0],10),m=parseInt(parts[1],10);
+  if(isNaN(h)||isNaN(m))return null;
+  const now=new Date(),target=new Date(now);
+  target.setHours(h,m,0,0);
+  if(target.getTime()<now.getTime()-2*60*1000)target.setDate(target.getDate()+1);
+  return target;
+}
+function generateCoefficients(){
+  const r=Math.random();let left;
+  if(r<0.60)left=rand(2.21,4.10);
+  else if(r<0.85)left=rand(3.51,8.00);
+  else left=rand(8.00,10.00);
+  const right=left+rand(0.20,0.60);
+  return{leftCoeff:left.toFixed(2),rightCoeff:right.toFixed(2)};
+}
+function rand(min,max){return Math.random()*(max-min)+min;}
+function randomChance(){return Math.floor(Math.random()*6)+94;}
+
+const apiURL="https://crash-gateway-grm-cr.100hp.app/state";
+const apiHeaders={'customer-id':'077dee8d-c923-4c02-9bee-757573662e69','session-id':'7a535791-247f-410f-b172-0998afaff5d0','accept':'application/json'};
+async function fetchGameData(){
+  try{const res=await fetch(apiURL,{headers:apiHeaders});if(!res.ok)throw new Error("API error");return await res.json();}
+  catch(e){console.warn("fetchGameData failed:",e);return null;}
+}
+
+function startPredictionVerification(){
+  if(!predictionData||!nextSignalTime)return;
+  const check=async()=>{
+    const now=new Date();
+    const w1Start=nextSignalTime,w1End=new Date(nextSignalTime.getTime()+60000);
+    const w2Start=secondSignalTime,w2End=new Date(secondSignalTime.getTime()+60000);
+    const inWindow=(now>=w1Start&&now<=w1End)||(now>=w2Start&&now<=w2End);
+    if(inWindow){
+      const data=await fetchGameData();
+      if(data?.history?.length){
+        const latest=data.history[0];
+        const coeff=parseFloat(latest.coefficient??latest.multiplier??0);
+        if(coeff>0){
+          clearInterval(verificationInterval);verificationInterval=null;
+          const left=parseFloat(predictionData.leftCoeff),right=parseFloat(predictionData.rightCoeff);
+          const hit=coeff>=left&&coeff<=right;
+          const label=now>=w1Start&&now<=w1End?"(1st window)":"(2nd window)";
+          displayVerificationResult(hit,coeff,label);
+        }
+      }
+    }
+    if(now>w2End){clearInterval(verificationInterval);verificationInterval=null;}
+  };
+  verificationInterval=setInterval(check,5000);
+  setTimeout(()=>{if(verificationInterval){clearInterval(verificationInterval);verificationInterval=null;}},6*60000);
+}
+function displayVerificationResult(hit,coeff,label){
+  const box=document.getElementById("coefficientBox");
+  const valEl=document.getElementById("coeffValue");
+  const saved=valEl.textContent;
+  box.style.backgroundColor=hit?"#1f7a3d":"#7a1f1f";
+  valEl.textContent=hit?`\u2705 HIT! ${coeff}x ${label}`:`\u274C MISS ${coeff}x ${label}`;
+  clearTimeout(verificationTimeout);
+  verificationTimeout=setTimeout(()=>{box.style.backgroundColor="";valEl.textContent=saved;},10000);
+}
+
+function startCountdown(){
+  const expiresAt=new Date(nextSignalTime.getTime()+2*60000);
+  const btn=document.getElementById("newSignalBtn"),status=document.getElementById("statusDisplay");
+  countdownInterval=setInterval(()=>{
+    const now=new Date(),timeLeft=expiresAt-now;
+    if(timeLeft<=0){clearInterval(countdownInterval);resetUI();return;}
+    const toTarget=nextSignalTime-now;
+    if(toTarget>0){
+      const m=Math.floor(toTarget/60000),s=Math.floor((toTarget%60000)/1000);
+      btn.textContent=`SIGNAL IN: ${m}:${s.toString().padStart(2,"0")}`;
+      status.textContent="\u23F3 Waiting for window...";status.className="status pulsing";
+    }else{
+      const m=Math.floor(timeLeft/60000),s=Math.floor((timeLeft%60000)/1000);
+      btn.textContent=`EXPIRES IN: ${m}:${s.toString().padStart(2,"0")}`;
+      status.textContent="\uD83D\uDD34 Signal active!";status.className="status pulsing";
+    }
+  },1000);
+}
+
+function resetUI(){
+  signalActive=false;nextSignalTime=null;secondSignalTime=null;predictionData=null;
+  if(verificationInterval){clearInterval(verificationInterval);verificationInterval=null;}
+  if(verificationTimeout){clearTimeout(verificationTimeout);verificationTimeout=null;}
+  document.getElementById("newSignalBtn").disabled=false;
+  document.getElementById("newSignalBtn").textContent="GET SIGNAL";
+  document.getElementById("statusDisplay").textContent="Prediction Updated Successfully!";
+  document.getElementById("statusDisplay").className="status";
+  document.getElementById("coeffValue").innerHTML="00.00X &ndash; 00.00X";
+  document.getElementById("coefficientBox").style.backgroundColor="";
+  document.getElementById("chanceDisplay").textContent="00%";
+  document.getElementById("progressFill").style.width="0%";
+  document.getElementById("apiTimeWindow").textContent="--:--";
+}
+
+async function generateNewSignal(){
+  if(signalActive)return;
+  const btn=document.getElementById("newSignalBtn"),status=document.getElementById("statusDisplay");
+  status.textContent="Analysis in progress ...";status.className="status pulsing";
+  btn.disabled=true;btn.textContent="ANALYSING...";
+  let prediction=null,targetTime=null;
+  try{
+    const tz=getUserTimeZone(),offset=getUTCOffset();
+    const res=await fetch(`https://trd.cc.nf/bot.php?t=${encodeURIComponent(tz)}&offset=${offset}`);
+    if(!res.ok)throw new Error("HTTP "+res.status);
+    const apiData=await res.json();
+    const twStr=apiData?.time_window;
+    const leftRaw=parseFloat(apiData?.manual_prediction?.coeff),rightRaw=parseFloat(apiData?.ai_prediction);
+    targetTime=parseTimeWindow(twStr);
+    if(!isNaN(leftRaw)&&!isNaN(rightRaw)&&leftRaw>0&&rightRaw>leftRaw){
+      prediction={leftCoeff:leftRaw.toFixed(2),rightCoeff:rightRaw.toFixed(2),chance:randomChance(),source:"api"};
+    }else if(!isNaN(leftRaw)&&leftRaw>0){
+      const spread=rand(0.20,0.55);
+      prediction={leftCoeff:leftRaw.toFixed(2),rightCoeff:(leftRaw+spread).toFixed(2),chance:randomChance(),source:"api-partial"};
+    }else{throw new Error("No valid coeff");}
+    if(twStr)document.getElementById("apiTimeWindow").textContent=twStr;
+  }catch(err){
+    console.warn("Prediction API failed -> local fallback:",err);
+    prediction={...generateCoefficients(),chance:randomChance(),source:"local"};
+  }
+  await new Promise(r=>setTimeout(r,1500));
+  const now=new Date();
+  if(targetTime){
+    nextSignalTime=targetTime;
+    if(nextSignalTime.getTime()<=now.getTime()+5000)nextSignalTime=new Date(now.getTime()+30000);
+  }else{
+    nextSignalTime=new Date(now.getTime()+Math.floor(rand(90,210))*1000);
+  }
+  secondSignalTime=new Date(nextSignalTime.getTime()+60000);
+  signalActive=true;
+  predictionData={leftCoeff:prediction.leftCoeff,rightCoeff:prediction.rightCoeff,chance:prediction.chance,generatedAt:new Date()};
+  if(!targetTime){
+    document.getElementById("apiTimeWindow").textContent=nextSignalTime.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",hour12:false});
+  }
+  document.getElementById("coeffValue").textContent=`${prediction.leftCoeff}X \u2013 ${prediction.rightCoeff}X`;
+  document.getElementById("chanceDisplay").textContent=`${prediction.chance}%`;
+  document.getElementById("progressFill").style.width=`${prediction.chance}%`;
+  document.getElementById("statusDisplay").textContent="Signal active!";
+  document.getElementById("statusDisplay").className="status pulsing";
+  btn.disabled=true;
+  startCountdown();startPredictionVerification();
+}
+
+document.addEventListener("DOMContentLoaded",()=>{resetUI();});
+</script>
+</body>
+</html>

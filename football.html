@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Form Guide — Match Predictor</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@600;700&family=Anton&family=Spline+Sans+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <style>
+    :root {
+      --paper: #efe9dc;
+      --paper-2: #e6dfcf;
+      --card: #f6f2e9;
+      --ink: #16140f;
+      --ink-2: #46413a;
+      --ink-3: #8a8275;
+      --line: #d6cdba;
+      --line-2: #c4b9a2;
+      --pitch: #1f7a4d;
+      --pitch-deep: #155c39;
+      --pitch-soft: #e1ebdf;
+      --hit: #1f7a4d;
+      --hit-soft: #dfeadd;
+      --miss: #b53a2b;
+      --miss-soft: #f1ddd7;
+      --pending: #b07d12;
+      --pending-soft: #f0e6cd;
+      --chalk: #c9472f;
+      --r: 4px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Archivo', system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.4;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(var(--line) 0.5px, transparent 0.5px);
+      background-size: 5px 5px;
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .navbar,
+    .hero,
+    .control-bar,
+    .page,
+    .mobile-nav,
+    .coupon-overlay,
+    #pg-loader {
+      position: relative;
+      z-index: 2;
+    }
+
+    a,
+    button {
+      text-decoration: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    ::selection {
+      background: var(--pitch);
+      color: var(--paper);
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 22px;
+      background: var(--ink);
+      color: var(--paper);
+      border-bottom: 3px solid var(--pitch);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--paper);
+    }
+
+    .nav-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      flex-shrink: 0;
+    }
+
+    .nav-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .nav-name {
+      font-family: 'Anton', sans-serif;
+      font-size: 26px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+
+    .nav-name b {
+      color: var(--pitch);
+      font-weight: 400;
+    }
+
+    .nav-tag {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--ink-3);
+      text-transform: uppercase;
+      margin-top: 3px;
+      display: block;
+    }
+
+    .exit-btn {
+      background: transparent;
+      color: var(--paper);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      padding: 7px 16px;
+      border-radius: var(--r);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      transition: 0.18s;
+    }
+
+    .exit-btn:hover {
+      background: var(--chalk);
+      border-color: var(--chalk);
+    }
+
+    .hero {
+      max-width: 1060px;
+      margin: 22px auto 0;
+      padding: 0 16px;
+    }
+
+    .hero-board {
+      background: var(--ink);
+      color: var(--paper);
+      border-radius: 6px;
+      padding: 26px 24px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #000;
+    }
+
+    .hero-board::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--pitch);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .hero-eyebrow .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--pitch);
+      border-radius: 50%;
+    }
+
+    .hero-match {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 18px;
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    .hero-team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .hero-crest {
+      font-size: 2rem;
+      color: var(--paper);
+      height: 56px;
+      width: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-crest img {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+    }
+
+    .hero-tname {
+      font-family: 'Archivo Narrow', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .hero-center {
+      text-align: center;
+    }
+
+    .hero-vs {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--ink-3);
+      margin-bottom: 4px;
+    }
+
+    .hero-time {
+      font-family: 'Anton', sans-serif;
+      font-size: 2.6rem;
+      line-height: 1;
+      letter-spacing: 1px;
+      color: var(--pitch);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hero-date {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--ink-3);
+      margin-top: 8px;
+      text-transform: uppercase;
+    }
+
+    .hero-glow,
+    .hero-dots {
+      display: none;
+    }
+
+    .control-bar {
+      max-width: 1060px;
+      margin: 18px auto 0;
+      padding: 0 16px;
+    }
+
+    .control-inner {
+      background: var(--card);
+      border: 1px solid var(--line-2);
+      border-radius: 6px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .coupon-bar-label {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .coupon-bar-label i {
+      color: var(--pitch);
+    }
+
+    .build-coupon-btn {
+      margin-left: auto;
+      background: var(--pitch);
+      color: var(--paper);
+      border: none;
+      padding: 11px 22px;
+      border-radius: var(--r);
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      transition: 0.18s;
+      box-shadow: 0 2px 0 var(--pitch-deep);
+    }
+
+    .build-coupon-btn:hover {
+      background: var(--pitch-deep);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 0 #0d3d25;
+    }
+
+    .build-coupon-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 var(--pitch-deep);
+    }
+
+    .coupon-count-badge {
+      background: var(--ink);
+      color: var(--paper);
+      padding: 5px 12px;
+      border-radius: 50px;
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .page {
+      max-width: 1060px;
+      margin: 22px auto 0;
+      display: flex;
+      gap: 22px;
+      padding: 0 16px 60px;
+    }
+
+    #main-col {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sidebar {
+      width: 312px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      flex-shrink: 0;
+    }
+
+    .day-tabs-wrap {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: thin;
+    }
+
+    .day-tab {
+      background: var(--card);
+      border: 1px solid var(--line-2);
+      padding: 9px 14px;
+      border-radius: var(--r);
+      flex: 1;
+      min-width: 92px;
+      text-align: center;
+      color: var(--ink-2);
+      transition: 0.18s;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-family: 'Archivo Narrow', sans-serif;
+      font-weight: 700;
+      font-size: 0.92rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .day-tab:hover {
+      border-color: var(--ink-3);
+    }
+
+    .day-count {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: var(--ink-3);
+      text-transform: lowercase;
+    }
+
+    .day-tab.active {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+
+    .day-tab.active .day-count {
+      color: var(--pitch);
+    }
+
+    .time-group {
+      margin-bottom: 16px;
+      background: var(--card);
+      border: 1px solid var(--line-2);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      animation: rise 0.4s ease both;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .time-col {
+      width: 62px;
+      flex-shrink: 0;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 16px 8px;
+      text-align: center;
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .time-matches {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .match-row {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+
+    .match-row:last-child {
+      border-bottom: none;
+    }
+
+    .match-row:hover {
+      background: var(--paper-2);
+    }
+
+    .match-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .match-comp {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status-badge {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      padding: 3px 8px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .status-badge.s-live {
+      background: var(--chalk);
+      color: var(--paper);
+      animation: pulse 1.6s ease infinite;
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: 0.65;
+      }
+    }
+
+    .status-badge.s-sched {
+      background: var(--pitch-soft);
+      color: var(--pitch-deep);
+    }
+
+    .status-badge.s-done {
+      background: var(--paper-2);
+      color: var(--ink-3);
+      border: 1px solid var(--line);
+    }
+
+    .teams-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .team-row {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .tcrest {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-3);
+      font-size: 0.95rem;
+    }
+
+    .tcrest img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .tname {
+      flex: 1;
+      font-family: 'Archivo Narrow', sans-serif;
+      font-weight: 600;
+      font-size: 1.02rem;
+      letter-spacing: 0.3px;
+      color: var(--ink-2);
+      text-transform: uppercase;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tname.winner {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .tscore {
+      font-family: 'Anton', sans-serif;
+      font-size: 1.25rem;
+      width: 30px;
+      text-align: right;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .winner-score {
+      color: var(--pitch);
+    }
+
+    .pred-row {
+      margin-top: 2px;
+    }
+
+    .pred-pill {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 9px 12px;
+      border-radius: var(--r);
+      border: 1px solid var(--line-2);
+      background: var(--paper);
+      border-left: 3px solid var(--ink-3);
+    }
+
+    .pred-pill.hit {
+      background: var(--hit-soft);
+      border-color: rgba(31, 122, 77, 0.35);
+      border-left-color: var(--hit);
+    }
+
+    .pred-pill.miss {
+      background: var(--miss-soft);
+      border-color: rgba(181, 58, 43, 0.3);
+      border-left-color: var(--miss);
+    }
+
+    .pred-pill.pend {
+      border-left-color: var(--pitch);
+    }
+
+    .pred-icon {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 0.7rem;
+    }
+
+    .pred-icon.hit {
+      background: var(--hit);
+      color: var(--paper);
+    }
+
+    .pred-icon.miss {
+      background: var(--miss);
+      color: var(--paper);
+    }
+
+    .pred-icon.pend {
+      background: var(--card);
+      color: var(--ink-3);
+      border: 1px solid var(--line-2);
+    }
+
+    .pred-label {
+      font-family: 'Archivo Narrow', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .pred-value {
+      margin-left: auto;
+      text-align: right;
+      line-height: 1.05;
+    }
+
+    .pred-value .pv-conf {
+      font-family: 'Spline Sans Mono', monospace;
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: var(--ink);
+    }
+
+    .pred-value .pv-odds {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 0.66rem;
+      color: var(--ink-3);
+      letter-spacing: 0.5px;
+    }
+
+    .pred-conf {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 3px;
+      background: var(--ink);
+      color: var(--paper);
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pred-conf i {
+      color: var(--pitch);
+    }
+
+    .match-expand {
+      display: none;
+      padding: 16px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .match-expand.open {
+      display: block;
+      animation: rise 0.3s ease both;
+    }
+
+    .prob-section {
+      margin-bottom: 16px;
+    }
+
+    .prob-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      color: var(--ink-2);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .prob-label-row .pd {
+      color: var(--ink-3);
+    }
+
+    .prob-bar-row {
+      display: flex;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      background: var(--line);
+    }
+
+    .pb-h {
+      background: var(--pitch);
+    }
+
+    .pb-d {
+      background: var(--pending);
+    }
+
+    .pb-a {
+      background: var(--ink-2);
+    }
+
+    .markets-section-label,
+    .markets-grid+.xg-row,
+    .markets-grid {
+      font-size: 0.86rem;
+    }
+
+    .markets-section-label {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin: 14px 0 9px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .markets-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    .market-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      padding: 7px 10px;
+      border-radius: var(--r);
+    }
+
+    .market-label {
+      font-family: 'Archivo Narrow', sans-serif;
+      font-weight: 600;
+      font-size: 0.84rem;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      color: var(--ink-2);
+    }
+
+    .market-best {
+      background: var(--pitch-soft);
+      border-color: var(--pitch);
+      box-shadow: inset 0 0 0 1px var(--pitch);
+    }
+
+    .market-best .market-label {
+      color: var(--pitch-deep);
+    }
+
+    .market-pct {
+      font-family: 'Spline Sans Mono', monospace;
+    }
+
+    .market-pick {
+      color: var(--pitch);
+    }
+
+    .market-bar-wrap {
+      display: none;
+    }
+
+    .xg-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .xg-tag {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 4px 9px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+    }
+
+    .analysis-txt {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      font-size: 0.84rem;
+      line-height: 1.55;
+      color: var(--ink-2);
+    }
+
+    .analysis-txt strong {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .sidebar>div,
+    .mobile-panel>div {
+      background: var(--card);
+      border: 1px solid var(--line-2);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .widget-head {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 13px 15px;
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .widget-head h3 {
+      font-family: 'Archivo Narrow', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .widget-head>span {
+      color: var(--pitch);
+    }
+
+    .league-select {
+      margin-left: auto;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--paper);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+      padding: 4px 6px;
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 0.68rem;
+      outline: none;
+    }
+
+    .league-select option {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .standings-tbl {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .standings-tbl th {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      text-align: left;
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line-2);
+      background: var(--paper-2);
+    }
+
+    .standings-tbl td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.82rem;
+      color: var(--ink-2);
+    }
+
+    .standings-tbl tr:last-child td {
+      border-bottom: none;
+    }
+
+    .team-tbl {
+      font-family: 'Archivo Narrow', sans-serif;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: var(--ink);
+    }
+
+    .pts {
+      font-family: 'Spline Sans Mono', monospace;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .pos-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 3px;
+      background: var(--paper-2);
+    }
+
+    .pos-num.pos-cl {
+      background: var(--pitch);
+      color: var(--paper);
+    }
+
+    .pos-num.pos-rel {
+      background: var(--miss-soft);
+      color: var(--miss);
+    }
+
+    .scorer-row {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .scorer-row:last-child {
+      border-bottom: none;
+    }
+
+    .scorer-pos {
+      font-family: 'Anton', sans-serif;
+      font-size: 1rem;
+      color: var(--ink-3);
+      width: 22px;
+      text-align: center;
+    }
+
+    .scorer-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .scorer-name {
+      font-family: 'Archivo Narrow', sans-serif;
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: var(--ink);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .scorer-club {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.5px;
+      color: var(--ink-3);
+      text-transform: uppercase;
+    }
+
+    .scorer-g {
+      font-family: 'Spline Sans Mono', monospace;
+      font-weight: 600;
+      font-size: 0.82rem;
+      color: var(--pitch-deep);
+    }
+
+    #loader {
+      text-align: center;
+      padding: 50px;
+      display: none;
+      justify-content: center;
+    }
+
+    .spinner {
+      width: 34px;
+      height: 34px;
+      border: 3px solid var(--line-2);
+      border-top-color: var(--pitch);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #empty-state {
+      text-align: center;
+      padding: 50px 30px;
+      color: var(--ink-3);
+      display: none;
+    }
+
+    #empty-state .e-icon {
+      font-size: 2rem;
+      color: var(--line-2);
+      margin-bottom: 14px;
+    }
+
+    #empty-state h3 {
+      font-family: 'Archivo Narrow', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--ink-2);
+      margin-bottom: 6px;
+    }
+
+    #empty-state p {
+      font-size: 0.88rem;
+    }
+
+    #error-banner {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: var(--miss-soft);
+      border: 1px solid rgba(181, 58, 43, 0.3);
+      border-left: 3px solid var(--miss);
+      color: var(--miss);
+      padding: 12px 15px;
+      border-radius: var(--r);
+      margin-bottom: 16px;
+      font-size: 0.86rem;
+    }
+
+    .coupon-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(22, 20, 15, 0.72);
+      backdrop-filter: blur(3px);
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .coupon-overlay.open {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .coupon-sheet {
+      background: var(--card);
+      width: 100%;
+      max-width: 460px;
+      border-radius: 6px;
+      overflow: hidden;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--ink);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+      animation: slipIn 0.3s ease both;
+    }
+
+    @keyframes slipIn {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .coupon-sheet-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 18px;
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .coupon-sheet-title {
+      font-family: 'Archivo Narrow', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .coupon-sheet-title i {
+      color: var(--pitch);
+    }
+
+    .coupon-sheet-title span {
+      color: var(--pitch);
+    }
+
+    .coupon-close-btn {
+      background: none;
+      border: none;
+      color: var(--ink-3);
+      font-size: 1.1rem;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+      transition: 0.15s;
+    }
+
+    .coupon-close-btn:hover {
+      color: var(--paper);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .coupon-body {
+      padding: 18px;
+      overflow-y: auto;
+      background: linear-gradient(var(--card), var(--card)) padding-box;
+    }
+
+    .coupon-no-data {
+      text-align: center;
+      padding: 30px 10px;
+      color: var(--ink-3);
+      font-size: 0.92rem;
+    }
+
+    .coupon-stats-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .coupon-stat {
+      flex: 1;
+      text-align: center;
+      background: var(--paper);
+      border: 1px solid var(--line-2);
+      padding: 12px 6px;
+      border-radius: var(--r);
+    }
+
+    .coupon-stat-val {
+      font-family: 'Anton', sans-serif;
+      font-size: 1.5rem;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .coupon-stat-lbl {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 8.5px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-top: 6px;
+    }
+
+    .coupon-accuracy-bar-wrap {
+      height: 8px;
+      background: var(--line);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .coupon-accuracy-bar {
+      height: 100%;
+      background: var(--pitch);
+      transition: width 0.7s cubic-bezier(.2, .7, .2, 1);
+    }
+
+    .coupon-accuracy-label {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .coupon-accuracy-label span {
+      color: var(--pitch-deep);
+      font-weight: 600;
+    }
+
+    .coupon-section-title {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 10px;
+      padding-bottom: 7px;
+      border-bottom: 1px dashed var(--line-2);
+    }
+
+    .coupon-pick-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 4px;
+      border-bottom: 1px dashed var(--line-2);
+    }
+
+    .coupon-pick-row:last-child {
+      border-bottom: none;
+    }
+
+    .coupon-pick-num {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+      background: var(--ink);
+      color: var(--paper);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .coupon-pick-num.gold {
+      background: var(--pitch);
+    }
+
+    .coupon-pick-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .coupon-pick-match {
+      font-family: 'Archivo Narrow', sans-serif;
+      font-weight: 600;
+      font-size: 0.96rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .coupon-pick-market {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-top: 2px;
+    }
+
+    .coupon-pick-market span {
+      color: var(--pitch-deep);
+      font-weight: 600;
+    }
+
+    .coupon-pick-conf {
+      font-family: 'Spline Sans Mono', monospace;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--ink-2);
+      flex-shrink: 0;
+    }
+
+    .coupon-pick-conf.high {
+      color: var(--pitch-deep);
+    }
+
+    .coupon-disclaimer {
+      margin-top: 16px;
+      padding: 11px 13px;
+      background: var(--pending-soft);
+      border: 1px solid rgba(176, 125, 18, 0.25);
+      border-radius: var(--r);
+      font-size: 0.74rem;
+      line-height: 1.5;
+      color: var(--ink-2);
+    }
+
+    #pg-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: var(--ink);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    #pg-loader::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 3px);
+    }
+
+    .pgl-name {
+      font-family: 'Anton', sans-serif;
+      font-size: 38px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--paper);
+      z-index: 1;
+    }
+
+    .pgl-name b {
+      color: var(--pitch);
+      font-weight: 400;
+    }
+
+    .pgl-sub {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 5px;
+      color: var(--ink-3);
+      text-transform: uppercase;
+      z-index: 1;
+    }
+
+    .pgl-track {
+      width: 210px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50px;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    #pg-bar {
+      height: 100%;
+      width: 1%;
+      background: var(--pitch);
+      border-radius: 50px;
+      transition: width 0.06s linear;
+    }
+
+    #pg-pct {
+      font-family: 'Spline Sans Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--ink-3);
+      z-index: 1;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .mobile-nav {
+      display: none;
+    }
+
+    .mobile-panel {
+      margin-bottom: 18px;
+    }
+
+    @media (max-width: 820px) {
+      .page {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .mobile-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: var(--ink);
+        border-top: 2px solid var(--pitch);
+        padding: 9px 8px;
+        justify-content: space-around;
+        z-index: 100;
+      }
+
+      .mnav-btn {
+        background: none;
+        border: none;
+        color: var(--ink-3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-family: 'Spline Sans Mono', monospace;
+        font-size: 9px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 4px 14px;
+      }
+
+      .mnav-btn .micon {
+        font-size: 1.05rem;
+      }
+
+      .mnav-btn.active {
+        color: var(--pitch);
+      }
+
+      #main-col {
+        padding-bottom: 78px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .nav-name {
+        font-size: 22px;
+      }
+
+      .hero-time {
+        font-size: 2.1rem;
+      }
+
+      .hero-match {
+        gap: 8px;
+      }
+
+      .markets-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .build-coupon-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .coupon-bar-label {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="pg-loader">
+    <div class="pgl-name">Form<b>Guide</b></div>
+    <div class="pgl-sub">Loading the form book</div>
+    <div class="pgl-track">
+      <div id="pg-bar"></div>
+    </div>
+    <div id="pg-pct">1%</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>(function () { var dur = 3000 + Math.random() * 2000; var p = 1, b = document.getElementById('pg-bar'), t = document.getElementById('pg-pct'), o = document.getElementById('pg-loader'); var iv = setInterval(function () { p += Math.floor(Math.random() * 4) + 1; if (p >= 100) { p = 100; clearInterval(iv); setTimeout(function () { o.style.transition = 'opacity 0.5s'; o.style.opacity = '0'; setTimeout(function () { o.remove(); }, 550); }, 200); } b.style.width = p + '%'; t.textContent = p + '%'; }, Math.round(dur / 40)); })();</script>
+
+  <nav class="navbar">
+    <a href="login.html" class="nav-brand">
+      <div class="nav-logo">
+        <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/87fa017c-a631-4e91-91c6-1750406774c7.png"
+          alt="Logo">
+      </div>
+      <div>
+        <div class="nav-name">Form<b>Guide</b></div>
+        <span class="nav-tag">Poisson · xG Model</span>
+      </div>
+    </a>
+    <div class="nav-right">
+      <a href="login.html" class="exit-btn">Exit</a>
+    </div>
+  </nav>
+
+  <div class="hero" id="hero-section">
+    <div class="hero-board">
+      <div class="hero-eyebrow"><span class="dot"></span> Featured Fixture</div>
+      <div class="hero-match" id="hero-match">
+        <div class="hero-team">
+          <div class="hero-crest" id="hero-home-crest"><i class="fas fa-futbol"></i></div>
+          <div class="hero-tname" id="hero-home-name">–</div>
+        </div>
+        <div class="hero-center">
+          <div class="hero-vs">KICK-OFF</div>
+          <div class="hero-time" id="hero-time">–:–</div>
+          <div class="hero-date" id="hero-date">–</div>
+        </div>
+        <div class="hero-team away">
+          <div class="hero-crest" id="hero-away-crest"><i class="fas fa-futbol"></i></div>
+          <div class="hero-tname" id="hero-away-name">–</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="control-bar">
+    <div class="control-inner">
+      <span class="coupon-bar-label"><i class="fas fa-bolt"></i> Model coupon</span>
+      <button class="build-coupon-btn" onclick="buildCoupon()"><i class="fas fa-receipt"></i> Build my slip</button>
+      <span class="coupon-count-badge" id="coupon-count-badge" style="display:none"></span>
+    </div>
+  </div>
+
+  <div class="coupon-overlay" id="coupon-overlay" onclick="closeCoupon(event)">
+    <div class="coupon-sheet" id="coupon-sheet">
+      <div class="coupon-sheet-head">
+        <div class="coupon-sheet-title"><i class="fas fa-receipt"></i> Model <span>Slip</span></div>
+        <button class="coupon-close-btn" onclick="closeCouponBtn()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="coupon-body" id="coupon-body"></div>
+    </div>
+  </div>
+
+  <input type="hidden" id="date-from" />
+  <input type="hidden" id="date-to" />
+  <input type="hidden" id="status-select" value="" />
+  <button id="load-btn" style="display:none" onclick="loadMatches()"></button>
+
+  <div class="page">
+    <div id="main-col">
+      <div id="error-banner"><span><i class="fas fa-exclamation-triangle"></i></span><span id="error-msg"></span></div>
+      <div class="day-tabs-wrap" id="day-tabs-wrap" style="display:none"></div>
+      <div id="loader">
+        <div class="spinner"></div>
+      </div>
+      <div id="empty-state">
+        <div class="e-icon"><i class="fas fa-inbox"></i></div>
+        <h3>No fixtures here</h3>
+        <p>Pick another matchday or league to see the card.</p>
+      </div>
+      <div id="matches-list"></div>
+
+      <div class="mobile-panel hidden" id="mob-standings">
+        <div id="mob-standings-widget" style="display:none">
+          <div class="widget-head"><span><i class="fas fa-table-list"></i></span>
+            <h3>Table</h3>
+            <select class="league-select" onchange="loadSidebar(this.value)">
+              <option value="PL">Premier League</option>
+              <option value="PD">La Liga</option>
+              <option value="BL1">Bundesliga</option>
+              <option value="SA">Serie A</option>
+              <option value="FL1">Ligue 1</option>
+            </select>
+          </div>
+          <div id="mob-standings-body"></div>
+        </div>
+      </div>
+      <div class="mobile-panel hidden" id="mob-scorers">
+        <div id="mob-scorers-widget" style="display:none">
+          <div class="widget-head"><span><i class="fas fa-futbol"></i></span>
+            <h3>Scorers</h3>
+            <select class="league-select" onchange="loadSidebar(this.value)">
+              <option value="PL">Premier League</option>
+              <option value="PD">La Liga</option>
+              <option value="BL1">Bundesliga</option>
+              <option value="SA">Serie A</option>
+              <option value="FL1">Ligue 1</option>
+            </select>
+          </div>
+          <div id="mob-scorers-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <div id="scorers-card" style="display:none">
+        <div class="widget-head"><span><i class="fas fa-futbol"></i></span>
+          <h3>Top Scorers</h3>
+          <select class="league-select" onchange="loadSidebar(this.value)">
+            <option value="PL">Premier League</option>
+            <option value="PD">La Liga</option>
+            <option value="BL1">Bundesliga</option>
+            <option value="SA">Serie A</option>
+            <option value="FL1">Ligue 1</option>
+          </select>
+        </div>
+        <div id="scorers-list"></div>
+      </div>
+      <div id="standings-card" style="display:none">
+        <div class="widget-head"><span><i class="fas fa-table-list"></i></span>
+          <h3>The Table</h3>
+          <select class="league-select" onchange="loadSidebar(this.value)">
+            <option value="PL">Premier League</option>
+            <option value="PD">La Liga</option>
+            <option value="BL1">Bundesliga</option>
+            <option value="SA">Serie A</option>
+            <option value="FL1">Ligue 1</option>
+          </select>
+        </div>
+        <div id="standings-body"></div>
+      </div>
+    </aside>
+  </div>
+
+  <nav class="mobile-nav">
+    <button class="mnav-btn active" id="mnav-matches" onclick="mobileTab('matches',this)"><span class="micon"><i
+          class="fas fa-calendar-day"></i></span>Card</button>
+    <button class="mnav-btn" id="mnav-standings" onclick="mobileTab('standings',this)"><span class="micon"><i
+          class="fas fa-table-list"></i></span>Table</button>
+    <button class="mnav-btn" id="mnav-scorers" onclick="mobileTab('scorers',this)"><span class="micon"><i
+          class="fas fa-futbol"></i></span>Scorers</button>
+  </nav>
+
+  <script>
+    /* ── FIREBASE DB INIT ── */
+    firebase.initializeApp({
+      apiKey: "AIzaSyA5Y4KswhImaWK8k-T_bpyqmBTKnIU-aeQ",
+      authDomain: "admin-8f6df.firebaseapp.com",
+      projectId: "admin-8f6df"
+    });
+    const db = firebase.firestore();
+
+    /* ── CONFIG ── */
+    const PROXY_BASE = '/.netlify/functions/football';
+    // Trimmed to the 5 leagues the free football-data.org tier reliably serves.
+    const ALL_COMPS = ['PL', 'PD', 'BL1', 'SA', 'FL1'];
+    // Throttle: free tier = 10 requests/min. Stagger calls so the first load never 429s.
+    const REQ_GAP_MS = 6500;
+    let allMatches = [];
+    let currentDay = null;
+    let teamForm = {};
+    let teamStats = {};
+    let leaguePositions = {};
+    let dayGroups = {};
+    let matchPredictions = {};
+
+    /* ── THROTTLE HELPERS ── */
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    // Run async task-producing fns one at a time with a gap between them.
+    async function runSequential(fns, gap = REQ_GAP_MS) {
+      const out = [];
+      for (let i = 0; i < fns.length; i++) {
+        try { out.push({ status: 'fulfilled', value: await fns[i]() }); }
+        catch (e) { out.push({ status: 'rejected', reason: e }); }
+        if (i < fns.length - 1) await sleep(gap);
+      }
+      return out;
+    }
+
+    /* ── HELPERS ── */
+    function fmtDate(d) { return d.toISOString().split('T')[0]; }
+    function todayStr() { return fmtDate(new Date()); }
+    function weekEnd() { const d = new Date(); d.setDate(d.getDate() + 2); return fmtDate(d); }
+    function rangeStart() { const d = new Date(); d.setDate(d.getDate() - 2); return fmtDate(d); }
+    function dayKeyForOffset(offset) { const d = new Date(); d.setDate(d.getDate() + offset); return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase(); }
+    function matchDayKey(utcDate) { const d = new Date(utcDate); return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase(); }
+    function matchTimeStr(utcDate) { if (!utcDate) return '–'; const d = new Date(utcDate); return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
+    function sortKey(utcDate) { return new Date(utcDate).getTime(); }
+
+    /* ── PREDICTION ENGINE ── */
+    function poisson(lambda, k) { if (lambda <= 0) return k === 0 ? 1 : 0; let p = Math.exp(-lambda); for (let i = 1; i <= k; i++)p *= lambda / i; return p; }
+    function probExactGoals(lambdaH, lambdaA, n) { let p = 0; for (let h = 0; h <= n; h++)p += poisson(lambdaH, h) * poisson(lambdaA, n - h); return p; }
+    function probUnder(lambdaH, lambdaA, threshold) { let p = 0; for (let n = 0; n <= threshold; n++)p += probExactGoals(lambdaH, lambdaA, n); return Math.min(1, p); }
+
+    function computePrediction(match) {
+      if (matchPredictions[match.id] && matchPredictions[match.id].conf <= 100) return matchPredictions[match.id];
+
+      const home = match.homeTeam || {}; const away = match.awayTeam || {};
+      const sH = teamStats[home.id] || { avgGf: 1.3, avgGa: 1.3, winRate: 33, results: [], h2h: {}, gamesPlayed: 0 };
+      const sA = teamStats[away.id] || { avgGf: 1.3, avgGa: 1.3, winRate: 33, results: [], h2h: {}, gamesPlayed: 0 };
+      const HOME_ADV = 0.15;
+      const expH = Math.max(0.1, (parseFloat(sH.avgGf) + parseFloat(sA.avgGa)) / 2 + HOME_ADV);
+      const expA = Math.max(0.1, (parseFloat(sA.avgGf) + parseFloat(sH.avgGa)) / 2);
+      let pHomeWin = 0, pDraw = 0, pAwayWin = 0;
+      for (let h = 0; h <= 7; h++) {
+        for (let a = 0; a <= 7; a++) {
+          const prob = poisson(expH, h) * poisson(expA, a);
+          if (h > a) pHomeWin += prob;
+          else if (h === a) pDraw += prob;
+          else pAwayWin += prob;
+        }
+      }
+      const homeW = Math.round(pHomeWin * 100); const drawP = Math.round(pDraw * 100); const awayW = Math.round(pAwayWin * 100);
+      const pOver05 = 1 - probExactGoals(expH, expA, 0);
+      const pUnder15 = probUnder(expH, expA, 1); const pOver15 = 1 - pUnder15;
+      const pUnder25 = probUnder(expH, expA, 2); const pOver25 = 1 - pUnder25;
+      const pUnder35 = probUnder(expH, expA, 3); const pOver35 = 1 - pUnder35;
+      const pBTTSNo = poisson(expH, 0) + poisson(expA, 0) - (poisson(expH, 0) * poisson(expA, 0));
+      const pBTTS = 1 - pBTTSNo;
+      const p1X = Math.min(1, pHomeWin + pDraw); const p2X = Math.min(1, pAwayWin + pDraw); const p12 = Math.min(1, pHomeWin + pAwayWin);
+      const markets = [
+        { id: 'over15', label: 'Over 1.5', display: 'Over 1.5', prob: pOver15, threshold: 0.62 },
+        { id: 'under15', label: 'Under 1.5', display: 'Under 1.5', prob: pUnder15, threshold: 0.48 },
+        { id: 'over25', label: 'Over 2.5', display: 'Over 2.5', prob: pOver25, threshold: 0.55 },
+        { id: 'under25', label: 'Under 2.5', display: 'Under 2.5', prob: pUnder25, threshold: 0.58 },
+        { id: 'over35', label: 'Over 3.5', display: 'Over 3.5', prob: pOver35, threshold: 0.38 },
+        { id: 'under35', label: 'Under 3.5', display: 'Under 3.5', prob: pUnder35, threshold: 0.62 },
+        { id: 'over05', label: 'Over 0.5', display: 'Over 0.5', prob: pOver05, threshold: 0.78 },
+        { id: 'btts', label: 'GG (BTTS)', display: 'GG', prob: pBTTS, threshold: 0.55 },
+        { id: 'bttsno', label: 'NG (No BTTS)', display: 'NG', prob: pBTTSNo, threshold: 0.58 },
+        { id: 'w1', label: 'W1 (Home)', display: 'W1', prob: pHomeWin, threshold: 0.48 },
+        { id: 'w2', label: 'W2 (Away)', display: 'W2', prob: pAwayWin, threshold: 0.38 },
+        { id: 'draw', label: 'Draw (X)', display: 'Draw', prob: pDraw, threshold: 0.28 },
+        { id: '1x', label: '1X', display: '1X', prob: p1X, threshold: 0.62 },
+        { id: '2x', label: '2X', display: '2X', prob: p2X, threshold: 0.55 },
+        { id: '12', label: '12 (No Draw)', display: '1/2', prob: p12, threshold: 0.58 },
+      ];
+      markets.forEach(m => m.odds = m.prob > 0 ? (1 / m.prob).toFixed(2) : "0.00");
+      const qualified = markets.filter(m => m.prob >= m.threshold);
+      const pool = qualified.length > 0 ? qualified : markets;
+      pool.sort((a, b) => (b.prob - b.threshold) - (a.prob - a.threshold));
+      const best = pool[0]; const conf = Math.round(best.prob * 100);
+      const predGoalsH = Math.round(expH); const predGoalsA = Math.round(expA);
+      const correctScore = `${predGoalsH}–${predGoalsA}`;
+      const pred = {
+        homeW, drawP, awayW, correctScore,
+        expH: expH.toFixed(2), expA: expA.toFixed(2),
+        over05Prob: Math.round(pOver05 * 100), over15Prob: Math.round(pOver15 * 100), under15Prob: Math.round(pUnder15 * 100),
+        over25Prob: Math.round(pOver25 * 100), under25Prob: Math.round(pUnder25 * 100),
+        over35Prob: Math.round(pOver35 * 100), under35Prob: Math.round(pUnder35 * 100),
+        bttsProb: Math.round(pBTTS * 100), bttsNoProb: Math.round(pBTTSNo * 100),
+        dc1xProb: Math.round(p1X * 100), dc2xProb: Math.round(p2X * 100), dc12Prob: Math.round(p12 * 100),
+        homeWinProb: Math.round(pHomeWin * 100), awayWinProb: Math.round(pAwayWin * 100), drawProb: Math.round(pDraw * 100),
+        tipId: best.id, tipLabel: best.label, tipDisplay: best.display, conf, tipOdds: best.odds,
+        confLabel: conf >= 82 ? '<i class="fas fa-fire"></i> VIP' : conf >= 70 ? '<i class="fas fa-bolt"></i> STRONG' : '<i class="fas fa-magnifying-glass-chart"></i> VALUE',
+        allMarkets: markets,
+        analysis: `xG model: ${home.shortName || 'Home'} ${expH.toFixed(2)} – ${expA.toFixed(2)} ${away.shortName || 'Away'}. Based on last-60-day averages (H Gf/Ga: ${sH.avgGf}/${sH.avgGa} | A Gf/Ga: ${sA.avgGf}/${sA.avgGa}). Over 1.5: ${Math.round(pOver15 * 100)}% · Over 2.5: ${Math.round(pOver25 * 100)}% · BTTS: ${Math.round(pBTTS * 100)}% · Under 2.5: ${Math.round(pUnder25 * 100)}%.`
+      };
+
+      try {
+        db.collection('predictions').doc(String(match.id)).set(pred).catch(() => { });
+        matchPredictions[match.id] = pred;
+      } catch (e) { }
+
+      return pred;
+    }
+
+    /* ── HIT DETECTION ── */
+    function checkHit(tipId, sh, sa) {
+      const total = sh + sa;
+      switch (tipId) {
+        case 'over05': return total > 0; case 'over15': return total > 1; case 'under15': return total <= 1;
+        case 'over25': return total > 2; case 'over35': return total > 3; case 'under25': return total <= 2; case 'under35': return total <= 3;
+        case 'btts': return sh > 0 && sa > 0; case 'bttsno': return !(sh > 0 && sa > 0);
+        case 'w1': return sh > sa; case 'w2': return sa > sh; case 'draw': return sh === sa;
+        case '1x': return sh >= sa; case '12': return sh !== sa; case '2x': return sa >= sh;
+        default: return false;
+      }
+    }
+
+    /* ── COUPON BUILDER ── */
+    function buildCoupon() {
+      const overlay = document.getElementById('coupon-overlay');
+      const body = document.getElementById('coupon-body');
+      const couponDayKeys = [dayKeyForOffset(0), dayKeyForOffset(1), dayKeyForOffset(-1)];
+      let couponMatches = [];
+      for (const dk of couponDayKeys) { const dm = dayGroups[dk] || []; couponMatches = couponMatches.concat(dm); if (couponMatches.length >= 20) break; }
+      if (!couponMatches.length) couponMatches = allMatches.slice(0, 20);
+      if (!couponMatches.length) { body.innerHTML = '<div class="coupon-no-data">Load the card first to build a slip.</div>'; overlay.classList.add('open'); return; }
+      const scored = couponMatches.map(m => {
+        const pred = computePrediction(m); const home = m.homeTeam || {}; const away = m.awayTeam || {};
+        return { matchLabel: `${home.shortName || home.name || '?'} vs ${away.shortName || away.name || '?'}`, market: pred.tipDisplay, marketLabel: pred.tipLabel, conf: pred.conf, tipId: pred.tipId, prob: pred.conf / 100, confLabel: pred.confLabel, status: m.status };
+      });
+      const pending = scored.filter(s => s.status !== 'FINISHED');
+      const sorted = [...pending].sort((a, b) => b.conf - a.conf);
+      const seen = {}; const diverse = [];
+      for (const s of sorted) { const key = s.tipId; if (!seen[key]) seen[key] = 0; if (seen[key] < 3) { diverse.push(s); seen[key]++; } if (diverse.length >= 8) break; }
+      if (diverse.length < 4) { for (const s of sorted) { if (!diverse.find(d => d.matchLabel === s.matchLabel)) diverse.push(s); if (diverse.length >= 6) break; } }
+      const picks = diverse.slice(0, 6);
+      if (!picks.length) { body.innerHTML = '<div class="coupon-no-data">No upcoming fixtures to put on a slip yet.</div>'; overlay.classList.add('open'); return; }
+      const combinedProb = picks.reduce((acc, p) => acc * p.prob, 1);
+      const combinedPct = Math.round(combinedProb * 100);
+      const avgConf = Math.round(picks.reduce((a, p) => a + p.conf, 0) / picks.length);
+      const aiScore = Math.min(97, Math.round(avgConf * 0.85 + combinedPct * 0.15 + 8));
+      const badge = document.getElementById('coupon-count-badge');
+      badge.textContent = `${picks.length} picks`; badge.style.display = 'inline-flex';
+      body.innerHTML = `
+      <div class="coupon-stats-row">
+        <div class="coupon-stat"><div class="coupon-stat-val">${picks.length}</div><div class="coupon-stat-lbl">Legs</div></div>
+        <div class="coupon-stat"><div class="coupon-stat-val">${avgConf}%</div><div class="coupon-stat-lbl">Avg Conf</div></div>
+        <div class="coupon-stat"><div class="coupon-stat-val" style="color:var(--pitch-deep)">${aiScore}%</div><div class="coupon-stat-lbl">Model Score</div></div>
+      </div>
+      <div class="coupon-accuracy-bar-wrap"><div class="coupon-accuracy-bar" id="coupon-acc-bar" style="width:0%"></div></div>
+      <div class="coupon-accuracy-label">Model rating · <span>${aiScore}% confidence</span></div>
+      <div class="coupon-section-title">Best market per fixture</div>
+      <div class="coupon-picks">
+        ${picks.map((p, i) => `
+          <div class="coupon-pick-row${p.conf >= 80 ? ' top-pick' : ''}">
+            <div class="coupon-pick-num${p.conf >= 80 ? ' gold' : ''}">${i + 1}</div>
+            <div class="coupon-pick-info">
+              <div class="coupon-pick-match">${p.matchLabel}</div>
+              <div class="coupon-pick-market">Pick: <span>${p.marketLabel}</span></div>
+            </div>
+            <div class="coupon-pick-conf${p.conf >= 80 ? ' high' : ''}">${p.conf}%</div>
+          </div>`).join('')}
+      </div>
+      <div class="coupon-disclaimer">These picks come from a statistical model (Poisson / xG). Football results are never guaranteed — treat this as entertainment and gamble responsibly.</div>`;
+      overlay.classList.add('open');
+      setTimeout(() => { const bar = document.getElementById('coupon-acc-bar'); if (bar) bar.style.width = aiScore + '%'; }, 100);
+    }
+
+    function closeCoupon(e) { if (e.target === document.getElementById('coupon-overlay')) document.getElementById('coupon-overlay').classList.remove('open'); }
+    function closeCouponBtn() { document.getElementById('coupon-overlay').classList.remove('open'); }
+
+    /* ── API ── */
+    const API_TOKEN = 'e510c1e3f20148c2a77afcc9ddbe7bf6';
+    const API_BASE = 'https://api.football-data.org/v4';
+    async function apiFetch(apiPath, extra = {}) {
+      const qs = new URLSearchParams({ path: apiPath, ...extra }).toString();
+      const cacheKey = (apiPath + '_' + qs).replace(/[^a-zA-Z0-9_]/g, '_');
+      const cacheRef = db.collection('api_cache').doc(cacheKey);
+
+      try {
+        const doc = await cacheRef.get();
+        if (doc.exists) {
+          const data = doc.data();
+          if (Date.now() - data.timestamp < 5 * 60 * 1000) {
+            console.log('Served from Firebase cache:', cacheKey);
+            return JSON.parse(data.payload);
+          }
+        }
+      } catch (e) { console.warn('Cache read error', e); }
+
+      let json;
+      try {
+        const res = await fetch(`${PROXY_BASE}?${qs}`);
+        if (res.status === 404) throw new Error('proxy_not_found');
+        if (!res.ok) { const e = await res.json().catch(() => { }); throw new Error(e?.message || `HTTP ${res.status}`); }
+        json = await res.json();
+      } catch (e) {
+        if (!String(e.message).includes('proxy_not_found') && !/fetch|network/i.test(e.message)) throw e;
+        const extraQs = new URLSearchParams(extra).toString(); const target = `${API_BASE}/${apiPath}${extraQs ? '?' + extraQs : ''}`; const proxied = `https://corsproxy.io/?${encodeURIComponent(target)}`;
+        const res2 = await fetch(proxied, { headers: { 'X-Auth-Token': API_TOKEN } });
+        if (!res2.ok) { const e = await res2.json().catch(() => { }); throw new Error(e?.message || `HTTP ${res2.status}`); }
+        json = await res2.json();
+      }
+
+      if (json) {
+        try {
+          cacheRef.set({ timestamp: Date.now(), payload: JSON.stringify(json) }).catch(e => console.warn('Cache write failed', e));
+        } catch (e) { }
+      }
+
+      return json;
+    }
+
+    /* ── SIDEBAR ── */
+    function renderScorers(scorers, listId, cardId) {
+      if (!scorers || !scorers.length) { document.getElementById(listId).innerHTML = '<div style="padding:14px;text-align:center;color:var(--ink-3);font-size:0.85rem">No scorer data</div>'; return; }
+      document.getElementById(cardId).style.display = 'block';
+      document.getElementById(listId).innerHTML = scorers.slice(0, 8).map((s, i) => `
+      <div class="scorer-row">
+        <div class="scorer-pos">${i + 1}</div>
+        <div class="scorer-info"><div class="scorer-name">${s.player?.name || '–'}</div><div class="scorer-club">${s.team?.shortName || s.team?.name || ''}</div></div>
+        <div class="scorer-g">${s.goals} <i class="fas fa-futbol" style="font-size:0.7rem"></i></div>
+      </div>`).join('');
+    }
+
+    function renderStandings(table, bodyId, cardId, max) {
+      if (!table || !table.length) { document.getElementById(bodyId).innerHTML = '<div style="padding:14px;text-align:center;color:var(--ink-3);font-size:0.85rem">No table data</div>'; return; }
+      document.getElementById(cardId).style.display = 'block';
+      document.getElementById(bodyId).innerHTML = `
+      <table class="standings-tbl">
+        <thead><tr><th>#</th><th>Team</th><th>P</th><th>GD</th><th>Pts</th></tr></thead>
+        <tbody>${table.slice(0, 14).map(row => { const p = row.position; const rel = max >= 18 ? max - 2 : 99; const cls = p <= 4 ? 'pos-cl' : (p >= rel ? 'pos-rel' : ''); return `<tr><td><span class="pos-num ${cls}">${p}</span></td><td class="team-tbl">${row.team?.shortName || row.team?.name || ''}</td><td>${row.playedGames}</td><td>${row.goalDifference >= 0 ? '+' : ''}${row.goalDifference}</td><td class="pts">${row.points}</td></tr>`; }).join('')}</tbody>
+      </table>`;
+    }
+
+    async function fetchHistoricalData(comp) {
+      try { const dateTo = todayStr(); const dateFrom = fmtDate(new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)); const data = await apiFetch(`competitions/${comp}/matches`, { dateFrom, dateTo }); let matches = data.matches || []; matches.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate)); const stats = {}; matches.filter(m => m.status === 'FINISHED').forEach(m => { const hId = m.homeTeam.id; const aId = m.awayTeam.id; const hS = m.score.fullTime.home; const aS = m.score.fullTime.away;[hId, aId].forEach(id => { if (!stats[id]) stats[id] = { results: [], gf: 0, ga: 0, w: 0, d: 0, l: 0, h2h: {} }; }); stats[hId].gf += hS; stats[hId].ga += aS; stats[aId].gf += aS; stats[aId].ga += hS; const winner = hS > aS ? hId : (hS < aS ? aId : null); if (!stats[hId].h2h[aId]) stats[hId].h2h[aId] = []; stats[hId].h2h[aId].push({ winner }); if (hS > aS) { stats[hId].results.push('W'); stats[hId].w++; stats[aId].results.push('L'); stats[aId].l++; } else if (hS < aS) { stats[hId].results.push('L'); stats[hId].l++; stats[aId].results.push('W'); stats[aId].w++; } else { stats[hId].results.push('D'); stats[hId].d++; stats[aId].results.push('D'); stats[aId].d++; } }); for (let id in stats) { const s = stats[id]; const count = s.results.length || 1; s.avgGf = (s.gf / count).toFixed(2); s.avgGa = (s.ga / count).toFixed(2); s.winRate = Math.round((s.w / count) * 100); s.results = s.results.slice(-10); } Object.assign(teamStats, stats); Object.assign(teamForm, Object.fromEntries(Object.entries(stats).map(([k, v]) => [k, v.results]))); } catch (e) { console.warn('Historical error (' + comp + '):', e); }
+    }
+
+    function renderScorersInto(s) { renderScorers(s, 'scorers-list', 'scorers-card'); renderScorers(s, 'mob-scorers-list', 'mob-scorers-widget'); }
+    function renderStandingsInto(table, max) { renderStandings(table, 'standings-body', 'standings-card', max); renderStandings(table, 'mob-standings-body', 'mob-standings-widget', max); }
+
+    async function loadSidebar(comp = 'PL') {
+      document.querySelectorAll('.league-select').forEach(el => el.value = comp);
+      const spinner = '<div style="padding:20px;text-align:center;color:var(--ink-3);font-size:0.85rem"><i class="fas fa-circle-notch fa-spin"></i> Loading…</div>';
+      ['scorers-list', 'mob-scorers-list', 'standings-body', 'mob-standings-body'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = spinner; });
+      try { const d = await apiFetch(`competitions/${comp}/scorers`, { limit: 8 }); renderScorersInto(d.scorers || []); } catch (e) { renderScorersInto([]); }
+      await sleep(REQ_GAP_MS);
+      try { const d = await apiFetch(`competitions/${comp}/standings`); const table = d.standings?.find(s => s.type === 'TOTAL')?.table || []; leaguePositions = {}; table.forEach(r => { leaguePositions[r.team.id] = r.position; }); renderStandingsInto(table, table.length); } catch (e) { renderStandingsInto([], 0); }
+    }
+
+    /* ── GROUP BY DAY ── */
+    function groupByDay(matches) { const groups = {}; matches.forEach(m => { const key = matchDayKey(m.utcDate); if (!groups[key]) groups[key] = []; groups[key].push(m); }); Object.keys(groups).forEach(k => groups[k].sort((a, b) => sortKey(a.utcDate) - sortKey(b.utcDate))); return groups; }
+
+    /* ── DAY TABS ── */
+    function buildDayTabs(groups) {
+      const wrap = document.getElementById('day-tabs-wrap'); wrap.style.display = 'flex';
+      const offsets = [-2, -1, 0, 1, 2]; const allowedKeys = offsets.map(o => dayKeyForOffset(o)); const todayKey = dayKeyForOffset(0);
+      wrap.innerHTML = allowedKeys.map(k => {
+        const isToday = k === todayKey; const isActive = k === currentDay; const count = groups[k] ? groups[k].length : 0; const label = isToday ? 'Today' : k;
+        return `<button class="day-tab${isActive ? ' active' : ''}" data-day="${k}" onclick="switchDay('${k}',this)">${label}<span class="day-count">${count > 0 ? count + ' game' + (count !== 1 ? 's' : '') : 'none'}</span></button>`;
+      }).join('');
+    }
+
+    function switchDay(key, el) { currentDay = key; document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); renderDay(dayGroups[key]); }
+
+    /* ── GROUP BY TIME ── */
+    function groupByTime(matches) { const groups = {}; matches.forEach(m => { const key = matchTimeStr(m.utcDate); if (!groups[key]) groups[key] = []; groups[key].push(m); }); return groups; }
+
+    /* ── HERO UPDATE ── */
+    function updateHero(matches) {
+      const featured = matches.find(m => m.status === 'IN_PLAY' || m.status === 'LIVE') || matches[0]; if (!featured) return;
+      const home = featured.homeTeam || {}; const away = featured.awayTeam || {};
+      document.getElementById('hero-home-crest').innerHTML = home.crest ? `<img src="${home.crest}" onerror="this.style.display='none'" alt="">` : '<i class="fas fa-futbol"></i>';
+      document.getElementById('hero-away-crest').innerHTML = away.crest ? `<img src="${away.crest}" onerror="this.style.display='none'" alt="">` : '<i class="fas fa-futbol"></i>';
+      document.getElementById('hero-home-name').textContent = home.shortName || home.name || '–';
+      document.getElementById('hero-away-name').textContent = away.shortName || away.name || '–';
+      const d = new Date(featured.utcDate); const isFinished = featured.status === 'FINISHED';
+      if (isFinished) { const sh = featured.score?.fullTime?.home ?? '–', sa = featured.score?.fullTime?.away ?? '–'; document.getElementById('hero-time').textContent = `${sh} – ${sa}`; document.querySelector('.hero-vs').textContent = 'FULL TIME'; }
+      else { document.getElementById('hero-time').textContent = matchTimeStr(featured.utcDate); document.querySelector('.hero-vs').textContent = 'KICK-OFF'; }
+      document.getElementById('hero-date').textContent = d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
+    }
+
+    /* ── RENDER DAY ── */
+    function renderDay(matches) {
+      const list = document.getElementById('matches-list'); list.innerHTML = ''; document.getElementById('empty-state').style.display = 'none';
+      if (!matches || !matches.length) { document.getElementById('empty-state').style.display = 'block'; return; }
+      const timeGroups = groupByTime(matches); const timeKeys = Object.keys(timeGroups);
+      timeKeys.forEach((timeKey, gi) => {
+        const timeMatches = timeGroups[timeKey]; const groupEl = document.createElement('div'); groupEl.className = 'time-group'; groupEl.style.animationDelay = `${gi * 0.04}s`;
+        const timeCol = document.createElement('div'); timeCol.className = 'time-col'; timeCol.textContent = timeKey;
+        const matchesCol = document.createElement('div'); matchesCol.className = 'time-matches';
+        timeMatches.forEach((m, idx) => { matchesCol.insertAdjacentHTML('beforeend', buildMatchRow(m, `m-${gi}-${idx}`)); });
+        groupEl.appendChild(timeCol); groupEl.appendChild(matchesCol); list.appendChild(groupEl);
+      });
+      updateHero(matches);
+    }
+
+    /* ── BUILD MATCH ROW ── */
+    function buildMatchRow(m, uid) {
+      const pred = computePrediction(m); const home = m.homeTeam || {}; const away = m.awayTeam || {};
+      const isFinished = m.status === 'FINISHED'; const isLive = m.status === 'IN_PLAY' || m.status === 'LIVE' || m.status === 'PAUSED';
+      const sh = m.score?.fullTime?.home ?? null; const sa = m.score?.fullTime?.away ?? null;
+      const statusCls = isFinished ? 's-done' : isLive ? 's-live' : 's-sched';
+      const statusLabel = isFinished ? 'FT' : isLive ? 'LIVE' : 'Soon';
+      const hCrest = home.crest ? `<img src="${home.crest}" onerror="this.style.display='none'" alt="">` : '<i class="fas fa-futbol"></i>';
+      const aCrest = away.crest ? `<img src="${away.crest}" onerror="this.style.display='none'" alt="">` : '<i class="fas fa-futbol"></i>';
+      let predStatus = 'pend', predIcon = '<i class="fas fa-clock"></i>';
+      if (isFinished && sh !== null && sa !== null) { const hit = checkHit(pred.tipId, sh, sa); predStatus = hit ? 'hit' : 'miss'; predIcon = hit ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>'; }
+      const homeWinner = isFinished && sh !== null && sh > sa; const awayWinner = isFinished && sa !== null && sa > sh;
+      const expId = 'exp-' + uid;
+      return `
+    <div class="match-row" onclick="toggleExp('${expId}')">
+      <div class="match-meta">
+        <span class="match-comp">${m.competition?.name || ''} · MD${m.matchday || '?'}</span>
+        <span class="status-badge ${statusCls}">${statusLabel}</span>
+      </div>
+      <div class="teams-stack">
+        <div class="team-row">
+          <div class="tcrest">${hCrest}</div>
+          <div class="tname${homeWinner ? ' winner' : ''}">${home.shortName || home.name || '?'}</div>
+          ${(isFinished || isLive) && sh !== null ? `<div class="tscore${homeWinner ? ' winner-score' : ''}">${sh}</div>` : `<div class="tscore" style="color:var(--ink-3)"></div>`}
+        </div>
+        <div class="team-row">
+          <div class="tcrest">${aCrest}</div>
+          <div class="tname${awayWinner ? ' winner' : ''}">${away.shortName || away.name || '?'}</div>
+          ${(isFinished || isLive) && sa !== null ? `<div class="tscore${awayWinner ? ' winner-score' : ''}">${sa}</div>` : `<div class="tscore" style="color:var(--ink-3)"></div>`}
+        </div>
+      </div>
+      <div class="pred-row">
+        <div class="pred-pill ${predStatus}">
+          <span class="pred-icon ${predStatus}">${predIcon}</span>
+          <span class="pred-label">${pred.tipDisplay}</span>
+          <span class="pred-value">
+            <div class="pv-conf">${pred.conf}%</div>
+            <div class="pv-odds">@${pred.tipOdds}</div>
+          </span>
+          <span class="pred-conf">${pred.confLabel}</span>
+        </div>
+      </div>
+    </div>
+    <div class="match-expand" id="${expId}">
+      <div class="expand-inner">
+        <div class="prob-section">
+          <div class="prob-label-row">
+            <span class="ph">${home.shortName || 'Home'} ${pred.homeW}%</span>
+            <span class="pd">Draw ${pred.drawP}%</span>
+            <span class="pa">${pred.awayW}% ${away.shortName || 'Away'}</span>
+          </div>
+          <div class="prob-bar-row">
+            <div class="pb-h" style="flex:${pred.homeW}"></div>
+            <div class="pb-d" style="flex:${pred.drawP}"></div>
+            <div class="pb-a" style="flex:${pred.awayW}"></div>
+          </div>
+        </div>
+        <div class="markets-section-label">All markets</div>
+        <div class="markets-grid">
+          ${pred.allMarkets.map(mk => {
+        const isBest = mk.id === pred.tipId; const pct = Math.round(mk.prob * 100);
+        const barColor = pct >= 72 ? 'var(--pitch)' : pct >= 55 ? 'var(--pending)' : 'var(--ink-3)';
+        return `<div class="market-row${isBest ? ' market-best' : ''}">
+              <span class="market-label">${mk.label}</span>
+              <span class="market-pct" style="color:${barColor};display:flex;flex-direction:column;align-items:flex-end;line-height:1.1">
+                <span>${pct}%</span>
+                <span style="font-size:0.66rem;color:var(--ink-3);">@${mk.odds}</span>
+              </span>
+              ${isBest ? '<span class="market-pick" style="margin-left:4px;"><i class="fas fa-check"></i></span>' : ''}
+            </div>`;
+      }).join('')}
+        </div>
+        <div class="xg-row">
+          <span class="xg-tag">xG ${pred.expH}</span>
+          <span style="color:var(--ink-3);font-size:.66rem;">vs</span>
+          <span class="xg-tag">xG ${pred.expA}</span>
+          <span style="color:var(--ink-3);font-size:.7rem;margin-left:4px;font-family:'Spline Sans Mono',monospace;">Predicted ${pred.correctScore}</span>
+        </div>
+        <div class="analysis-txt"><strong>Model read</strong> ${pred.analysis}</div>
+      </div>
+    </div>`;
+    }
+
+    function toggleExp(id) { event.stopPropagation(); document.getElementById(id).classList.toggle('open'); }
+
+    /* ── LOAD ALL LEAGUES (throttled) ── */
+    async function loadMatches() {
+      const from = document.getElementById('date-from').value; const to = document.getElementById('date-to').value;
+      setLoading(true); document.getElementById('error-banner').style.display = 'none'; document.getElementById('matches-list').innerHTML = ''; document.getElementById('empty-state').style.display = 'none'; document.getElementById('day-tabs-wrap').style.display = 'none'; document.getElementById('scorers-card').style.display = 'none'; document.getElementById('standings-card').style.display = 'none'; document.getElementById('mob-scorers-widget').style.display = 'none'; document.getElementById('mob-standings-widget').style.display = 'none';
+      const params = {}; if (from) params.dateFrom = from; if (to) params.dateTo = to;
+      try {
+        // 1) Fixtures: one call per league, spaced out so we never trip the rate limit.
+        const matchResults = await runSequential(
+          ALL_COMPS.map(c => () => apiFetch(`competitions/${c}/matches`, params))
+        );
+        let fetchedMatches = matchResults.filter(r => r.status === 'fulfilled' && r.value?.matches).flatMap(r => r.value.matches);
+
+        // Persist fetched matches so they accumulate over time.
+        fetchedMatches.forEach(m => {
+          db.collection('matches').doc(String(m.id)).set(m, { merge: true }).catch(() => { });
+        });
+
+        // Pull previously stored matches in this date range.
+        try {
+          let q = db.collection('matches');
+          if (from) q = q.where('utcDate', '>=', from + 'T00:00:00Z');
+          if (to) q = q.where('utcDate', '<=', to + 'T23:59:59Z');
+          const snap = await q.get();
+          const storedMatches = snap.docs.map(d => d.data());
+          const merged = {};
+          storedMatches.forEach(m => merged[m.id] = m);
+          fetchedMatches.forEach(m => merged[m.id] = m);
+          allMatches = Object.values(merged);
+        } catch (e) {
+          console.warn('Failed to load stored matches', e);
+          allMatches = fetchedMatches;
+        }
+
+        allMatches.sort((a, b) => sortKey(a.utcDate) - sortKey(b.utcDate));
+
+        // Load any frozen predictions.
+        if (allMatches.length > 0) {
+          try {
+            const predDocs = await Promise.all(allMatches.map(m => db.collection('predictions').doc(String(m.id)).get().catch(() => null)));
+            predDocs.forEach(doc => { if (doc && doc.exists) matchPredictions[doc.id] = doc.data(); });
+          } catch (e) { console.warn('Failed to load static predictions', e); }
+        }
+
+        setLoading(false);
+        if (!allMatches.length) { document.getElementById('empty-state').style.display = 'block'; }
+        else {
+          dayGroups = groupByDay(allMatches); const todayKey = dayKeyForOffset(0);
+          currentDay = dayGroups[todayKey] ? todayKey : Object.keys(dayGroups)[0];
+          buildDayTabs(dayGroups); renderDay(dayGroups[currentDay]);
+          setTimeout(() => { const at = document.querySelector('.day-tab.active'); if (at) at.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }, 100);
+        }
+
+        // 2) Historical form data — runs in the background, spaced out, after fixtures render.
+        runSequential(ALL_COMPS.map(c => () => fetchHistoricalData(c))).then(() => {
+          // Recompute predictions now that real form data exists (skips already-frozen ones).
+          if (currentDay && dayGroups[currentDay]) renderDay(dayGroups[currentDay]);
+        });
+
+        // 3) Sidebar — also background, throttled inside loadSidebar.
+        loadSidebar();
+      } catch (err) { setLoading(false); const b = document.getElementById('error-banner'); b.style.display = 'flex'; document.getElementById('error-msg').textContent = err.message || 'Could not load the card. Try again.'; }
+    }
+
+    function setLoading(on) { document.getElementById('loader').style.display = on ? 'flex' : 'none'; document.getElementById('load-btn').disabled = on; }
+    function loadToday() { const t = todayStr(); document.getElementById('date-from').value = t; document.getElementById('date-to').value = t; loadMatches(); }
+
+    function mobileTab(tab, el) {
+      document.querySelectorAll('.mnav-btn').forEach(b => b.classList.remove('active')); el.classList.add('active');
+      const mainCol = document.getElementById('matches-list'); const emptyState = document.getElementById('empty-state'); const loader = document.getElementById('loader'); const dayTabsWrap = document.getElementById('day-tabs-wrap'); const mobStand = document.getElementById('mob-standings'); const mobScorers = document.getElementById('mob-scorers');
+      mobStand.classList.add('hidden'); mobScorers.classList.add('hidden'); mainCol.style.display = 'none'; emptyState.style.display = 'none'; loader.style.display = 'none'; dayTabsWrap.style.display = 'none';
+      if (tab === 'matches') { mainCol.style.display = ''; if (dayTabsWrap._has) dayTabsWrap.style.display = 'flex'; if (!mainCol.innerHTML.trim() && currentDay && dayGroups[currentDay]) renderDay(dayGroups[currentDay]); }
+      else if (tab === 'standings') { mobStand.classList.remove('hidden'); }
+      else if (tab === 'scorers') { mobScorers.classList.remove('hidden'); }
+    }
+
+    (function init() { document.getElementById('date-from').value = rangeStart(); document.getElementById('date-to').value = weekEnd(); loadMatches(); })();
+
+    const _orig_buildDayTabs = buildDayTabs;
+    buildDayTabs = function (groups) { _orig_buildDayTabs(groups); document.getElementById('day-tabs-wrap')._has = 1; };
+  </script>
+</body>
+
+</html>

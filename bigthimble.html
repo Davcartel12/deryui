@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cup Shuffle Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url("https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/ecae2b74-9e36-47a0-b79d-521aaaaa5e0e.png");
+            background-size: cover;
+            background-position: center;
+            min-height: 100dvh;
+        }
+
+        .game {
+            width: 92vw;
+            max-width: 480px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0;
+        }
+
+        .cups {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            width: 100%;
+            margin-top: clamp(60px, 14vw, 120px);
+            position: relative;
+        }
+
+        .cup {
+            width: 30%;
+            position: relative;
+            transition: 0.6s;
+        }
+
+        .cup img.cup-img {
+            width: 100%;
+            z-index: 2;
+            position: relative;
+            display: block;
+        }
+
+        .hidden-item {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: clamp(28px, 10vw, 44px);
+            opacity: 0;
+            transition: 0.5s;
+            z-index: 1;
+        }
+
+        .show .hidden-item {
+            opacity: 1;
+        }
+
+        .lift {
+            transform: translateY(-50px);
+        }
+
+        .lift .hidden-item {
+            transform: translateX(-50%) translateY(50px);
+        }
+
+        .buttons {
+            margin-top: clamp(24px, 7vw, 48px);
+            display: flex;
+            justify-content: center;
+            gap: clamp(12px, 4vw, 24px);
+            width: 100%;
+        }
+
+        .mode-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: transform 0.15s, opacity 0.15s;
+            flex: 0 0 auto;
+        }
+
+        .mode-btn img {
+            width: clamp(110px, 30vw, 160px);
+            display: block;
+        }
+
+        .mode-btn:active {
+            transform: scale(0.95);
+        }
+
+        .mode-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .exit-btn {
+            margin-top: clamp(16px, 5vw, 32px);
+            padding: clamp(10px, 2.5vw, 14px) clamp(28px, 8vw, 42px);
+            border-radius: 12px;
+            background: transparent;
+            border: 2px solid #f5c842;
+            color: #f5c842;
+            font-size: clamp(13px, 3.5vw, 17px);
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            letter-spacing: 1px;
+        }
+
+        .exit-btn:active {
+            background: #f5c842;
+            color: #000;
+            transform: scale(0.97);
+        }
+
+        @media (hover: hover) {
+            .mode-btn:hover {
+                transform: scale(1.05);
+            }
+
+            .exit-btn:hover {
+                background: #f5c842;
+                color: #000;
+                transform: scale(1.08);
+            }
+        }
+
+        /* Landscape phones */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .cups {
+                margin-top: 30px;
+            }
+
+            .cup {
+                width: 26%;
+            }
+
+            .lift {
+                transform: translateY(-38px);
+            }
+
+            .lift .hidden-item {
+                transform: translateX(-50%) translateY(38px);
+            }
+
+            .buttons {
+                margin-top: 14px;
+            }
+
+            .mode-btn img {
+                width: clamp(80px, 20vw, 120px);
+            }
+
+            .exit-btn {
+                margin-top: 10px;
+                padding: 8px 24px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Loading screen -->
+    <div id="pg-loader"
+        style="position:fixed;inset:0;z-index:99999;background:url('https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/956b38c1-d756-4de7-983e-073261e343fa.avif') center/cover no-repeat;">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div>
+        <div
+            style="position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;">
+            <div
+                style="font-family:Arial,sans-serif;font-weight:900;font-size:clamp(20px,6vw,28px);color:#fff;letter-spacing:5px;text-shadow:0 0 25px #f5c842;">
+                THIMBLE</div>
+            <div
+                style="font-size:clamp(9px,2.5vw,11px);color:rgba(255,255,255,0.6);letter-spacing:4px;font-family:Arial,sans-serif;">
+                LOADING PREDICTOR...</div>
+            <div
+                style="width:72%;max-width:300px;background:rgba(255,255,255,0.15);border-radius:50px;overflow:hidden;height:7px;margin-top:4px;">
+                <div id="pg-bar"
+                    style="height:100%;width:1%;background:linear-gradient(90deg,#f5c842,#ffaa00);border-radius:50px;transition:width 0.06s linear;">
+                </div>
+            </div>
+            <div id="pg-pct"
+                style="color:#fff;font-weight:900;font-size:clamp(12px,3.5vw,14px);letter-spacing:3px;font-family:Arial,sans-serif;opacity:0.85;">
+                1%</div>
+        </div>
+    </div>
+    <script>(function () { var dur = 5000 + Math.random() * 5000; var p = 1, b = document.getElementById('pg-bar'), t = document.getElementById('pg-pct'), o = document.getElementById('pg-loader'); var iv = setInterval(function () { p += Math.floor(Math.random() * 4) + 1; if (p >= 100) { p = 100; clearInterval(iv); setTimeout(function () { o.style.transition = 'opacity 0.6s'; o.style.opacity = '0'; setTimeout(function () { o.remove(); }, 650); }, 200); } b.style.width = p + '%'; t.textContent = p + '%'; }, Math.round(dur / 40)); })();</script>
+
+    <div class="game">
+        <div class="cups" id="cups">
+            <div class="cup">
+                <img class="cup-img"
+                    src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/ea1155da-f94a-476e-9c40-bf3d29e6af84.png">
+                <img class="hidden-item" src="">
+            </div>
+            <div class="cup">
+                <img class="cup-img"
+                    src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/ea1155da-f94a-476e-9c40-bf3d29e6af84.png">
+                <img class="hidden-item" src="">
+            </div>
+            <div class="cup">
+                <img class="cup-img"
+                    src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/ea1155da-f94a-476e-9c40-bf3d29e6af84.png">
+                <img class="hidden-item" src="">
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button class="mode-btn" id="btn1" onclick="startGame('two')">
+                <img
+                    src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/524d56dc-d098-44c7-8ead-f01639eb2702.png">
+            </button>
+            <button class="mode-btn" id="btn2" onclick="startGame('one')">
+                <img
+                    src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/297f9a6f-e447-45b1-b34b-70d42a4a130a.png">
+            </button>
+        </div>
+        <button class="exit-btn" onclick="location.href='login.html'">EXIT</button>
+    </div>
+
+    <script>
+        const BALL_SRC = "https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/c012728f-b770-46ff-a811-cf55f1220c99.png";
+        const container = document.getElementById("cups");
+        const btn1 = document.getElementById("btn1");
+        const btn2 = document.getElementById("btn2");
+
+        function setButtonsDisabled(val) {
+            btn1.disabled = val;
+            btn2.disabled = val;
+        }
+
+        function getCups() {
+            return Array.from(container.querySelectorAll(".cup"));
+        }
+
+        function resetCups() {
+            getCups().forEach(c => {
+                c.classList.remove("show", "lift");
+                c.style.transform = "";
+                c.style.transition = "0.6s";
+                c.querySelector(".hidden-item").src = "";
+            });
+        }
+
+        function swapCups(a, b) {
+            const rectA = a.getBoundingClientRect();
+            const rectB = b.getBoundingClientRect();
+            const dx = rectB.left - rectA.left;
+
+            a.style.transition = "transform 0.3s ease";
+            b.style.transition = "transform 0.3s ease";
+            a.style.transform = `translateX(${dx}px)`;
+            b.style.transform = `translateX(${-dx}px)`;
+
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    a.style.transition = "none";
+                    b.style.transition = "none";
+                    a.style.transform = "";
+                    b.style.transform = "";
+
+                    const parent = a.parentNode;
+                    const aNext = a.nextSibling;
+                    if (aNext === b) {
+                        parent.insertBefore(b, a);
+                    } else {
+                        parent.insertBefore(a, b);
+                        parent.insertBefore(b, aNext);
+                    }
+                    resolve();
+                }, 320);
+            });
+        }
+
+        async function runShuffles(count) {
+            for (let i = 0; i < count; i++) {
+                const cups = getCups();
+                const ai = Math.floor(Math.random() * 3);
+                let bi;
+                do { bi = Math.floor(Math.random() * 3); } while (bi === ai);
+                await swapCups(cups[ai], cups[bi]);
+                await new Promise(r => setTimeout(r, 80));
+            }
+        }
+
+        async function startGame(mode) {
+            setButtonsDisabled(true);
+            resetCups();
+
+            const cups = getCups();
+            let ballCupIndices;
+            if (mode === 'two') {
+                const emptyIndex = Math.floor(Math.random() * 3);
+                ballCupIndices = [0, 1, 2].filter(i => i !== emptyIndex);
+            } else {
+                ballCupIndices = [Math.floor(Math.random() * 3)];
+            }
+
+            const ballCupEls = ballCupIndices.map(i => {
+                cups[i].querySelector(".hidden-item").src = BALL_SRC;
+                return cups[i];
+            });
+
+            await runShuffles(14);
+            await new Promise(r => setTimeout(r, 500));
+
+            ballCupEls.forEach(c => {
+                c.style.transition = "0.6s";
+                c.classList.add("lift", "show");
+            });
+
+            await new Promise(r => setTimeout(r, 2200));
+            ballCupEls.forEach(c => c.classList.remove("lift", "show"));
+            setButtonsDisabled(false);
+        }
+    </script>
+</body>
+
+</html>

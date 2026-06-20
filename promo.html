@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Promo - APNAJ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--accent:#1e90ff;--accent2:#ff4f4f;--bg:#07080c;--surface:#0d0f16;--border:rgba(255,255,255,0.07);--text:#f0f2ff;--muted:rgba(240,242,255,0.45);}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+    .topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(7,8,12,.85);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
+    .logo-wrap{display:flex;align-items:center;gap:10px}
+    .logo-wrap img{width:36px;height:36px;object-fit:contain}
+    .logo-wrap span{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--accent);line-height:1}
+    .promo-tag{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;background:linear-gradient(90deg,var(--accent),#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .promo-tag span{-webkit-text-fill-color:var(--text);color:var(--muted);font-weight:400;margin-right:4px}
+    .page{position:relative;z-index:1;padding:24px 20px 120px}
+    .hero{background:linear-gradient(135deg,rgba(30,144,255,.18),rgba(0,212,255,.08));border:1px solid rgba(30,144,255,.25);border-radius:20px;padding:28px 24px;text-align:center;margin-bottom:24px;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(30,144,255,.15),transparent)}
+    .hero-code{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:8px;background:linear-gradient(90deg,var(--accent),#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;position:relative;z-index:1}
+    .hero-label{font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;position:relative;z-index:1}
+    .hero-desc{font-size:13px;color:var(--muted);margin-top:10px;position:relative;z-index:1}
+    .copy-btn{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:12px 28px;border-radius:99px;background:var(--accent);color:#fff;font-size:13px;font-weight:800;border:none;cursor:pointer;letter-spacing:1px;transition:.2s;position:relative;z-index:1}
+    .copy-btn:hover{background:#1a7fe0;transform:translateY(-1px)}
+    .copy-btn svg{width:16px;height:16px}
+    .sec-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--muted);margin-bottom:14px}
+    .offer-list{display:flex;flex-direction:column;gap:12px}
+    .offer-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 16px;display:flex;align-items:center;gap:14px}
+    .offer-icon{font-size:32px;width:52px;text-align:center;flex-shrink:0}
+    .offer-title{font-size:14px;font-weight:800;margin-bottom:4px}
+    .offer-text{font-size:12px;color:var(--muted);line-height:1.5}
+    .offer-badge{margin-left:auto;flex-shrink:0;background:rgba(30,144,255,.15);border:1px solid rgba(30,144,255,.3);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:800;color:var(--accent);white-space:nowrap}
+    .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(7,8,12,.92);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:10px 0 calc(10px + env(safe-area-inset-bottom))}
+    .nav-item{flex:1;max-width:90px;display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:var(--muted);font-size:11px;font-weight:600;transition:color .2s;padding:4px 0}
+    .nav-item.active{color:var(--accent)}
+    .nav-item svg{width:22px;height:22px}
+    .dot{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:0;margin-top:-2px;transition:opacity .2s}
+    .nav-item.active .dot{opacity:1}
+    .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--accent);color:#fff;font-size:13px;font-weight:700;padding:10px 22px;border-radius:99px;opacity:0;pointer-events:none;transition:.3s;z-index:9999}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo-wrap">
+      <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png" alt="Logo">
+      <span>APNAJ</span>
+    </div>
+    <div class="promo-tag"><span>Code:</span>APNAJ</div>
+  </header>
+
+  <div class="page">
+
+    <!-- HERO CODE -->
+    <div class="hero">
+      <div class="hero-label">Your Promo Code</div>
+      <div class="hero-code">APNAJ</div>
+      <div class="hero-desc">Use this code on 1win to get exclusive bonuses & free bets</div>
+      <button class="copy-btn" id="copyBtn" onclick="copyCode()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy Code
+      </button>
+    </div>
+
+    <!-- OFFERS -->
+    <div class="sec-title">🎁 Active Offers</div>
+    <div class="offer-list">
+      <div class="offer-card">
+        <div class="offer-icon">💰</div>
+        <div>
+          <div class="offer-title">Welcome Bonus</div>
+          <div class="offer-text">Get up to 500% on your first deposit when you use code APNAJ</div>
+        </div>
+        <div class="offer-badge">HOT</div>
+      </div>
+      <div class="offer-card">
+        <div class="offer-icon">🎰</div>
+        <div>
+          <div class="offer-title">Free Spins</div>
+          <div class="offer-text">50 free spins on selected crash games every Friday</div>
+        </div>
+        <div class="offer-badge">WEEKLY</div>
+      </div>
+      <div class="offer-card">
+        <div class="offer-icon">🏆</div>
+        <div>
+          <div class="offer-title">VIP Cashback</div>
+          <div class="offer-text">Earn up to 30% cashback weekly as a VIP member</div>
+        </div>
+        <div class="offer-badge">VIP</div>
+      </div>
+      <div class="offer-card">
+        <div class="offer-icon">🤝</div>
+        <div>
+          <div class="offer-title">Refer a Friend</div>
+          <div class="offer-text">Earn 10% of every deposit your referrals make, forever</div>
+        </div>
+        <div class="offer-badge">NEW</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast">✅ Code copied!</div>
+
+  <nav class="bottom-nav">
+    <a href="login.html" class="nav-item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span><div class="dot"></div></a>
+    <a href="live.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg><span>Live</span><div class="dot"></div></a>
+    <a href="promo.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span>Promo</span><div class="dot"></div></a>
+    <a href="contact.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Support</span><div class="dot"></div></a>
+  </nav>
+
+  <script>
+    function copyCode(){
+      navigator.clipboard.writeText("APNAJ").catch(()=>{});
+      const t=document.getElementById("toast");
+      t.classList.add("show");
+      setTimeout(()=>t.classList.remove("show"),2200);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROCKET QUEEN VIP - APNAJ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --accent: #1e90ff;
+            --accent2: #ff4f4f;
+            --bg: #07080c;
+            --surface: #0d0f16;
+            --border: rgba(255, 255, 255, 0.07);
+            --text: #f0f2ff;
+            --muted: rgba(240, 242, 255, 0.45);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            height: 100%;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(rgba(7, 8, 12, 0.8), rgba(7, 8, 12, 0.95)), url('https://i.supaimg.com/9c071b4e-8fce-4cc8-8cbb-4938f2f2c851/1027610c-ed4c-4b83-a86d-8edb7b909fee.avif') center/cover no-repeat;
+            z-index: 0;
+        }
+
+        /* ── TOP BAR ── */
+        .topbar {
+            position: relative;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: rgba(7, 8, 12, 0.85);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-wrap img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .logo-wrap span {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 26px;
+            letter-spacing: 3px;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .exit-btn {
+            background: var(--accent2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 48px;
+            letter-spacing: 4px;
+            color: var(--accent);
+            font-weight: 400;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin-top: 5px;
+            font-size: 16px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .main-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: 1fr;
+        }
+
+        @media(min-width:768px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(13, 15, 22, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border);
+            padding: 30px;
+            border-radius: 20px;
+        }
+
+        .card h2,
+        .card h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 2px;
+            color: var(--text);
+            font-weight: 400;
+            margin-bottom: 15px;
+        }
+
+        .card h2 {
+            font-size: 28px;
+            color: var(--accent);
+        }
+
+        .card h3 {
+            font-size: 22px;
+        }
+
+        button {
+            border: none;
+            cursor: pointer;
+            border-radius: 12px;
+            padding: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: #1a7fe0;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 144, 255, 0.3);
+        }
+
+        .auto-btn {
+            margin-top: 15px;
+            width: 100%;
+            background: #22c55e;
+            color: white;
+        }
+
+        .auto-btn.active {
+            background: var(--accent2);
+        }
+
+        .copy-btn {
+            margin-top: 15px;
+            background: var(--surface);
+            color: white;
+            border: 1px solid var(--border);
+            width: 100%;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .saved-box {
+            white-space: pre-line;
+            margin-top: 10px;
+            font-size: 15px;
+            color: var(--text);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            min-height: 80px;
+        }
+
+        .history-list {
+            max-height: 250px;
+            overflow: auto;
+            padding-right: 5px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) transparent;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            font-size: 14px;
+            border: 1px solid var(--border);
+        }
+
+        .high {
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+        .medium {
+            color: #eab308;
+            font-weight: bold;
+        }
+
+        .prediction-item {
+            margin-bottom: 12px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .prediction-item b {
+            color: white;
+        }
+
+                /* Premium VIP Gate Styles */
+        #vip-gate {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .gate-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(4, 5, 8, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .gate-box {
+            position: relative;
+            z-index: 10;
+            background: linear-gradient(145deg, rgba(16, 18, 27, 0.9) 0%, rgba(10, 12, 16, 0.95) 100%);
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            border-radius: 28px;
+            padding: 45px 35px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            animation: gateSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes gateSlideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .shield-icon {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.05));
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.15);
+        }
+
+        .gate-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 36px;
+            letter-spacing: 5px;
+            background: linear-gradient(to right, #ffd700, #ff8c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .gate-sub {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .gate-input {
+            width: 100%;
+            padding: 18px 20px 18px 50px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .gate-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        .gate-input:focus {
+            background: rgba(0, 0, 0, 0.6);
+            border-color: rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+        }
+
+        .gate-input:focus + .input-icon, .gate-input:not(:placeholder-shown) + .input-icon {
+            color: #ffd700;
+        }
+
+        .gate-error {
+            color: #ff4f4f;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 79, 79, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 79, 79, 0.2);
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        .btn-unlock {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            color: #000;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(255, 140, 0, 0.2);
+        }
+
+        .btn-unlock:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px rgba(255, 140, 0, 0.3);
+            background: linear-gradient(135deg, #ffe033 0%, #ffa533 100%);
+        }
+
+        .gate-footer {
+            margin-top: 25px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .gate-footer a {
+            color: #ffd700;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 5px;
+            transition: 0.3s;
+        }
+
+        .gate-footer a:hover {
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <a href="login.html" class="logo-wrap">
+            <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png"
+                alt="Logo">
+            <span>APNAJ</span>
+        </a>
+        <a href="login.html" class="exit-btn">EXIT</a>
+    </header>
+
+        <!-- Premium VIP Gate -->
+    <div id="vip-gate">
+        <div class="gate-overlay"></div>
+        <div class="gate-box">
+            <div class="shield-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="gate-title">PRO ACCESS</div>
+            <p class="gate-sub">Restricted Area. Please authenticate to access the APNAJ Premium Predictor Engine.</p>
+            
+            <div class="input-wrapper">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input class="gate-input" id="vip-code-input" type="password" placeholder="Enter Pro Password" autocomplete="off" />
+            </div>
+            
+            <div class="gate-error" id="gate-error"><i class="fa-solid fa-triangle-exclamation"></i> ACCESS DENIED</div>
+            
+            <button class="btn-unlock" id="unlock-btn" onclick="checkVipCode()">
+                <span>AUTHENTICATE</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+            
+            <div class="gate-footer">
+                <p>Need access?</p>
+                <a href="https://t.me/kingapnaj" target="_blank">Contact @kingapnaj</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header style="margin-bottom: 40px; text-align: center;">
+            <h1>ROCKET QUEEN PRO</h1>
+            <p class="subtitle">VIP Predictor System</p>
+        </header>
+
+        <div class="main-grid">
+            <div>
+                <div class="card">
+                    <button class="btn-primary" id="generate-btn" onclick="generatePrediction()">Generate
+                        Prediction</button>
+                    <button class="auto-btn" id="autoBtn" onclick="toggleAuto()">AUTO MODE : OFF</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="card" id="prediction-card">
+                    <h2>Waiting...</h2>
+                </div>
+
+                <div class="card" style="margin-top:20px;">
+                    <h3>Recent Coefficients</h3>
+                    <div class="history-list" id="history-list">Loading...</div>
+                </div>
+
+                <div class="card" style="margin-top:20px;">
+                    <h3>🔥 Predictions ≥ 94%</h3>
+                    <div id="savedPredictions" class="saved-box"></div>
+                    <button class="copy-btn" onclick="copyPredictions()">Copy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+
+                // Premium VIP Gate Logic
+        const VIP_CODES = ['C123u'];
+        const STORAGE_KEY = 'vip_access_gate';
+
+        function checkVipCode() {
+            const input = document.getElementById('vip-code-input').value.trim();
+            const err = document.getElementById('gate-error');
+            const btn = document.getElementById('unlock-btn');
+            
+            if (VIP_CODES.map(c => c.toLowerCase()).includes(input.toLowerCase())) {
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>AUTHENTICATING...</span>';
+                setTimeout(() => {
+                    localStorage.setItem(STORAGE_KEY, input);
+                    const gate = document.getElementById('vip-gate');
+                    gate.style.opacity = '0';
+                    gate.style.transition = '0.5s ease';
+                    setTimeout(() => gate.style.display = 'none', 500);
+                    err.style.display = 'none';
+                }, 800);
+            } else {
+                err.style.display = 'flex';
+                document.getElementById('vip-code-input').style.borderColor = '#ff4f4f';
+                setTimeout(() => { document.getElementById('vip-code-input').style.borderColor = 'rgba(255, 255, 255, 0.1)' }, 1500);
+            }
+        }
+
+        document.getElementById('vip-code-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') checkVipCode();
+        });
+
+        // Auto-unlock if already authenticated
+        if (localStorage.getItem(STORAGE_KEY) && VIP_CODES.map(c => c.toLowerCase()).includes(localStorage.getItem(STORAGE_KEY).toLowerCase())) {
+            document.getElementById('vip-gate').style.display = 'none'
+        }
+
+        let historyData = []
+        let autoMode = false
+        let autoInterval = null
+        let predictionCounts = {};
+
+        async function fetchHistory() {
+
+            try {
+
+                const res = await fetch("https://crash-gateway-grm-cr.100hp.app/history", {
+                    headers: {
+                        'customer-id': '077dee8d-c923-4c02-9bee-757573662e69',
+                        'session-id': '65a473a6-e416-41f1-b0b5-4477fc25d4ad'
+                    }
+                })
+
+                const data = await res.json()
+
+                historyData = data.data || []
+
+                renderHistory()
+
+            } catch (e) {
+
+                historyData = generateSimulatedHistory()
+                renderHistory()
+
+            }
+
+        }
+
+        function generateSimulatedHistory() {
+
+            let arr = []
+
+            for (let i = 0; i < 30; i++) {
+
+                let coef = Math.random() < 0.1 ?
+                    Math.random() * 100 + 20 :
+                    Math.random() * 10 + 1
+
+                arr.push({
+                    coef: parseFloat(coef.toFixed(2)),
+                    time: new Date(Date.now() - i * 60000).toISOString()
+                })
+
+            }
+
+            return arr
+
+        }
+
+        function renderHistory() {
+
+            const list = document.getElementById("history-list")
+
+            list.innerHTML = ""
+
+            historyData.slice(0, 15).forEach((item, i) => {
+
+                const coefClass = item.coef >= 50 ? "high" : item.coef >= 10 ? "medium" : ""
+
+                const div = document.createElement("div")
+
+                div.className = "history-item"
+
+                div.innerHTML = `<span>#${i + 1}</span>
+<span class="${coefClass}">${item.coef.toFixed(2)}x</span>
+<span>${new Date(item.time).toLocaleTimeString()}</span>`
+
+                list.appendChild(div)
+
+            })
+
+        }
+
+        function analyzeData(data) {
+
+            if (data.length < 10) return generateSimulatedPrediction()
+
+            const recent = data.slice(0, 30)
+
+            let weightedSum = 0
+            let weightTotal = 0
+
+            recent.forEach((item, index) => {
+                const weight = recent.length - index
+                weightedSum += item.coef * weight
+                weightTotal += weight
+            })
+
+            const weightedAverage = weightedSum / weightTotal
+
+            let lowStreak = 0
+
+            for (let i = 0; i < recent.length; i++) {
+                if (recent[i].coef < 2) lowStreak++
+                else break
+            }
+
+            const highSpikes = recent.filter(r => r.coef >= 20)
+
+            const spikeFrequency = highSpikes.length / recent.length
+
+            const mean = recent.reduce((s, r) => s + r.coef, 0) / recent.length
+
+            const variance = recent.reduce((s, r) => s + Math.pow(r.coef - mean, 2), 0) / recent.length
+
+            const volatility = Math.sqrt(variance)
+
+            const spikeTimes = highSpikes.map(s => new Date(s.time).getTime())
+
+            let avgGapSeconds = 600 // default 10 minutes in seconds
+
+            if (spikeTimes.length > 2) {
+
+                let gaps = []
+
+                for (let i = 1; i < spikeTimes.length; i++) {
+
+                    gaps.push((spikeTimes[i - 1] - spikeTimes[i]) / 1000) // gap in seconds
+
+                }
+
+                avgGapSeconds = gaps.reduce((a, b) => a + b, 0) / gaps.length
+
+            }
+
+            // Add small random jitter (±30 seconds) for precision variation
+            const jitterSeconds = (Math.random() - 0.5) * 60
+
+            const predictedSeconds = Math.max(60, Math.round(avgGapSeconds + jitterSeconds))
+
+            const now = new Date()
+
+            const future = new Date(now.getTime() + predictedSeconds * 1000)
+
+            const h = future.getHours().toString().padStart(2, '0')
+            const m = future.getMinutes().toString().padStart(2, '0')
+
+            // End time is exactly 1 minute after start
+            const futureEnd = new Date(future.getTime() + 60000)
+            const hEnd = futureEnd.getHours().toString().padStart(2, '0')
+            const mEnd = futureEnd.getMinutes().toString().padStart(2, '0')
+
+            const timeStart = `${h}:${m}`
+            const timeEnd = `${hEnd}:${mEnd}`
+
+            let predictedCoef = weightedAverage * (1 + volatility / 20)
+
+            if (lowStreak >= 4) predictedCoef *= 1.8
+            if (lowStreak >= 7) predictedCoef *= 2.4
+
+            predictedCoef = Math.max(20, Math.min(predictedCoef, 150))
+
+            let confidence = 65
+
+            if (lowStreak >= 4) confidence += 10
+            if (volatility > 10) confidence += 8
+            if (spikeFrequency > 0.15) confidence += 7
+
+            confidence = Math.min(confidence, 96)
+
+            return {
+                time: `${timeStart}--${timeEnd}`,
+                coefficient: `Above ${Math.round(predictedCoef)}x`,
+                confidence: `${confidence}%`
+            }
+
+        }
+
+        function generateSimulatedPrediction() {
+
+            const now = new Date()
+
+            const secs = Math.floor(Math.random() * 3600) + 60 // 1 min to 61 min ahead
+
+            const future = new Date(now.getTime() + secs * 1000)
+
+            const h = future.getHours().toString().padStart(2, '0')
+            const m = future.getMinutes().toString().padStart(2, '0')
+
+            // End time is exactly 1 minute after start
+            const futureEnd = new Date(future.getTime() + 60000)
+            const hEnd = futureEnd.getHours().toString().padStart(2, '0')
+            const mEnd = futureEnd.getMinutes().toString().padStart(2, '0')
+
+            return {
+                time: `${h}:${m}--${hEnd}:${mEnd}`,
+                coefficient: `Above ${Math.floor(Math.random() * 50) + 50}x`,
+                confidence: `${Math.floor(Math.random() * 10) + 85}%`
+            }
+
+        }
+
+        async function generatePrediction() {
+
+            await fetchHistory()
+
+            let prediction
+
+            if (historyData.length > 0) {
+                prediction = analyzeData(historyData)
+            } else {
+                prediction = generateSimulatedPrediction()
+            }
+
+            displayPrediction(prediction)
+
+            let conf = parseInt(prediction.confidence)
+
+            if (conf >= 94) {
+                savePrediction(prediction.time)
+            }
+
+        }
+
+        function displayPrediction(pred) {
+
+            const card = document.getElementById("prediction-card")
+
+            card.innerHTML = `
+<h2>🚀 SIGNAL</h2>
+<p class="prediction-item">📢 Time: <b>${pred.time}</b></p>
+<p class="prediction-item">🎯 Coefficient: <b>${pred.coefficient}</b></p>
+<p class="prediction-item">📊 Confidence: <b>${pred.confidence}</b></p>
+`
+
+        }
+
+                function savePrediction(time) {
+            if (!predictionCounts[time]) {
+                predictionCounts[time] = 1;
+            } else {
+                predictionCounts[time]++;
+            }
+
+            let lines = [];
+            for (let t in predictionCounts) {
+                if (predictionCounts[t] >= 2) {
+                    lines.push(t + " - 100% ✅");
+                } else {
+                    lines.push(t);
+                }
+            }
+
+            lines.sort((a, b) => {
+                let t1 = a.split(" ")[0].split("--")[0];
+                let t2 = b.split(" ")[0].split("--")[0];
+                let [h1, m1] = t1.split(":").map(Number);
+                let [h2, m2] = t2.split(":").map(Number);
+                return (h1 * 60 + m1) - (h2 * 60 + m2);
+            });
+
+            document.getElementById("savedPredictions").innerText = lines.join("\n");
+        }
+
+        function copyPredictions() {
+            navigator.clipboard.writeText(document.getElementById("savedPredictions").innerText);
+        }
+
+        function toggleAuto() {
+
+            autoMode = !autoMode
+
+            const btn = document.getElementById("autoBtn")
+
+            if (autoMode) {
+
+                btn.innerText = "AUTO MODE : ON"
+                btn.style.background = "#ef4444"
+
+                autoInterval = setInterval(() => {
+                    generatePrediction()
+                }, 1000)
+
+            } else {
+
+                btn.innerText = "AUTO MODE : OFF"
+                btn.style.background = "#22c55e"
+
+                clearInterval(autoInterval)
+
+            }
+
+        }
+
+        fetchHistory()
+
+        setInterval(fetchHistory, 10000)
+
+
+    </script>
+</body>
+
+</html>

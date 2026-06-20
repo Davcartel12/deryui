@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>APNAJ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --accent: #1e90ff;
+      --accent2: #ff4f4f;
+      --bg: #07080c;
+      --surface: #0d0f16;
+      --border: rgba(255, 255, 255, 0.07);
+      --text: #f0f2ff;
+      --muted: rgba(240, 242, 255, 0.45);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: rgba(7, 8, 12, 0.85);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-wrap img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+
+    .logo-wrap span {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 3px;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    /* ── SEARCH BAR ROW ── */
+    .search-bar-row {
+      padding: 10px 20px 4px;
+      display: flex;
+      justify-content: center;
+      background: var(--bg);
+    }
+
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 16px;
+      transition: border-color .2s;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .search-wrap:focus-within {
+      border-color: var(--accent);
+    }
+
+    .search-wrap svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .search-wrap input {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      width: 100%;
+    }
+
+    .search-wrap input::placeholder {
+      color: var(--muted);
+    }
+
+    .promo-tag {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, var(--accent), #00d4ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .promo-tag span {
+      -webkit-text-fill-color: var(--text);
+      color: var(--muted);
+      font-weight: 400;
+      margin-right: 4px;
+    }
+
+    /* ── CATEGORY PILLS ── */
+    .cats {
+      display: flex;
+      gap: 8px;
+      padding: 16px 20px 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .cats::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cat {
+      flex-shrink: 0;
+      padding: 6px 16px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--muted);
+      transition: .2s;
+      background: transparent;
+    }
+
+    .cat.active,
+    .cat:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px 10px;
+    }
+
+    .section-label h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: var(--muted);
+    }
+
+    /* ── FEATURED STRIP (horizontal scroll) ── */
+    .featured-strip {
+      display: flex;
+      gap: 12px;
+      padding: 0 20px 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .featured-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .feat-card {
+      flex: 0 0 180px;
+      height: 110px;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: transform .25s, box-shadow .25s;
+    }
+
+    .feat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .6);
+    }
+
+    .feat-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .feat-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, transparent 40%, rgba(0, 0, 0, .85));
+    }
+
+    .feat-card .fc-title {
+      position: absolute;
+      bottom: 8px;
+      left: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      z-index: 2;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, .8);
+    }
+
+    .feat-card .fc-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--accent2);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      padding: 2px 7px;
+      border-radius: 99px;
+      z-index: 2;
+      text-transform: uppercase;
+    }
+
+    /* ── MAIN GRID ── */
+    .grid-wrap {
+      padding: 0 20px 100px;
+    }
+
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    @media(min-width: 600px) {
+      .game-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media(min-width: 900px) {
+      .game-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
+    .game-tile {
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+      aspect-ratio: 3/4;
+    }
+
+    .game-tile:hover {
+      transform: scale(1.04);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, .6);
+      border-color: rgba(30, 144, 255, .4);
+      z-index: 5;
+    }
+
+    .game-tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .3s;
+    }
+
+    .game-tile:hover img {
+      transform: scale(1.08);
+    }
+
+    .game-tile::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0, 0, 0, .92) 0%, rgba(0, 0, 0, .1) 55%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .tile-title {
+      position: absolute;
+      bottom: 8px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      z-index: 2;
+      letter-spacing: .5px;
+    }
+
+    .tile-open {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      background: rgba(30, 144, 255, .25);
+      backdrop-filter: blur(4px);
+      transition: opacity .2s;
+      z-index: 3;
+    }
+
+    .tile-open span {
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 7px 20px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 20px rgba(30, 144, 255, .5);
+    }
+
+    .game-tile:hover .tile-open {
+      opacity: 1;
+    }
+
+    /* hide class for search */
+    .game-tile.hidden {
+      display: none;
+    }
+
+    .feat-card.hidden {
+      display: none;
+    }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      background: rgba(7, 8, 12, 0.92);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+    }
+
+    .nav-item {
+      flex: 1;
+      max-width: 90px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      transition: color .2s;
+      padding: 4px 0;
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+    }
+
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .nav-item .dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0;
+      margin-top: -2px;
+      transition: opacity .2s;
+    }
+
+    .nav-item.active .dot {
+      opacity: 1;
+    }
+
+    /* ── NO RESULTS ── */
+    .no-results {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .no-results.show {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="logo-wrap">
+      <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png"
+        alt="Logo">
+      <span>APNAJ</span>
+    </div>
+    <div class="promo-tag"><span>Code:</span>APNAJ</div>
+  </header>
+
+  <!-- SEARCH BAR -->
+  <div class="search-bar-row">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+      </svg>
+      <input type="text" id="gameSearch" placeholder="Search games…">
+    </div>
+  </div>
+
+  <div class="cats">
+    <button class="cat active" data-cat="all">All</button>
+    <button class="cat" data-cat="mine">Mine</button>
+    <button class="cat" data-cat="crash">Crash</button>
+    <button class="cat" data-cat="cards">Cards</button>
+    <button class="cat" data-cat="pro">Pro</button>
+    <button class="cat" data-cat="others">Others</button>
+  </div>
+
+  <!-- FEATURED STRIP -->
+  <div class="section-label">
+    <h2>🔥 Hot Right Now</h2>
+  </div>
+  <div class="featured-strip" id="featuredStrip">
+    <div class="feat-card" data-game="luckyjet" data-cat="crash" onclick="openGame('luckyjet')">
+      <img src="https://i.supaimg.com/21b87ec5-855c-47b5-ac0b-ea171081cbf8.avif">
+      <div class="fc-badge">HOT</div>
+      <div class="fc-title">Lucky Jet</div>
+    </div>
+    <div class="feat-card" data-game="mines" data-cat="mine" onclick="openGame('mines')">
+      <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/24be5673-1030-4ea6-9379-d4cd050176f2.avif">
+      <div class="fc-badge">TOP</div>
+      <div class="fc-title">Mines</div>
+    </div>
+    <div class="feat-card" data-game="aviator" data-cat="crash" onclick="openGame('aviator')">
+      <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/5c9e6454-c9d7-4879-8873-75e1c670b345.avif">
+      <div class="fc-badge">NEW</div>
+      <div class="fc-title">Aviator</div>
+    </div>
+    <div class="feat-card" data-game="crash" data-cat="crash" onclick="openGame('crash')">
+      <img src="https://i.supaimg.com/ce3dd0b3-3761-43d3-9b06-2efa5387be3e.avif">
+      <div class="fc-title">Crash</div>
+    </div>
+    <div class="feat-card" data-game="roulette" data-cat="cards" onclick="openGame('roulette')">
+      <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/0ca8cea1-ca1d-413e-91a7-4715861391a3.png">
+      <div class="fc-title">Roulette</div>
+    </div>
+  </div>
+
+  <!-- ALL GAMES GRID -->
+  <div class="section-label">
+    <h2>All Games</h2>
+  </div>
+  <div class="grid-wrap">
+    <div class="game-grid" id="gameGrid">
+
+      <div class="game-tile" data-game="crash" data-cat="crash" data-title="crash" onclick="openGame('crash')">
+        <img src="https://i.supaimg.com/ce3dd0b3-3761-43d3-9b06-2efa5387be3e.avif">
+        <div class="tile-title">Crash</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="aviator" data-cat="crash" data-title="aviator" onclick="openGame('aviator')">
+        <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/5c9e6454-c9d7-4879-8873-75e1c670b345.avif">
+        <div class="tile-title">Aviator</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="luckyjet" data-cat="crash" data-title="lucky jet"
+        onclick="openGame('luckyjet')">
+        <img src="https://i.supaimg.com/21b87ec5-855c-47b5-ac0b-ea171081cbf8.avif">
+        <div class="tile-title">Lucky Jet</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="luckyjet2" data-cat="crash" data-title="lucky jet 2"
+        onclick="openGame('luckyjet2')">
+        <img src="https://i.supaimg.com/21b87ec5-855c-47b5-ac0b-ea171081cbf8.avif">
+        <div class="tile-title">Lucky Jet 2</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="luckyjetpro" data-cat="pro" data-title="lucky jet pro"
+        onclick="openGame('luckyjetpro')">
+        <img src="https://i.supaimg.com/9c071b4e-8fce-4cc8-8cbb-4938f2f2c851/30986a3c-abd4-4e10-9d97-1d6b91926885.avif">
+        <div class="tile-title">Lucky Jet Pro</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="crashpro" data-cat="pro" data-title="crash pro"
+        onclick="openGame('crashpro')">
+        <img src="https://i.supaimg.com/9c071b4e-8fce-4cc8-8cbb-4938f2f2c851/9e0500a5-64d9-4fbc-b50d-37fea38091f2.avif">
+        <div class="tile-title">Crash Pro</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="rocketqueenpro" data-cat="pro" data-title="rocket queen pro"
+        onclick="openGame('rocketqueenpro')">
+        <img src="https://i.supaimg.com/9c071b4e-8fce-4cc8-8cbb-4938f2f2c851/1027610c-ed4c-4b83-a86d-8edb7b909fee.avif">
+        <div class="tile-title">Rocket Queen Pro</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="rocketxpro" data-cat="pro" data-title="rocket x pro"
+        onclick="openGame('rocketxpro')">
+        <img src="https://i.supaimg.com/9c071b4e-8fce-4cc8-8cbb-4938f2f2c851/f7a334e0-f43a-4a5b-a92a-c0543a9da2f0.avif">
+        <div class="tile-title">Rocket X Pro</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="crimeempirepro" data-cat="pro" data-title="crime empire pro"
+        onclick="openGame('crimeempirepro')">
+        <img src="https://i.supaimg.com/9c071b4e-8fce-4cc8-8cbb-4938f2f2c851/7d34eb41-e1a7-4237-8858-ac078659dbaf.avif">
+        <div class="tile-title">Crime Empire Pro</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="astronautpro" data-cat="pro" data-title="astronaut pro"
+        onclick="openGame('astronautpro')">
+        <img src="https://i.supaimg.com/9c071b4e-8fce-4cc8-8cbb-4938f2f2c851/ba2b3a8d-fcba-4822-ac83-a4d7eefae7e5.avif">
+        <div class="tile-title">Astronaut Pro</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="tropicanapro" data-cat="pro" data-title="tropicana pro"
+        onclick="openGame('tropicanapro')">
+        <img src="https://i.supaimg.com/9c071b4e-8fce-4cc8-8cbb-4938f2f2c851/959d5e7c-1c8e-4ab7-b582-18570784a9ff.avif">
+        <div class="tile-title">Tropicana Pro</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="metacrashpro" data-cat="pro" data-title="meta crash pro"
+        onclick="openGame('metacrashpro')">
+        <img src="https://i.supaimg.com/9c071b4e-8fce-4cc8-8cbb-4938f2f2c851/1dbf7dd3-ce46-4eb4-ad08-8da2928fe1be.avif">
+        <div class="tile-title">Meta Crash Pro</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="fortunecrashpro" data-cat="pro" data-title="fortune crash pro"
+        onclick="openGame('fortunecrashpro')">
+        <img src="https://i.supaimg.com/9c071b4e-8fce-4cc8-8cbb-4938f2f2c851/52bafb3b-948e-4cb0-8e68-b2d01793a1a7.avif">
+        <div class="tile-title">Fortune Crash Pro</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="rocketqueen" data-cat="crash" data-title="rocket queen"
+        onclick="openGame('rocketqueen')">
+        <img src="https://i.supaimg.com/162b0cba-004a-4e45-aa1a-35b998b65577.avif">
+        <div class="tile-title">Rocket Queen</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="rocketx" data-cat="crash" data-title="rocket x" onclick="openGame('rocketx')">
+        <img src="https://i.supaimg.com/01b28058-1a15-4a4f-85b9-314529613146.avif">
+        <div class="tile-title">Rocket X</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="astronaut" data-cat="crash" data-title="astronaut"
+        onclick="openGame('astronaut')">
+        <img src="https://i.supaimg.com/9b17bf36-e51c-4f7b-83ce-62e7049d6f76.avif">
+        <div class="tile-title">Astronaut</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="crimeempire" data-cat="crash" data-title="crime empire"
+        onclick="openGame('crimeempire')">
+        <img src="https://i.supaimg.com/5c83456e-6eef-41cd-94c9-b4875dc585dc.avif">
+        <div class="tile-title">Crime Empire</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="fortunecrash" data-cat="crash" data-title="fortune crash"
+        onclick="openGame('fortunecrash')">
+        <img src="https://i.supaimg.com/3b8f23ec-2bba-444b-bf2f-2ddae92ea88e.avif">
+        <div class="tile-title">Fortune Crash</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="tropicana" data-cat="crash" data-title="tropicana"
+        onclick="openGame('tropicana')">
+        <img src="https://i.supaimg.com/6a79165b-ee74-4e4d-addc-2d75d6c3ed18.avif">
+        <div class="tile-title">Tropicana</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="metacrash" data-cat="crash" data-title="meta crash"
+        onclick="openGame('metacrash')">
+        <img src="https://i.supaimg.com/fd6921d8-e9e0-4ec2-b123-6f1b37449434.avif">
+        <div class="tile-title">Meta Crash</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="mines" data-cat="mine" data-title="mines" onclick="openGame('mines')">
+        <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/24be5673-1030-4ea6-9379-d4cd050176f2.avif">
+        <div class="tile-title">Mines</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="mines2" data-cat="mine" data-title="mines 2" onclick="openGame('mines2')">
+        <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/c276cbc5-9b20-4586-9597-8304e5aefb19.avif">
+        <div class="tile-title">Mines 2</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="thimble" data-cat="others" data-title="thimble" onclick="openGame('thimble')">
+        <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/956b38c1-d756-4de7-983e-073261e343fa.avif">
+        <div class="tile-title">Thimble</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="coinflip" data-cat="others" data-title="coinflip" onclick="openGame('coinflip')">
+        <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/df95edb4-36ef-40d9-b81d-0795401e7eb7.webp">
+        <div class="tile-title">Coinflip</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="poker" data-cat="cards" data-title="poker" onclick="openGame('poker')">
+        <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/a0fbcdd6-f41c-4388-a181-67a73402d50c.avif">
+        <div class="tile-title">Poker</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="blackjack" data-cat="cards" data-title="blackjack"
+        onclick="openGame('blackjack')">
+        <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/8abba343-b27a-4553-8ce3-0d9f096e9dde.avif">
+        <div class="tile-title">Blackjack</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="roulette" data-cat="cards" data-title="roulette" onclick="openGame('roulette')">
+        <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/0ca8cea1-ca1d-413e-91a7-4715861391a3.png">
+        <div class="tile-title">Roulette</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+      <div class="game-tile" data-game="football" data-cat="others" data-title="football" onclick="openGame('football')">
+        <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/87fa017c-a631-4e91-91c6-1750406774c7.png">
+        <div class="tile-title">Football</div>
+        <div class="tile-open"><span>Open</span></div>
+      </div>
+
+    </div>
+    <div class="no-results" id="noResults">No games found.</div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="login.html" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+      </svg>
+      <span>Home</span>
+      <div class="dot"></div>
+    </a>
+    <a href="live.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+      </svg>
+      <span>Live</span>
+      <div class="dot"></div>
+    </a>
+    <a href="promo.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+      </svg>
+      <span>Promo</span>
+      <div class="dot"></div>
+    </a>
+    <a href="contact.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+      <span>Support</span>
+      <div class="dot"></div>
+    </a>
+  </nav>
+
+  <script>
+    // ── GAME ROUTING ──
+    const pages = {
+      crash: "crash.html", aviator: "aviator.html", luckyjet: "luckyjet.html", luckyjet2: "luckyjet123.html",
+      luckyjetpro: "luckyjetpro.html", crashpro: "crashpro.html", rocketqueenpro: "rocketqueenpro.html", rocketxpro: "rocketxpro.html",
+      crimeempirepro: "crimeempirepro.html", astronautpro: "astronautpro.html", tropicanapro: "tropicanapro.html", metacrashpro: "metacrashpro.html", fortunecrashpro: "fortunecrashpro.html",
+      rocketqueen: "rocketqueen.html", rocketx: "rocketx.html", astronaut: "astronaut.html",
+      crimeempire: "crimeempire.html", fortunecrash: "fortunecrash.html", tropicana: "tropicana.html",
+      metacrash: "metacrash.html", thimble: "bigthimble.html", mines: "mines.html",
+      coinflip: "coinflip.html", mines2: "mines2.html", poker: "poker.html",
+      blackjack: "blackjack.html", roulette: "roulette.html", football: "football.html"
+    };
+    function openGame(g) { if (pages[g]) location.href = pages[g]; }
+
+    // ── SEARCH ──
+    const searchInput = document.getElementById('gameSearch');
+    const tiles = document.querySelectorAll('.game-tile');
+    const featCards = document.querySelectorAll('.feat-card');
+    const noResults = document.getElementById('noResults');
+
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase().trim();
+      let count = 0;
+      tiles.forEach(t => {
+        const match = t.dataset.title.includes(q);
+        t.classList.toggle('hidden', !match);
+        if (match) count++;
+      });
+      featCards.forEach(f => {
+        const match = (f.querySelector('.fc-title').textContent.toLowerCase()).includes(q);
+        f.classList.toggle('hidden', !match);
+      });
+      noResults.classList.toggle('show', count === 0);
+    });
+
+    // ── CATEGORY FILTER ──
+    const catBtns = document.querySelectorAll('.cat');
+    catBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        catBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const cat = btn.dataset.cat;
+        tiles.forEach(t => {
+          const show = cat === 'all' ? t.dataset.cat !== 'pro' : t.dataset.cat === cat;
+          t.classList.toggle('hidden', !show);
+        });
+        featCards.forEach(f => {
+          const show = cat === 'all' ? f.dataset.cat !== 'pro' : f.dataset.cat === cat;
+          f.classList.toggle('hidden', !show);
+        });
+        searchInput.value = '';
+      });
+    });
+
+    // Trigger initial filter to hide 'pro' games on page load
+    document.querySelector('.cat.active').click();
+  </script>
+</body>
+
+</html>
