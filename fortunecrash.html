@@ -4,65 +4,65 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fortune Crash Predictor</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
-    :root{--fire:#ffaa00;--ember:#cc7700;--gold:#ffdd88;--bg:#080608;--surface:rgba(255,255,255,0.04);--border:rgba(255,170,0,0.2)}
+    :root{--c:#ffaa00;--c2:#cc8800;--c3:#ffdd88;--bg:#0a0600}
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    html,body{height:100%;width:100%;background:var(--bg);color:#fff;font-family:'Inter',sans-serif;overflow-x:hidden}
-    .bg-layer{position:fixed;inset:0;z-index:0;background:url("https://i.supaimg.com/3b8f23ec-2bba-444b-bf2f-2ddae92ea88e.avif") center/cover no-repeat}
-    .bg-layer::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 100%,rgba(255,170,0,.35) 0%,transparent 70%),linear-gradient(to top,rgba(8,6,8,.97) 0%,rgba(8,6,8,.82) 50%,rgba(8,6,8,.65) 100%)}
+    html,body{height:100%;width:100%;background:var(--bg);color:#fff;font-family:'Inter',sans-serif;overflow:hidden}
+    .bg-layer{position:fixed;inset:0;z-index:0;background:url("https://i.supaimg.com/3b8f23ec-2bba-444b-bf2f-2ddae92ea88e.avif") center/cover no-repeat;opacity:.15}
+    .scanlines{position:fixed;inset:0;z-index:2;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.15) 2px,rgba(0,0,0,.15) 4px)}
+    .vignette{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.7) 100%)}
+    .neon-frame{position:fixed;inset:8px;z-index:1;pointer-events:none;border:2px solid rgba(255,170,0,.5);border-radius:4px;box-shadow:0 0 20px rgba(255,170,0,.3),inset 0 0 20px rgba(255,170,0,.05)}
     #pg-loader{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
-    .loader-title{font-family:'Inter',sans-serif;font-size:32px;font-weight:900;letter-spacing:8px;color:var(--fire);text-shadow:0 0 40px var(--fire)}
-    .loader-sub{font-size:11px;letter-spacing:5px;color:rgba(255,255,255,.4);text-transform:uppercase}
-    .loader-track{width:240px;height:3px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
-    #pg-bar{height:100%;width:1%;background:linear-gradient(90deg,var(--fire),var(--gold));border-radius:99px;transition:width .06s linear}
-    #pg-pct{font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:3px}
-    .page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;padding:0 0 24px}
-    .bottom-actions{display:flex;gap:10px;padding:0 20px 14px}
-    .action-btn{flex:1;padding:13px 10px;border-radius:14px;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.5px;transition:.25s}
-    .btn-vip{background:linear-gradient(135deg,#7b2fff,#9b4dff);color:#fff;box-shadow:0 6px 24px rgba(155,77,255,.35)}
-    .btn-vip:hover{box-shadow:0 8px 32px rgba(155,77,255,.55);transform:translateY(-1px)}
-    .btn-pro{background:linear-gradient(135deg,var(--fire),var(--ember));color:#fff;box-shadow:0 6px 24px rgba(255,60,0,.35)}
-    .btn-pro:hover{box-shadow:0 8px 32px rgba(255,60,0,.55);transform:translateY(-1px)}
-    .page-title{text-align:center;padding:24px 0 4px}
-    .page-title h1{font-family:'Inter',sans-serif;font-size:30px;font-weight:900;letter-spacing:6px;color:var(--fire);text-shadow:0 0 30px rgba(255,170,0,.7),0 0 60px rgba(255,170,0,.3);animation:pulse-glow 2.5s ease-in-out infinite}
-    @keyframes pulse-glow{0%,100%{text-shadow:0 0 30px rgba(255,170,0,.7),0 0 60px rgba(255,170,0,.3)}50%{text-shadow:0 0 50px rgba(255,170,0,1),0 0 100px rgba(255,170,0,.5)}}
-    .page-title p{font-size:11px;letter-spacing:4px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-top:4px}
-    .history-wrap{margin:14px 0 0;padding:0 16px}
-    .history-label{font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:8px;padding-left:2px}
-    .history-bar{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+    .loader-title{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--c);text-shadow:0 0 20px var(--c),0 0 40px var(--c)}
+    .loader-sub{font-size:9px;letter-spacing:5px;color:rgba(255,255,255,.4);text-transform:uppercase}
+    .loader-track{width:240px;height:4px;background:rgba(255,170,0,.1);border-radius:0;overflow:hidden;border:1px solid rgba(255,170,0,.3)}
+    #pg-bar{height:100%;width:1%;background:linear-gradient(90deg,var(--c),var(--c3));transition:width .06s linear;box-shadow:0 0 10px var(--c)}
+    #pg-pct{font-family:'Press Start 2P',monospace;font-size:10px;color:rgba(255,170,0,.8);letter-spacing:2px}
+    .page{position:relative;z-index:3;height:100vh;display:flex;flex-direction:column;padding:16px}
+    .hud-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,170,0,.3)}
+    .hud-brand{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--c);text-shadow:0 0 15px var(--c)}
+    .hud-score{font-family:'Press Start 2P',monospace;font-size:8px;color:rgba(255,221,136,.7);text-align:right}
+    .hud-score span{display:block;font-size:6px;color:rgba(255,221,136,.4);margin-bottom:2px}
+    .hist-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .hist-lbl{font-family:'Press Start 2P',monospace;font-size:6px;color:rgba(255,170,0,.5);white-space:nowrap}
+    .history-bar{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;flex:1}
     .history-bar::-webkit-scrollbar{display:none}
-    .history-pill{flex-shrink:0;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,170,0,.07);color:var(--ember);font-family:'Inter',sans-serif;font-size:11px;font-weight:700;white-space:nowrap;animation:pill-in .3s ease}
+    .history-pill{flex-shrink:0;padding:3px 8px;border-radius:2px;background:rgba(255,170,0,.1);border:1px solid rgba(255,170,0,.4);color:#cc8800;font-family:'Press Start 2P',monospace;font-size:7px;animation:pill-in .3s ease}
     @keyframes pill-in{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
-    .history-pill.high{color:var(--gold);border-color:rgba(255,213,74,.3);background:rgba(255,213,74,.06)}
-    .history-pill.low{color:#ff6060;border-color:rgba(255,60,60,.3);background:rgba(255,60,60,.06)}
-    .main-card-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
-    .signal-row{display:flex;align-items:center;gap:8px}
-    .signal-dot{width:8px;height:8px;border-radius:50%;background:#2dff7e;box-shadow:0 0 10px #2dff7e;animation:blink 1.2s ease-in-out infinite}
+    .history-pill.high{color:var(--c3);border-color:rgba(255,221,136,.5);background:rgba(255,221,136,.1)}
+    .history-pill.low{color:#ff6060;border-color:rgba(255,60,60,.4)}
+    .monitor-wrap{flex:1;display:flex;align-items:center;justify-content:center}
+    .monitor{width:min(340px,92vw);position:relative}
+    .monitor-screen{background:rgba(0,0,0,.9);border:3px solid rgba(255,170,0,.6);border-radius:8px;padding:20px;text-align:center;position:relative;overflow:hidden;box-shadow:0 0 40px rgba(255,170,0,.3),inset 0 0 40px rgba(0,0,0,.8)}
+    .monitor-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(255,170,0,.05) 0%,transparent 70%);pointer-events:none}
+    .monitor-scanline{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,170,0,.03) 3px,rgba(255,170,0,.03) 6px);pointer-events:none}
+    .screen-eyebrow{font-family:'Press Start 2P',monospace;font-size:7px;color:rgba(255,170,0,.5);letter-spacing:2px;margin-bottom:12px}
+    .screen-title{font-family:'Press Start 2P',monospace;font-size:9px;color:rgba(255,221,136,.8);margin-bottom:6px}
+    #predictionValue{font-family:'Inter',sans-serif;font-size:72px;font-weight:900;color:#fff;line-height:1;text-shadow:0 0 30px var(--c),0 0 60px rgba(255,170,0,.4);transition:all .4s cubic-bezier(.34,1.56,.64,1);display:block}
+    #predictionValue.pop{transform:scale(1.1);text-shadow:0 0 60px var(--c3),0 0 20px var(--c3)}
+    .screen-divider{height:1px;background:rgba(255,170,0,.3);margin:12px 0}
+    .sig-row{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:4px}
+    .sig-dot{width:6px;height:6px;border-radius:50%;background:#2dff7e;box-shadow:0 0 8px #2dff7e;animation:blink 1.2s infinite}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-    .signal-text{font-family:'Inter',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:#2dff7e;text-transform:uppercase}
-    .ring-wrap{position:relative;width:200px;height:200px;display:flex;align-items:center;justify-content:center}
-    .ring-svg{position:absolute;inset:0;animation:spin-ring 8s linear infinite}
-    @keyframes spin-ring{to{transform:rotate(360deg)}}
-    .ring-inner{width:160px;height:160px;border-radius:50%;background:rgba(0,0,0,.6);border:2px solid rgba(255,170,0,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:inset 0 0 40px rgba(255,170,0,.1)}
-    .pred-label{font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.4);text-transform:uppercase}
-    #predictionValue{font-family:'Inter',sans-serif;font-size:46px;font-weight:900;color:#fff;line-height:1;text-shadow:0 0 30px rgba(255,221,136,.5);transition:all .4s cubic-bezier(.34,1.56,.64,1)}
-    #predictionValue.pop{transform:scale(1.15);text-shadow:0 0 60px var(--gold),0 0 20px var(--gold)}
-    .page-footer{display:flex;align-items:center;justify-content:center;gap:14px;padding:0 20px}
-    .exit-btn{padding:13px 44px;border-radius:14px;background:transparent;border:1px solid rgba(255,170,0,.5);color:var(--fire);font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:.25s}
-    .exit-btn:hover{background:var(--fire);color:#000;box-shadow:0 0 30px rgba(255,170,0,.5)}
-    .ticker-wrap{margin:0 0 14px;overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:7px 0;background:rgba(255,170,0,.03)}
-    .ticker{display:flex;gap:40px;animation:ticker-scroll 18s linear infinite;white-space:nowrap}
-    @keyframes ticker-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-    .ticker-item{font-family:'Inter',sans-serif;font-size:10px;color:rgba(255,255,255,.25);letter-spacing:2px;flex-shrink:0}
-    .ticker-item span{color:var(--ember)}
+    .sig-txt{font-family:'Press Start 2P',monospace;font-size:6px;color:#2dff7e}
+    .monitor-base{height:16px;background:linear-gradient(180deg,rgba(255,170,0,.3),rgba(255,170,0,.1));border-left:3px solid rgba(255,170,0,.6);border-right:3px solid rgba(255,170,0,.6);border-bottom:3px solid rgba(255,170,0,.6);border-radius:0 0 4px 4px;margin-top:-1px}
+    .monitor-stand{width:60px;height:10px;background:linear-gradient(180deg,rgba(255,170,0,.2),transparent);margin:0 auto}
+    .insert-coins{font-family:'Press Start 2P',monospace;font-size:7px;color:rgba(255,221,136,.6);text-align:center;margin-top:6px;animation:blink-text 1s infinite}
+    @keyframes blink-text{0%,100%{opacity:1}50%{opacity:0}}
+    .footer{display:flex;align-items:center;justify-content:center;padding-top:10px}
+    .exit-btn{padding:10px 36px;border-radius:2px;background:transparent;border:2px solid rgba(255,170,0,.6);color:var(--c);font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:2px;cursor:pointer;transition:.25s;text-shadow:0 0 10px var(--c)}
+    .exit-btn:hover{background:rgba(255,170,0,.15);box-shadow:0 0 20px rgba(255,170,0,.4)}
   </style>
 </head>
 <body>
   <div class="bg-layer"></div>
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+  <div class="neon-frame"></div>
   <div id="pg-loader">
     <div class="loader-title">FORTUNE CRASH</div>
-    <div class="loader-sub">Loading Predictor…</div>
+    <div class="loader-sub">Loading Game…</div>
     <div class="loader-track"><div id="pg-bar"></div></div>
     <div id="pg-pct">1%</div>
   </div>
@@ -70,46 +70,30 @@
     (function(){var dur=5000+Math.random()*5000,p=1,b=document.getElementById('pg-bar'),t=document.getElementById('pg-pct'),o=document.getElementById('pg-loader');var iv=setInterval(function(){p+=Math.floor(Math.random()*4)+1;if(p>=100){p=100;clearInterval(iv);setTimeout(function(){o.style.transition='opacity 0.6s';o.style.opacity='0';setTimeout(function(){o.remove();},650);},200);}b.style.width=p+'%';t.textContent=p+'%';},Math.round(dur/40));})();
   </script>
   <div class="page">
-    <div class="page-title"><h1>FORTUNE CRASH</h1><p>AI Coefficient Predictor</p></div>
-    <div class="history-wrap">
-      <div class="history-label">Recent Results</div>
+    <div class="hud-top">
+      <div class="hud-brand">FORTUNE CRASH</div>
+      <div class="hud-score"><span>AI ENGINE</span>ACTIVE</div>
+    </div>
+    <div class="hist-row">
+      <div class="hist-lbl">LOG▶</div>
       <div class="history-bar" id="historyBar"></div>
     </div>
-    <div class="ticker-wrap">
-      <div class="ticker">
-        <span class="ticker-item">ANALYZING PATTERN <span>●</span></span>
-        <span class="ticker-item">LIVE FEED ACTIVE <span>●</span></span>
-        <span class="ticker-item">ENSEMBLE MODEL <span>●</span></span>
-        <span class="ticker-item">SIGNAL DETECTED <span>●</span></span>
-        <span class="ticker-item">ANALYZING PATTERN <span>●</span></span>
-        <span class="ticker-item">LIVE FEED ACTIVE <span>●</span></span>
-        <span class="ticker-item">ENSEMBLE MODEL <span>●</span></span>
-        <span class="ticker-item">SIGNAL DETECTED <span>●</span></span>
-      </div>
-    </div>
-    <div class="main-card-wrap">
-      <div class="signal-row" style="margin-bottom:16px;">
-        <div class="signal-dot"></div>
-        <div class="signal-text">Next Coefficient</div>
-      </div>
-      <div class="ring-wrap">
-        <svg class="ring-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="100" cy="100" r="96" stroke="url(#ringGrad)" stroke-width="2" stroke-dasharray="8 6"/>
-          <defs>
-            <linearGradient id="ringGrad" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#ffaa00" stop-opacity="0.7"/>
-              <stop offset="50%" stop-color="#ffdd88" stop-opacity="0.3"/>
-              <stop offset="100%" stop-color="#ffaa00" stop-opacity="0.1"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <div class="ring-inner">
-          <div class="pred-label">Prediction</div>
+    <div class="monitor-wrap">
+      <div class="monitor">
+        <div class="monitor-screen">
+          <div class="monitor-scanline"></div>
+          <div class="screen-eyebrow">── PREDICTION UNIT ──</div>
+          <div class="screen-title">NEXT COEFF.</div>
           <div id="predictionValue">--</div>
+          <div class="screen-divider"></div>
+          <div class="sig-row"><div class="sig-dot"></div><div class="sig-txt">AI SIGNAL LOCKED</div></div>
         </div>
+        <div class="monitor-base"></div>
+        <div class="monitor-stand"></div>
+        <div class="insert-coins">◄ FORTUNE CRASH AI ENGINE ►</div>
       </div>
     </div>
-    <div class="page-footer">
+    <div class="footer">
       <button class="exit-btn" onclick="location.href='login.html'">EXIT</button>
     </div>
   </div>

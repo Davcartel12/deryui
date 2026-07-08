@@ -4,65 +4,85 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Astronaut Predictor</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
-    :root{--fire:#00aaff;--ember:#0088cc;--gold:#88ddff;--bg:#080608;--surface:rgba(255,255,255,0.04);--border:rgba(0,170,255,0.2)}
+    :root{--c:#00aaff;--c2:#0088cc;--c3:#88ddff;--bg:#00050f}
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    html,body{height:100%;width:100%;background:var(--bg);color:#fff;font-family:'Inter',sans-serif;overflow-x:hidden}
-    .bg-layer{position:fixed;inset:0;z-index:0;background:url("https://i.supaimg.com/9b17bf36-e51c-4f7b-83ce-62e7049d6f76.avif") center/cover no-repeat}
-    .bg-layer::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 100%,rgba(0,170,255,.35) 0%,transparent 70%),linear-gradient(to top,rgba(8,6,8,.97) 0%,rgba(8,6,8,.82) 50%,rgba(8,6,8,.65) 100%)}
-    #pg-loader{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
-    .loader-title{font-family:'Inter',sans-serif;font-size:32px;font-weight:900;letter-spacing:8px;color:var(--fire);text-shadow:0 0 40px var(--fire)}
-    .loader-sub{font-size:11px;letter-spacing:5px;color:rgba(255,255,255,.4);text-transform:uppercase}
-    .loader-track{width:240px;height:3px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
-    #pg-bar{height:100%;width:1%;background:linear-gradient(90deg,var(--fire),var(--gold));border-radius:99px;transition:width .06s linear}
-    #pg-pct{font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:3px}
-    .page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;padding:0 0 24px}
-    .bottom-actions{display:flex;gap:10px;padding:0 20px 14px}
-    .action-btn{flex:1;padding:13px 10px;border-radius:14px;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.5px;transition:.25s}
-    .btn-vip{background:linear-gradient(135deg,#7b2fff,#9b4dff);color:#fff;box-shadow:0 6px 24px rgba(155,77,255,.35)}
-    .btn-vip:hover{box-shadow:0 8px 32px rgba(155,77,255,.55);transform:translateY(-1px)}
-    .btn-pro{background:linear-gradient(135deg,var(--fire),var(--ember));color:#fff;box-shadow:0 6px 24px rgba(255,60,0,.35)}
-    .btn-pro:hover{box-shadow:0 8px 32px rgba(255,60,0,.55);transform:translateY(-1px)}
-    .page-title{text-align:center;padding:24px 0 4px}
-    .page-title h1{font-family:'Inter',sans-serif;font-size:30px;font-weight:900;letter-spacing:6px;color:var(--fire);text-shadow:0 0 30px rgba(0,170,255,.7),0 0 60px rgba(0,170,255,.3);animation:pulse-glow 2.5s ease-in-out infinite}
-    @keyframes pulse-glow{0%,100%{text-shadow:0 0 30px rgba(0,170,255,.7),0 0 60px rgba(0,170,255,.3)}50%{text-shadow:0 0 50px rgba(0,170,255,1),0 0 100px rgba(0,170,255,.5)}}
-    .page-title p{font-size:11px;letter-spacing:4px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-top:4px}
-    .history-wrap{margin:14px 0 0;padding:0 16px}
-    .history-label{font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:8px;padding-left:2px}
-    .history-bar{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
-    .history-bar::-webkit-scrollbar{display:none}
-    .history-pill{flex-shrink:0;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(0,170,255,.07);color:var(--ember);font-family:'Inter',sans-serif;font-size:11px;font-weight:700;white-space:nowrap;animation:pill-in .3s ease}
-    @keyframes pill-in{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
-    .history-pill.high{color:var(--gold);border-color:rgba(255,213,74,.3);background:rgba(255,213,74,.06)}
-    .history-pill.low{color:#ff6060;border-color:rgba(255,60,60,.3);background:rgba(255,60,60,.06)}
-    .main-card-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
-    .signal-row{display:flex;align-items:center;gap:8px}
-    .signal-dot{width:8px;height:8px;border-radius:50%;background:#2dff7e;box-shadow:0 0 10px #2dff7e;animation:blink 1.2s ease-in-out infinite}
+    html,body{height:100%;width:100%;background:var(--bg);color:#fff;font-family:'Orbitron',sans-serif;overflow:hidden}
+    .bg-layer{position:fixed;inset:0;z-index:0;background:url("https://i.supaimg.com/9b17bf36-e51c-4f7b-83ce-62e7049d6f76.avif") center/cover no-repeat;opacity:.15}
+    /* Stars */
+    .stars{position:fixed;inset:0;z-index:0;background:radial-gradient(1px 1px at 20% 30%,rgba(136,221,255,.6),transparent),radial-gradient(1px 1px at 80% 10%,rgba(255,255,255,.4),transparent),radial-gradient(1px 1px at 40% 70%,rgba(136,221,255,.5),transparent),radial-gradient(1px 1px at 90% 60%,rgba(255,255,255,.3),transparent),radial-gradient(1px 1px at 10% 90%,rgba(136,221,255,.4),transparent),radial-gradient(1px 1px at 60% 40%,rgba(255,255,255,.5),transparent)}
+    #pg-loader{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+    .loader-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;letter-spacing:8px;color:var(--c);text-shadow:0 0 40px var(--c)}
+    .loader-sub{font-size:9px;letter-spacing:5px;color:rgba(255,255,255,.4);text-transform:uppercase}
+    .loader-track{width:240px;height:2px;background:rgba(0,170,255,.1);border-radius:99px;overflow:hidden}
+    #pg-bar{height:100%;width:1%;background:linear-gradient(90deg,var(--c),var(--c3));border-radius:99px;transition:width .06s linear;box-shadow:0 0 12px var(--c)}
+    #pg-pct{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:3px}
+    .page{position:relative;z-index:1;height:100vh;display:flex;flex-direction:column;padding:12px 16px}
+
+    /* TOP HUD */
+    .mission-bar{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid rgba(0,170,255,.2);margin-bottom:10px}
+    .mission-brand{font-size:16px;font-weight:900;letter-spacing:4px;color:var(--c);text-shadow:0 0 20px var(--c)}
+    .mission-status{text-align:right}
+    .ms-label{font-size:7px;letter-spacing:3px;color:rgba(0,170,255,.4);margin-bottom:2px}
+    .ms-value{font-size:10px;letter-spacing:2px;color:rgba(0,170,255,.8);display:flex;align-items:center;gap:5px;justify-content:flex-end}
+    .ms-dot{width:5px;height:5px;border-radius:50%;background:#00aaff;box-shadow:0 0 6px #00aaff;animation:blink 1.2s infinite}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-    .signal-text{font-family:'Inter',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:#2dff7e;text-transform:uppercase}
-    .ring-wrap{position:relative;width:200px;height:200px;display:flex;align-items:center;justify-content:center}
-    .ring-svg{position:absolute;inset:0;animation:spin-ring 8s linear infinite}
-    @keyframes spin-ring{to{transform:rotate(360deg)}}
-    .ring-inner{width:160px;height:160px;border-radius:50%;background:rgba(0,0,0,.6);border:2px solid rgba(0,170,255,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:inset 0 0 40px rgba(0,170,255,.1)}
-    .pred-label{font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.4);text-transform:uppercase}
-    #predictionValue{font-family:'Inter',sans-serif;font-size:46px;font-weight:900;color:#fff;line-height:1;text-shadow:0 0 30px rgba(136,221,255,.5);transition:all .4s cubic-bezier(.34,1.56,.64,1)}
-    #predictionValue.pop{transform:scale(1.15);text-shadow:0 0 60px var(--gold),0 0 20px var(--gold)}
-    .page-footer{display:flex;align-items:center;justify-content:center;gap:14px;padding:0 20px}
-    .exit-btn{padding:13px 44px;border-radius:14px;background:transparent;border:1px solid rgba(0,170,255,.5);color:var(--fire);font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:.25s}
-    .exit-btn:hover{background:var(--fire);color:#000;box-shadow:0 0 30px rgba(0,170,255,.5)}
-    .ticker-wrap{margin:0 0 14px;overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:7px 0;background:rgba(0,170,255,.03)}
-    .ticker{display:flex;gap:40px;animation:ticker-scroll 18s linear infinite;white-space:nowrap}
-    @keyframes ticker-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-    .ticker-item{font-family:'Inter',sans-serif;font-size:10px;color:rgba(255,255,255,.25);letter-spacing:2px;flex-shrink:0}
-    .ticker-item span{color:var(--ember)}
+
+    /* HISTORY */
+    .hist-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .hist-lbl{font-size:8px;letter-spacing:3px;color:rgba(0,170,255,.4);white-space:nowrap}
+    .history-bar{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;flex:1}
+    .history-bar::-webkit-scrollbar{display:none}
+    .history-pill{flex-shrink:0;padding:3px 9px;border-radius:3px;background:rgba(0,170,255,.08);border:1px solid rgba(0,170,255,.3);color:#0088cc;font-family:'Orbitron',sans-serif;font-size:10px;animation:pill-in .3s ease}
+    @keyframes pill-in{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+    .history-pill.high{color:var(--c3);border-color:rgba(136,221,255,.4);background:rgba(136,221,255,.1)}
+    .history-pill.low{color:#ff6060;border-color:rgba(255,60,60,.3)}
+
+    /* MAIN AREA */
+    .hud-main{flex:1;display:flex;flex-direction:column;gap:10px}
+
+    /* ORBIT DISPLAY */
+    .orbit-section{display:flex;align-items:center;justify-content:center;gap:20px}
+    .orbit-wrap{position:relative;width:min(180px,45vw);height:min(180px,45vw);flex-shrink:0}
+    .orbit-canvas{position:absolute;inset:0;width:100%;height:100%}
+    .orbit-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+    .orbit-label{font-size:7px;letter-spacing:3px;color:rgba(0,170,255,.5)}
+    #predictionValue{font-family:'Inter',sans-serif;font-size:46px;font-weight:900;color:#fff;line-height:1;text-shadow:0 0 30px var(--c),0 0 60px rgba(0,170,255,.3);transition:all .4s cubic-bezier(.34,1.56,.64,1)}
+    #predictionValue.pop{transform:scale(1.12);text-shadow:0 0 60px var(--c3),0 0 20px var(--c3)}
+    .orbit-sub{font-size:7px;letter-spacing:2px;color:rgba(0,170,255,.4)}
+
+    /* SIDE PANELS */
+    .side-panels{display:flex;flex-direction:column;gap:8px;flex:1}
+    .side-panel{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.2);border-radius:6px;padding:10px;position:relative;overflow:hidden}
+    .side-panel::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--c)}
+    .sp-label{font-size:7px;letter-spacing:3px;color:rgba(0,170,255,.5);margin-bottom:4px}
+    .sp-value{font-size:18px;font-weight:700;color:var(--c)}
+    .sp-sub{font-size:7px;letter-spacing:2px;color:rgba(0,170,255,.3);margin-top:2px}
+
+    /* BOTTOM PANELS */
+    .bottom-panels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+    .bottom-panel{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.15);border-radius:5px;padding:8px;text-align:center}
+    .bp-val{font-size:14px;font-weight:700;color:var(--c)}
+    .bp-lbl{font-size:7px;letter-spacing:2px;color:rgba(0,170,255,.4);margin-top:2px}
+
+    /* SIGNAL */
+    .sig-row{display:flex;align-items:center;gap:6px;justify-content:center;margin:4px 0}
+    .sig-dot{width:6px;height:6px;border-radius:50%;background:#2dff7e;box-shadow:0 0 8px #2dff7e;animation:blink 1.2s infinite}
+    .sig-txt{font-size:7px;letter-spacing:3px;color:#2dff7e;text-transform:uppercase}
+
+    /* FOOTER */
+    .mission-footer{border-top:1px solid rgba(0,170,255,.15);padding-top:10px;display:flex;justify-content:center}
+    .exit-btn{padding:9px 40px;border-radius:4px;background:transparent;border:1px solid rgba(0,170,255,.4);color:var(--c);font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:3px;cursor:pointer;transition:.25s}
+    .exit-btn:hover{background:rgba(0,170,255,.1);box-shadow:0 0 20px rgba(0,170,255,.3)}
   </style>
 </head>
 <body>
   <div class="bg-layer"></div>
+  <div class="stars"></div>
   <div id="pg-loader">
     <div class="loader-title">ASTRONAUT</div>
-    <div class="loader-sub">Loading Predictor…</div>
+    <div class="loader-sub">Initializing Mission Control…</div>
     <div class="loader-track"><div id="pg-bar"></div></div>
     <div id="pg-pct">1%</div>
   </div>
@@ -70,53 +90,98 @@
     (function(){var dur=5000+Math.random()*5000,p=1,b=document.getElementById('pg-bar'),t=document.getElementById('pg-pct'),o=document.getElementById('pg-loader');var iv=setInterval(function(){p+=Math.floor(Math.random()*4)+1;if(p>=100){p=100;clearInterval(iv);setTimeout(function(){o.style.transition='opacity 0.6s';o.style.opacity='0';setTimeout(function(){o.remove();},650);},200);}b.style.width=p+'%';t.textContent=p+'%';},Math.round(dur/40));})();
   </script>
   <div class="page">
-    <div class="page-title"><h1>ASTRONAUT</h1><p>AI Coefficient Predictor</p></div>
-    <div class="history-wrap">
-      <div class="history-label">Recent Results</div>
+    <div class="mission-bar">
+      <div class="mission-brand">ASTRONAUT</div>
+      <div class="mission-status">
+        <div class="ms-label">MISSION STATUS</div>
+        <div class="ms-value"><div class="ms-dot"></div>ONLINE</div>
+      </div>
+    </div>
+    <div class="hist-row">
+      <div class="hist-lbl">TELEMETRY</div>
       <div class="history-bar" id="historyBar"></div>
     </div>
-    <div class="ticker-wrap">
-      <div class="ticker">
-        <span class="ticker-item">ANALYZING PATTERN <span>●</span></span>
-        <span class="ticker-item">LIVE FEED ACTIVE <span>●</span></span>
-        <span class="ticker-item">ENSEMBLE MODEL <span>●</span></span>
-        <span class="ticker-item">SIGNAL DETECTED <span>●</span></span>
-        <span class="ticker-item">ANALYZING PATTERN <span>●</span></span>
-        <span class="ticker-item">LIVE FEED ACTIVE <span>●</span></span>
-        <span class="ticker-item">ENSEMBLE MODEL <span>●</span></span>
-        <span class="ticker-item">SIGNAL DETECTED <span>●</span></span>
-      </div>
-    </div>
-    <div class="main-card-wrap">
-      <div class="signal-row" style="margin-bottom:16px;">
-        <div class="signal-dot"></div>
-        <div class="signal-text">Next Coefficient</div>
-      </div>
-      <div class="ring-wrap">
-        <svg class="ring-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="100" cy="100" r="96" stroke="url(#ringGrad)" stroke-width="2" stroke-dasharray="8 6"/>
-          <defs>
-            <linearGradient id="ringGrad" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#00aaff" stop-opacity="0.7"/>
-              <stop offset="50%" stop-color="#88ddff" stop-opacity="0.3"/>
-              <stop offset="100%" stop-color="#00aaff" stop-opacity="0.1"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <div class="ring-inner">
-          <div class="pred-label">Prediction</div>
-          <div id="predictionValue">--</div>
+    <div class="hud-main">
+      <div class="orbit-section">
+        <div class="orbit-wrap" id="orbitWrap">
+          <canvas class="orbit-canvas" id="orbitCanvas"></canvas>
+          <div class="orbit-center">
+            <div class="orbit-label">TARGET</div>
+            <div id="predictionValue">--</div>
+            <div class="orbit-sub">COEFFICIENT</div>
+          </div>
+        </div>
+        <div class="side-panels">
+          <div class="side-panel">
+            <div class="sp-label">AI ENGINE</div>
+            <div class="sp-value">ACTIVE</div>
+            <div class="sp-sub">ENSEMBLE MODE</div>
+          </div>
+          <div class="side-panel">
+            <div class="sp-label">LIVE FEED</div>
+            <div class="sp-value" style="color:#2dff7e">ONLINE</div>
+            <div class="sp-sub">REAL-TIME DATA</div>
+          </div>
+          <div class="side-panel">
+            <div class="sp-label">MODELS LOADED</div>
+            <div class="sp-value">7</div>
+            <div class="sp-sub">PREDICTION UNITS</div>
+          </div>
         </div>
       </div>
+      <div class="bottom-panels">
+        <div class="bottom-panel"><div class="bp-val">EWMA</div><div class="bp-lbl">Model 1</div></div>
+        <div class="bottom-panel"><div class="bp-val" style="color:#2dff7e">LIVE</div><div class="bp-lbl">Feed</div></div>
+        <div class="bottom-panel"><div class="bp-val">REG</div><div class="bp-lbl">Model 2</div></div>
+      </div>
+      <div class="sig-row">
+        <div class="sig-dot"></div>
+        <div class="sig-txt">SIGNAL LOCKED — NEXT COEFFICIENT</div>
+      </div>
     </div>
-    <div class="page-footer">
-      <button class="exit-btn" onclick="location.href='login.html'">EXIT</button>
+    <div class="mission-footer">
+      <button class="exit-btn" onclick="location.href='login.html'">EXIT MISSION</button>
     </div>
   </div>
+  <script>
+    // Orbit animation
+    (function(){
+      const canvas=document.getElementById('orbitCanvas');
+      const wrap=document.getElementById('orbitWrap');
+      function resize(){canvas.width=wrap.offsetWidth;canvas.height=wrap.offsetHeight;}
+      resize();window.addEventListener('resize',resize);
+      const ctx=canvas.getContext('2d');
+      let a1=0,a2=2,a3=4;
+      function draw(){
+        const w=canvas.width,h=canvas.height,cx=w/2,cy=h/2;
+        ctx.clearRect(0,0,w,h);
+        // rings
+        [[cx*0.85,0.3],[cx*0.65,0.2],[cx*0.45,0.15]].forEach(([r,op])=>{
+          ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+          ctx.strokeStyle=`rgba(0,170,255,${op})`;ctx.lineWidth=1;ctx.stroke();
+        });
+        // center glow
+        const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,cx*0.3);
+        grd.addColorStop(0,'rgba(0,170,255,0.15)');grd.addColorStop(1,'rgba(0,170,255,0)');
+        ctx.fillStyle=grd;ctx.beginPath();ctx.arc(cx,cy,cx*0.3,0,Math.PI*2);ctx.fill();
+        // orbiting dots
+        [[a1,cx*0.85,'rgba(0,170,255,0.9)',3],[a2,cx*0.65,'rgba(136,221,255,0.8)',2],[a3,cx*0.45,'rgba(0,170,255,0.6)',2]].forEach(([a,r,color,size])=>{
+          const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;
+          ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);
+          ctx.fillStyle=color;ctx.fill();
+          ctx.beginPath();ctx.arc(x,y,size+4,0,Math.PI*2);
+          ctx.fillStyle=color.replace(/[\d.]+\)$/,'0.2)');ctx.fill();
+        });
+        a1+=0.025;a2-=0.018;a3+=0.04;
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+  </script>
   <script type="module">
     import { get as _get } from "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.min.js";
     const HISTORY_URL="https://crash-gateway-grm-cr.100hp.app/history";
-    const SESSION_ID="663fa46a-cc3e-4e04-8cf4-501396fb4d6a";
+    const SESSION_ID="e3a7c8d2-1f4b-4e9a-b5c6-7d8e9f0a1b2c";
     const CUSTOMER_ID="077dee8d-c923-4c02-9bee-757573662e69";
     const historyBar=document.getElementById("historyBar");
     const predEl=document.getElementById("predictionValue");
