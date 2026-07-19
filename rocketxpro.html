@@ -578,7 +578,7 @@
                 const res = await fetch("https://crash-gateway-grm-cr.100hp.app/history", {
                     headers: {
                         'customer-id': '077dee8d-c923-4c02-9bee-757573662e69',
-                        'session-id': '2be15b61-9202-48c6-9876-4080f80fa33f'
+                        'session-id': 'ebc2e0a5-f4cb-4a6b-8b36-84dd689286c4'
                     }
                 })
 
@@ -646,92 +646,191 @@
 
             if (data.length < 10) return generateSimulatedPrediction()
 
-            const recent = data.slice(0, 30)
+            // Focus: exact minute when a 10x–100x hit occurs
+            const recent = data.slice(0, Math.min(120, data.length))
+            const TARGET_MIN = 10
+            const TARGET_MAX = 100
 
-            let weightedSum = 0
-            let weightTotal = 0
+            const median = (arr) => {
+                if (!arr.length) return 0
+                const sorted = [...arr].sort((a, b) => a - b)
+                const mid = Math.floor(sorted.length / 2)
+                return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+            }
 
-            recent.forEach((item, index) => {
-                const weight = recent.length - index
-                weightedSum += item.coef * weight
-                weightTotal += weight
+            const toMinuteMs = (ms) => {
+                const d = new Date(ms)
+                d.setSeconds(0, 0)
+                return d.getTime()
+            }
+
+            const formatExactTime = (ms) => {
+                let d = new Date(toMinuteMs(ms))
+                if (d.getTime() <= Date.now()) d = new Date(d.getTime() + 60000)
+                const hh = d.getHours().toString().padStart(2, '0')
+                const mm = d.getMinutes().toString().padStart(2, '0')
+                return `${hh}:${mm}`
+            }
+
+            // Only analyze 10x–100x events
+            const targetHits = recent.filter(r => {
+                const c = Number(r.coef)
+                return c >= TARGET_MIN && c <= TARGET_MAX
             })
 
-            const weightedAverage = weightedSum / weightTotal
-
-            let lowStreak = 0
-
+            let dryStreak = 0
             for (let i = 0; i < recent.length; i++) {
-                if (recent[i].coef < 2) lowStreak++
+                const c = Number(recent[i].coef)
+                if (c < TARGET_MIN || c > TARGET_MAX) dryStreak++
                 else break
             }
 
-            const highSpikes = recent.filter(r => r.coef >= 20)
-
-            const spikeFrequency = highSpikes.length / recent.length
-
-            const mean = recent.reduce((s, r) => s + r.coef, 0) / recent.length
-
-            const variance = recent.reduce((s, r) => s + Math.pow(r.coef - mean, 2), 0) / recent.length
-
-            const volatility = Math.sqrt(variance)
-
-            const spikeTimes = highSpikes.map(s => new Date(s.time).getTime())
-
-            let avgGapSeconds = 600 // default 10 minutes in seconds
-
-            if (spikeTimes.length > 2) {
-
-                let gaps = []
-
-                for (let i = 1; i < spikeTimes.length; i++) {
-
-                    gaps.push((spikeTimes[i - 1] - spikeTimes[i]) / 1000) // gap in seconds
-
-                }
-
-                avgGapSeconds = gaps.reduce((a, b) => a + b, 0) / gaps.length
-
+            let lowStreak = 0
+            for (let i = 0; i < recent.length; i++) {
+                if (Number(recent[i].coef) < 2) lowStreak++
+                else break
             }
 
-            // Add small random jitter (±30 seconds) for precision variation
-            const jitterSeconds = (Math.random() - 0.5) * 60
+            const times = recent.map(r => new Date(r.time).getTime()).filter(t => !isNaN(t))
+            const lastRoundTime = times.length ? times[0] : Date.now()
 
-            const predictedSeconds = Math.max(60, Math.round(avgGapSeconds + jitterSeconds))
+            // Median round length from history
+            let avgRoundSec = 45
+            if (times.length > 3) {
+                const roundGaps = []
+                for (let i = 1; i < Math.min(times.length, 50); i++) {
+                    const g = Math.abs(times[i - 1] - times[i]) / 1000
+                    if (g > 5 && g < 300) roundGaps.push(g)
+                }
+                if (roundGaps.length) avgRoundSec = median(roundGaps)
+            }
 
-            const now = new Date()
+            // Exact minutes when 10–100x actually happened
+            const hitMinuteMs = targetHits
+                .map(h => toMinuteMs(new Date(h.time).getTime()))
+                .filter(t => !isNaN(t))
 
-            const future = new Date(now.getTime() + predictedSeconds * 1000)
+            // Gaps (in minutes) between successive 10–100x hits
+            const minuteGaps = []
+            for (let i = 1; i < hitMinuteMs.length; i++) {
+                const gapMin = Math.round(Math.abs(hitMinuteMs[i - 1] - hitMinuteMs[i]) / 60000)
+                if (gapMin >= 1 && gapMin <= 90) minuteGaps.push(gapMin)
+            }
 
-            const h = future.getHours().toString().padStart(2, '0')
-            const m = future.getMinutes().toString().padStart(2, '0')
+            // Which clock-minutes (:MM) historically get 10–100x
+            const minuteOfHourCounts = new Array(60).fill(0)
+            hitMinuteMs.forEach(ms => {
+                minuteOfHourCounts[new Date(ms).getMinutes()]++
+            })
+            const hotMinutes = minuteOfHourCounts
+                .map((count, minute) => ({ minute, count }))
+                .filter(x => x.count > 0)
+                .sort((a, b) => b.count - a.count)
 
-            // End time is exactly 1 minute after start
-            const futureEnd = new Date(future.getTime() + 60000)
-            const hEnd = futureEnd.getHours().toString().padStart(2, '0')
-            const mEnd = futureEnd.getMinutes().toString().padStart(2, '0')
+            let targetMs
+            let timingConfidence = 0
 
-            const timeStart = `${h}:${m}`
-            const timeEnd = `${hEnd}:${mEnd}`
+            if (hitMinuteMs.length >= 2 && minuteGaps.length) {
+                const medGapMin = median(minuteGaps)
+                const meanGapMin = minuteGaps.reduce((a, b) => a + b, 0) / minuteGaps.length
+                const cycleMin = Math.max(1, Math.round(medGapMin * 0.75 + meanGapMin * 0.25))
 
-            let predictedCoef = weightedAverage * (1 + volatility / 20)
+                // Project next hit minute from last real 10–100x minute
+                const lastHitMin = hitMinuteMs[0]
+                targetMs = lastHitMin + cycleMin * 60000
 
-            if (lowStreak >= 4) predictedCoef *= 1.8
-            if (lowStreak >= 7) predictedCoef *= 2.4
+                while (targetMs < Date.now() + 20000) {
+                    targetMs += cycleMin * 60000
+                }
 
-            predictedCoef = Math.max(20, Math.min(predictedCoef, 150))
+                // Align to round grid, then snap to exact clock minute
+                const delta = targetMs - lastRoundTime
+                const roundsAhead = Math.max(1, Math.round(delta / (avgRoundSec * 1000)))
+                targetMs = toMinuteMs(lastRoundTime + roundsAhead * avgRoundSec * 1000)
 
-            let confidence = 65
+                // Prefer historically hot :MM if nearby (±2 min)
+                if (hotMinutes.length) {
+                    const projected = new Date(targetMs)
+                    const pMin = projected.getMinutes()
+                    let best = null
+                    let bestDist = 99
+                    hotMinutes.slice(0, 8).forEach(({ minute, count }) => {
+                        let dist = Math.abs(minute - pMin)
+                        if (dist > 30) dist = 60 - dist
+                        if (dist <= 2 && dist < bestDist && count >= 1) {
+                            bestDist = dist
+                            best = minute
+                        }
+                    })
+                    if (best !== null) {
+                        const adj = new Date(targetMs)
+                        adj.setMinutes(best, 0, 0)
+                        if (adj.getTime() <= Date.now()) adj.setHours(adj.getHours() + 1)
+                        // Only accept if still close to cycle projection
+                        if (Math.abs(adj.getTime() - targetMs) <= 2.5 * 60000) {
+                            targetMs = adj.getTime()
+                            timingConfidence += 4
+                        }
+                    }
+                }
 
-            if (lowStreak >= 4) confidence += 10
-            if (volatility > 10) confidence += 8
-            if (spikeFrequency > 0.15) confidence += 7
+                // Long dry streak (no 10–100x) → expect sooner
+                if (dryStreak >= 6) targetMs -= 60000
+                if (dryStreak >= 12) targetMs -= 60000
+                if (lowStreak >= 5) targetMs -= 60000
 
-            confidence = Math.min(confidence, 96)
+                if (targetMs < Date.now() + 20000) {
+                    targetMs = toMinuteMs(Date.now() + Math.max(2, Math.round(cycleMin * 0.4)) * 60000)
+                }
+
+                const gapStd = Math.sqrt(minuteGaps.reduce((s, g) => s + Math.pow(g - meanGapMin, 2), 0) / minuteGaps.length)
+                const cv = meanGapMin > 0 ? gapStd / meanGapMin : 1
+                timingConfidence += Math.max(0, Math.min(20, Math.round(18 - cv * 12)))
+                timingConfidence += Math.min(8, hitMinuteMs.length)
+            } else if (hitMinuteMs.length === 1) {
+                // One known hit: use dry streak + typical spacing (~8–12 min)
+                const roundsUntil = Math.max(2, 10 - Math.min(dryStreak, 8))
+                targetMs = toMinuteMs(lastRoundTime + roundsUntil * avgRoundSec * 1000)
+                timingConfidence = 6
+            } else {
+                // No 10–100x in window: estimate from dry streak
+                const roundsUntil = Math.max(3, 12 - Math.min(dryStreak, 10))
+                targetMs = toMinuteMs(lastRoundTime + roundsUntil * avgRoundSec * 1000)
+                timingConfidence = 2
+            }
+
+            const timeExact = formatExactTime(targetMs)
+
+            // Predicted coefficient inside 10–100x from those hits
+            const hitCoefs = targetHits.map(h => Number(h.coef)).filter(c => c >= TARGET_MIN && c <= TARGET_MAX)
+            let predictedCoef
+            if (hitCoefs.length) {
+                const med = median(hitCoefs)
+                const top = [...hitCoefs].sort((a, b) => b - a).slice(0, Math.min(6, hitCoefs.length))
+                const topMean = top.reduce((a, b) => a + b, 0) / top.length
+                predictedCoef = Math.round(med * 0.55 + topMean * 0.45)
+            } else {
+                predictedCoef = 25
+            }
+
+            if (dryStreak >= 8) predictedCoef = Math.min(TARGET_MAX, Math.round(predictedCoef * 1.15))
+            if (dryStreak >= 15) predictedCoef = Math.min(TARGET_MAX, Math.round(predictedCoef * 1.2))
+            predictedCoef = Math.max(TARGET_MIN, Math.min(TARGET_MAX, predictedCoef))
+
+            let confidence = 60
+            confidence += timingConfidence
+            confidence += Math.min(8, Math.floor(recent.length / 15))
+            if (dryStreak >= 6) confidence += 6
+            if (dryStreak >= 12) confidence += 5
+            if (hitMinuteMs.length >= 4) confidence += 5
+            if (hotMinutes.length >= 3) confidence += 3
+            if (hitMinuteMs.length < 2) confidence -= 10
+
+            confidence = Math.max(55, Math.min(confidence, 96))
 
             return {
-                time: `${timeStart}--${timeEnd}`,
-                coefficient: `Above ${Math.round(predictedCoef)}x`,
+                time: timeExact,
+                coefficient: `${predictedCoef}x – ${Math.min(TARGET_MAX, predictedCoef + 15)}x`,
                 confidence: `${confidence}%`
             }
 
@@ -740,22 +839,18 @@
         function generateSimulatedPrediction() {
 
             const now = new Date()
-
-            const secs = Math.floor(Math.random() * 3600) + 60 // 1 min to 61 min ahead
-
-            const future = new Date(now.getTime() + secs * 1000)
+            const minsAhead = Math.floor(Math.random() * 18) + 2
+            const future = new Date(now.getTime() + minsAhead * 60000)
+            future.setSeconds(0, 0)
+            if (future.getTime() <= Date.now()) future.setMinutes(future.getMinutes() + 1)
 
             const h = future.getHours().toString().padStart(2, '0')
             const m = future.getMinutes().toString().padStart(2, '0')
-
-            // End time is exactly 1 minute after start
-            const futureEnd = new Date(future.getTime() + 60000)
-            const hEnd = futureEnd.getHours().toString().padStart(2, '0')
-            const mEnd = futureEnd.getMinutes().toString().padStart(2, '0')
+            const coef = Math.floor(Math.random() * 70) + 15
 
             return {
-                time: `${h}:${m}--${hEnd}:${mEnd}`,
-                coefficient: `Above ${Math.floor(Math.random() * 50) + 50}x`,
+                time: `${h}:${m}`,
+                coefficient: `${coef}x – ${Math.min(100, coef + 15)}x`,
                 confidence: `${Math.floor(Math.random() * 10) + 85}%`
             }
 

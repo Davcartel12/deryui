@@ -212,7 +212,7 @@ function rand(min,max){return Math.random()*(max-min)+min;}
 function randomChance(){return Math.floor(Math.random()*6)+94;}
 
 const apiURL="https://crash-gateway-grm-cr.100hp.app/state";
-const apiHeaders={'customer-id':'077dee8d-c923-4c02-9bee-757573662e69','session-id':'7a535791-247f-410f-b172-0998afaff5d0','accept':'application/json'};
+const apiHeaders={'customer-id':'077dee8d-c923-4c02-9bee-757573662e69','session-id':'5849f7fa-7e34-4f78-917a-ab063f9d9422','accept':'application/json'};
 async function fetchGameData(){
   try{const res=await fetch(apiURL,{headers:apiHeaders});if(!res.ok)throw new Error("API error");return await res.json();}
   catch(e){console.warn("fetchGameData failed:",e);return null;}
