@@ -3,181 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Astronaut Predictor</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-  <style>
-    :root{--c:#00aaff;--c2:#0088cc;--c3:#88ddff;--bg:#00050f}
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    html,body{height:100%;width:100%;background:var(--bg);color:#fff;font-family:'Orbitron',sans-serif;overflow:hidden}
-    .bg-layer{position:fixed;inset:0;z-index:0;background:url("https://i.supaimg.com/9b17bf36-e51c-4f7b-83ce-62e7049d6f76.avif") center/cover no-repeat;opacity:.15}
-    /* Stars */
-    .stars{position:fixed;inset:0;z-index:0;background:radial-gradient(1px 1px at 20% 30%,rgba(136,221,255,.6),transparent),radial-gradient(1px 1px at 80% 10%,rgba(255,255,255,.4),transparent),radial-gradient(1px 1px at 40% 70%,rgba(136,221,255,.5),transparent),radial-gradient(1px 1px at 90% 60%,rgba(255,255,255,.3),transparent),radial-gradient(1px 1px at 10% 90%,rgba(136,221,255,.4),transparent),radial-gradient(1px 1px at 60% 40%,rgba(255,255,255,.5),transparent)}
-    #pg-loader{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
-    .loader-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;letter-spacing:8px;color:var(--c);text-shadow:0 0 40px var(--c)}
-    .loader-sub{font-size:9px;letter-spacing:5px;color:rgba(255,255,255,.4);text-transform:uppercase}
-    .loader-track{width:240px;height:2px;background:rgba(0,170,255,.1);border-radius:99px;overflow:hidden}
-    #pg-bar{height:100%;width:1%;background:linear-gradient(90deg,var(--c),var(--c3));border-radius:99px;transition:width .06s linear;box-shadow:0 0 12px var(--c)}
-    #pg-pct{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:3px}
-    .page{position:relative;z-index:1;height:100vh;display:flex;flex-direction:column;padding:12px 16px}
-
-    /* TOP HUD */
-    .mission-bar{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid rgba(0,170,255,.2);margin-bottom:10px}
-    .mission-brand{font-size:16px;font-weight:900;letter-spacing:4px;color:var(--c);text-shadow:0 0 20px var(--c)}
-    .mission-status{text-align:right}
-    .ms-label{font-size:7px;letter-spacing:3px;color:rgba(0,170,255,.4);margin-bottom:2px}
-    .ms-value{font-size:10px;letter-spacing:2px;color:rgba(0,170,255,.8);display:flex;align-items:center;gap:5px;justify-content:flex-end}
-    .ms-dot{width:5px;height:5px;border-radius:50%;background:#00aaff;box-shadow:0 0 6px #00aaff;animation:blink 1.2s infinite}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-
-    /* HISTORY */
-    .hist-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-    .hist-lbl{font-size:8px;letter-spacing:3px;color:rgba(0,170,255,.4);white-space:nowrap}
-    .history-bar{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;flex:1}
-    .history-bar::-webkit-scrollbar{display:none}
-    .history-pill{flex-shrink:0;padding:3px 9px;border-radius:3px;background:rgba(0,170,255,.08);border:1px solid rgba(0,170,255,.3);color:#0088cc;font-family:'Orbitron',sans-serif;font-size:10px;animation:pill-in .3s ease}
-    @keyframes pill-in{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
-    .history-pill.high{color:var(--c3);border-color:rgba(136,221,255,.4);background:rgba(136,221,255,.1)}
-    .history-pill.low{color:#ff6060;border-color:rgba(255,60,60,.3)}
-
-    /* MAIN AREA */
-    .hud-main{flex:1;display:flex;flex-direction:column;gap:10px}
-
-    /* ORBIT DISPLAY */
-    .orbit-section{display:flex;align-items:center;justify-content:center;gap:20px}
-    .orbit-wrap{position:relative;width:min(180px,45vw);height:min(180px,45vw);flex-shrink:0}
-    .orbit-canvas{position:absolute;inset:0;width:100%;height:100%}
-    .orbit-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
-    .orbit-label{font-size:7px;letter-spacing:3px;color:rgba(0,170,255,.5)}
-    #predictionValue{font-family:'Inter',sans-serif;font-size:46px;font-weight:900;color:#fff;line-height:1;text-shadow:0 0 30px var(--c),0 0 60px rgba(0,170,255,.3);transition:all .4s cubic-bezier(.34,1.56,.64,1)}
-    #predictionValue.pop{transform:scale(1.12);text-shadow:0 0 60px var(--c3),0 0 20px var(--c3)}
-    .orbit-sub{font-size:7px;letter-spacing:2px;color:rgba(0,170,255,.4)}
-
-    /* SIDE PANELS */
-    .side-panels{display:flex;flex-direction:column;gap:8px;flex:1}
-    .side-panel{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.2);border-radius:6px;padding:10px;position:relative;overflow:hidden}
-    .side-panel::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--c)}
-    .sp-label{font-size:7px;letter-spacing:3px;color:rgba(0,170,255,.5);margin-bottom:4px}
-    .sp-value{font-size:18px;font-weight:700;color:var(--c)}
-    .sp-sub{font-size:7px;letter-spacing:2px;color:rgba(0,170,255,.3);margin-top:2px}
-
-    /* BOTTOM PANELS */
-    .bottom-panels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-    .bottom-panel{background:rgba(0,170,255,.04);border:1px solid rgba(0,170,255,.15);border-radius:5px;padding:8px;text-align:center}
-    .bp-val{font-size:14px;font-weight:700;color:var(--c)}
-    .bp-lbl{font-size:7px;letter-spacing:2px;color:rgba(0,170,255,.4);margin-top:2px}
-
-    /* SIGNAL */
-    .sig-row{display:flex;align-items:center;gap:6px;justify-content:center;margin:4px 0}
-    .sig-dot{width:6px;height:6px;border-radius:50%;background:#2dff7e;box-shadow:0 0 8px #2dff7e;animation:blink 1.2s infinite}
-    .sig-txt{font-size:7px;letter-spacing:3px;color:#2dff7e;text-transform:uppercase}
-
-    /* FOOTER */
-    .mission-footer{border-top:1px solid rgba(0,170,255,.15);padding-top:10px;display:flex;justify-content:center}
-    .exit-btn{padding:9px 40px;border-radius:4px;background:transparent;border:1px solid rgba(0,170,255,.4);color:var(--c);font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:3px;cursor:pointer;transition:.25s}
-    .exit-btn:hover{background:rgba(0,170,255,.1);box-shadow:0 0 20px rgba(0,170,255,.3)}
-  </style>
+  <title>Astronaut Predictor - APNAJ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
 </head>
-<body>
-  <div class="bg-layer"></div>
-  <div class="stars"></div>
+<body class="theme-noise">
   <div id="pg-loader">
     <div class="loader-title">ASTRONAUT</div>
-    <div class="loader-sub">Initializing Mission Control…</div>
+    <div class="loader-sub">Loading…</div>
     <div class="loader-track"><div id="pg-bar"></div></div>
     <div id="pg-pct">1%</div>
   </div>
   <script>
-    (function(){var dur=5000+Math.random()*5000,p=1,b=document.getElementById('pg-bar'),t=document.getElementById('pg-pct'),o=document.getElementById('pg-loader');var iv=setInterval(function(){p+=Math.floor(Math.random()*4)+1;if(p>=100){p=100;clearInterval(iv);setTimeout(function(){o.style.transition='opacity 0.6s';o.style.opacity='0';setTimeout(function(){o.remove();},650);},200);}b.style.width=p+'%';t.textContent=p+'%';},Math.round(dur/40));})();
+    (function(){var dur=2000+Math.random()*1500,p=1,b=document.getElementById('pg-bar'),t=document.getElementById('pg-pct'),o=document.getElementById('pg-loader');var iv=setInterval(function(){p+=Math.floor(Math.random()*6)+2;if(p>=100){p=100;clearInterval(iv);setTimeout(function(){o.style.transition='opacity 0.5s';o.style.opacity='0';setTimeout(function(){o.remove();},500);},150);}b.style.width=p+'%';t.textContent=p+'%';},Math.round(dur/35));})();
   </script>
-  <div class="page">
-    <div class="mission-bar">
-      <div class="mission-brand">ASTRONAUT</div>
-      <div class="mission-status">
-        <div class="ms-label">MISSION STATUS</div>
-        <div class="ms-value"><div class="ms-dot"></div>ONLINE</div>
+
+  <header class="topbar">
+    <a class="logo-wrap" href="login.html">
+      <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png" alt="Logo">
+      <span>APNAJ</span>
+    </a>
+    <a class="exit-btn" href="login.html">Exit</a>
+  </header>
+
+  <main class="container fade-up">
+    <h1 class="page-title">ASTRONAUT</h1>
+    <p class="page-sub">AI Predictor</p>
+
+    <div class="card">
+      
+      <div class="hist-row">
+        <div class="hist-lbl">History</div>
+        <div class="history-bar" id="historyBar"></div>
+        
       </div>
-    </div>
-    <div class="hist-row">
-      <div class="hist-lbl">TELEMETRY</div>
-      <div class="history-bar" id="historyBar"></div>
-    </div>
-    <div class="hud-main">
-      <div class="orbit-section">
-        <div class="orbit-wrap" id="orbitWrap">
-          <canvas class="orbit-canvas" id="orbitCanvas"></canvas>
-          <div class="orbit-center">
-            <div class="orbit-label">TARGET</div>
-            <div id="predictionValue">--</div>
-            <div class="orbit-sub">COEFFICIENT</div>
-          </div>
-        </div>
-        <div class="side-panels">
-          <div class="side-panel">
-            <div class="sp-label">AI ENGINE</div>
-            <div class="sp-value">ACTIVE</div>
-            <div class="sp-sub">ENSEMBLE MODE</div>
-          </div>
-          <div class="side-panel">
-            <div class="sp-label">LIVE FEED</div>
-            <div class="sp-value" style="color:#2dff7e">ONLINE</div>
-            <div class="sp-sub">REAL-TIME DATA</div>
-          </div>
-          <div class="side-panel">
-            <div class="sp-label">MODELS LOADED</div>
-            <div class="sp-value">7</div>
-            <div class="sp-sub">PREDICTION UNITS</div>
-          </div>
-        </div>
+      <div class="predict-panel">
+        <div class="predict-eyebrow">Prediction Unit</div>
+        <div class="predict-label">Next Coefficient</div>
+        <div id="predictionValue">--</div>
+        <div class="predict-divider"></div>
+        <div class="sig-row"><div class="sig-dot"></div><div class="sig-txt">AI Signal Locked</div></div>
       </div>
-      <div class="bottom-panels">
-        <div class="bottom-panel"><div class="bp-val">EWMA</div><div class="bp-lbl">Model 1</div></div>
-        <div class="bottom-panel"><div class="bp-val" style="color:#2dff7e">LIVE</div><div class="bp-lbl">Feed</div></div>
-        <div class="bottom-panel"><div class="bp-val">REG</div><div class="bp-lbl">Model 2</div></div>
-      </div>
-      <div class="sig-row">
-        <div class="sig-dot"></div>
-        <div class="sig-txt">SIGNAL LOCKED — NEXT COEFFICIENT</div>
-      </div>
+      <div class="engine-tag">ASTRONAUT AI Engine</div>
     </div>
-    <div class="mission-footer">
-      <button class="exit-btn" onclick="location.href='login.html'">EXIT MISSION</button>
-    </div>
-  </div>
-  <script>
-    // Orbit animation
-    (function(){
-      const canvas=document.getElementById('orbitCanvas');
-      const wrap=document.getElementById('orbitWrap');
-      function resize(){canvas.width=wrap.offsetWidth;canvas.height=wrap.offsetHeight;}
-      resize();window.addEventListener('resize',resize);
-      const ctx=canvas.getContext('2d');
-      let a1=0,a2=2,a3=4;
-      function draw(){
-        const w=canvas.width,h=canvas.height,cx=w/2,cy=h/2;
-        ctx.clearRect(0,0,w,h);
-        // rings
-        [[cx*0.85,0.3],[cx*0.65,0.2],[cx*0.45,0.15]].forEach(([r,op])=>{
-          ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
-          ctx.strokeStyle=`rgba(0,170,255,${op})`;ctx.lineWidth=1;ctx.stroke();
-        });
-        // center glow
-        const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,cx*0.3);
-        grd.addColorStop(0,'rgba(0,170,255,0.15)');grd.addColorStop(1,'rgba(0,170,255,0)');
-        ctx.fillStyle=grd;ctx.beginPath();ctx.arc(cx,cy,cx*0.3,0,Math.PI*2);ctx.fill();
-        // orbiting dots
-        [[a1,cx*0.85,'rgba(0,170,255,0.9)',3],[a2,cx*0.65,'rgba(136,221,255,0.8)',2],[a3,cx*0.45,'rgba(0,170,255,0.6)',2]].forEach(([a,r,color,size])=>{
-          const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;
-          ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);
-          ctx.fillStyle=color;ctx.fill();
-          ctx.beginPath();ctx.arc(x,y,size+4,0,Math.PI*2);
-          ctx.fillStyle=color.replace(/[\d.]+\)$/,'0.2)');ctx.fill();
-        });
-        a1+=0.025;a2-=0.018;a3+=0.04;
-        requestAnimationFrame(draw);
-      }
-      draw();
-    })();
-  </script>
+  </main>
+  
   <script type="module">
     import { get as _get } from "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.min.js";
     const HISTORY_URL="https://crash-gateway-grm-cr.100hp.app/history";

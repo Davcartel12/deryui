@@ -3,136 +3,58 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lucky Jet Predictor</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-  <style>
-    :root{--c:#4400ff;--c2:#3300cc;--c3:#9977ff;--bg:#04020f}
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    html,body{height:100%;width:100%;background:var(--bg);color:#fff;font-family:'Inter',sans-serif;overflow:hidden}
-    .bg-layer{position:fixed;inset:0;z-index:0;background:url("https://i.supaimg.com/21b87ec5-855c-47b5-ac0b-ea171081cbf8.avif") center/cover no-repeat;opacity:.15}
-    .scanlines{position:fixed;inset:0;z-index:2;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.15) 2px,rgba(0,0,0,.15) 4px)}
-    .vignette{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.7) 100%)}
-    .neon-frame{position:fixed;inset:8px;z-index:1;pointer-events:none;border:2px solid rgba(68,0,255,.5);border-radius:4px;box-shadow:0 0 20px rgba(68,0,255,.3),inset 0 0 20px rgba(68,0,255,.05)}
-    #pg-loader{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
-    .loader-title{font-family:'Press Start 2P',monospace;font-size:16px;color:var(--c);text-shadow:0 0 20px var(--c),0 0 40px var(--c)}
-    .loader-sub{font-size:9px;letter-spacing:5px;color:rgba(255,255,255,.4);text-transform:uppercase}
-    .loader-track{width:240px;height:4px;background:rgba(68,0,255,.1);border-radius:0;overflow:hidden;border:1px solid rgba(68,0,255,.3)}
-    #pg-bar{height:100%;width:1%;background:linear-gradient(90deg,var(--c),var(--c3));transition:width .06s linear;box-shadow:0 0 10px var(--c)}
-    #pg-pct{font-family:'Press Start 2P',monospace;font-size:10px;color:rgba(68,0,255,.8);letter-spacing:2px}
-    .page{position:relative;z-index:3;height:100vh;display:flex;flex-direction:column;padding:16px}
-
-    .hud-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(68,0,255,.3)}
-    .hud-brand{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--c);text-shadow:0 0 15px var(--c)}
-    .hud-score{font-family:'Press Start 2P',monospace;font-size:8px;color:rgba(153,119,255,.7);text-align:right}
-    .hud-score span{display:block;font-size:6px;color:rgba(153,119,255,.4);margin-bottom:2px}
-
-    .hist-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-    .hist-lbl{font-family:'Press Start 2P',monospace;font-size:6px;color:rgba(68,0,255,.5);white-space:nowrap}
-    .history-bar{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;flex:1}
-    .history-bar::-webkit-scrollbar{display:none}
-    .hist-btn{flex-shrink:0;width:24px;height:24px;border-radius:3px;background:rgba(68,0,255,.15);border:1px solid rgba(68,0,255,.4);color:#9977ff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s}
-    .hist-btn:hover{background:rgba(68,0,255,.3)}
-    .history-pill{flex-shrink:0;padding:3px 8px;border-radius:2px;background:rgba(68,0,255,.1);border:1px solid rgba(68,0,255,.4);color:#3300cc;font-family:'Press Start 2P',monospace;font-size:7px;animation:pill-in .3s ease}
-    @keyframes pill-in{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
-    .history-pill.mid{color:var(--c3);border-color:rgba(153,119,255,.5);background:rgba(153,119,255,.1)}
-    .history-pill.high{color:#ffdd88;border-color:rgba(255,221,136,.5);background:rgba(255,221,136,.08)}
-
-    /* LIVE STATUS */
-    .live-strip{display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.7);border:1px solid rgba(68,0,255,.3);padding:7px 12px;border-radius:4px;margin-bottom:10px}
-    .ls-left{display:flex;align-items:center;gap:6px}
-    .ls-dot{width:6px;height:6px;border-radius:50%;background:#a855f7}
-    .ls-dot.active{background:#2dff7e;box-shadow:0 0 8px #2dff7e;animation:blink 1.2s infinite}
-    .ls-dot.ended{background:#ff6060;box-shadow:0 0 8px #ff6060}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-    #liveStatusBadge{font-family:'Press Start 2P',monospace;font-size:7px;color:#a855f7}
-    #liveStatusValue{font-family:'Press Start 2P',monospace;font-size:9px;color:rgba(255,255,255,.5)}
-    #liveStatusValue.flying{color:#fff}
-    #liveStatusValue.ending{color:#ff6060}
-
-    .monitor-wrap{flex:1;display:flex;align-items:center;justify-content:center}
-    .monitor{width:min(340px,92vw);position:relative}
-    .monitor-screen{background:rgba(0,0,0,.9);border:3px solid rgba(68,0,255,.6);border-radius:8px;padding:20px;text-align:center;position:relative;overflow:hidden;box-shadow:0 0 40px rgba(68,0,255,.3),inset 0 0 40px rgba(0,0,0,.8)}
-    .monitor-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(68,0,255,.05) 0%,transparent 70%);pointer-events:none}
-    .monitor-scanline{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(68,0,255,.03) 3px,rgba(68,0,255,.03) 6px);pointer-events:none}
-    .screen-eyebrow{font-family:'Press Start 2P',monospace;font-size:7px;color:rgba(68,0,255,.5);letter-spacing:2px;margin-bottom:12px}
-    .screen-title{font-family:'Press Start 2P',monospace;font-size:9px;color:rgba(153,119,255,.8);margin-bottom:6px}
-    #predictionValue{font-family:'Inter',sans-serif;font-size:72px;font-weight:900;color:#fff;line-height:1;text-shadow:0 0 30px var(--c),0 0 60px rgba(68,0,255,.4);transition:all .4s cubic-bezier(.34,1.56,.64,1);display:block}
-    #predictionValue.pop{transform:scale(1.1);text-shadow:0 0 60px var(--c3),0 0 20px var(--c3)}
-    .screen-divider{height:1px;background:rgba(68,0,255,.3);margin:12px 0}
-    .sig-row{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:4px}
-    .sig-dot{width:6px;height:6px;border-radius:50%;background:#2dff7e;box-shadow:0 0 8px #2dff7e;animation:blink 1.2s infinite}
-    .sig-txt{font-family:'Press Start 2P',monospace;font-size:6px;color:#2dff7e}
-    .monitor-base{height:16px;background:linear-gradient(180deg,rgba(68,0,255,.3),rgba(68,0,255,.1));border-left:3px solid rgba(68,0,255,.6);border-right:3px solid rgba(68,0,255,.6);border-bottom:3px solid rgba(68,0,255,.6);border-radius:0 0 4px 4px;margin-top:-1px}
-    .monitor-stand{width:60px;height:10px;background:linear-gradient(180deg,rgba(68,0,255,.2),transparent);margin:0 auto}
-    .insert-coins{font-family:'Press Start 2P',monospace;font-size:7px;color:rgba(153,119,255,.6);text-align:center;margin-top:6px;animation:blink-text 1s infinite}
-    @keyframes blink-text{0%,100%{opacity:1}50%{opacity:0}}
-
-    .footer{display:flex;align-items:center;justify-content:center;padding-top:10px}
-    .exit-btn{padding:10px 36px;border-radius:2px;background:transparent;border:2px solid rgba(68,0,255,.6);color:var(--c);font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:2px;cursor:pointer;transition:.25s;text-shadow:0 0 10px var(--c)}
-    .exit-btn:hover{background:rgba(68,0,255,.15);box-shadow:0 0 20px rgba(68,0,255,.4)}
-
-    /* HISTORY POPUP */
-    .history-overlay{position:fixed;inset:0;z-index:100000;background:rgba(4,2,15,.85);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s ease}
-    .history-overlay.active{opacity:1;pointer-events:all}
-    .history-popup{width:90%;max-width:360px;background:#080413;border-radius:8px;border:2px solid rgba(68,0,255,.4);padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.7);transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-    .history-overlay.active .history-popup{transform:scale(1)}
-    .popup-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(68,0,255,.2)}
-    .popup-title{font-family:'Press Start 2P',monospace;font-size:10px;color:var(--c)}
-    .popup-close{width:26px;height:26px;border-radius:4px;background:rgba(68,0,255,.15);border:1px solid rgba(68,0,255,.4);color:#9977ff;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
-    .popup-close:hover{background:rgba(68,0,255,.3)}
-    .popup-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-height:55vh;overflow-y:auto}
-    .popup-grid .history-pill{margin:0;width:100%;padding:7px 0;font-size:7px;text-align:center;justify-content:center}
-  </style>
+  <title>Lucky Jet Predictor - APNAJ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
 </head>
-<body>
-  <div class="bg-layer"></div>
-  <div class="scanlines"></div>
-  <div class="vignette"></div>
-  <div class="neon-frame"></div>
+<body class="theme-noise">
   <div id="pg-loader">
     <div class="loader-title">LUCKY JET</div>
-    <div class="loader-sub">Loading Game…</div>
+    <div class="loader-sub">Loading…</div>
     <div class="loader-track"><div id="pg-bar"></div></div>
     <div id="pg-pct">1%</div>
   </div>
   <script>
-    (function(){var dur=5000+Math.random()*5000,p=1,b=document.getElementById('pg-bar'),t=document.getElementById('pg-pct'),o=document.getElementById('pg-loader');var iv=setInterval(function(){p+=Math.floor(Math.random()*4)+1;if(p>=100){p=100;clearInterval(iv);setTimeout(function(){o.style.transition='opacity 0.6s';o.style.opacity='0';setTimeout(function(){o.remove();},650);},200);}b.style.width=p+'%';t.textContent=p+'%';},Math.round(dur/40));})();
+    (function(){var dur=2000+Math.random()*1500,p=1,b=document.getElementById('pg-bar'),t=document.getElementById('pg-pct'),o=document.getElementById('pg-loader');var iv=setInterval(function(){p+=Math.floor(Math.random()*6)+2;if(p>=100){p=100;clearInterval(iv);setTimeout(function(){o.style.transition='opacity 0.5s';o.style.opacity='0';setTimeout(function(){o.remove();},500);},150);}b.style.width=p+'%';t.textContent=p+'%';},Math.round(dur/35));})();
   </script>
-  <div class="page">
-    <div class="hud-top">
-      <div class="hud-brand">LKY JET</div>
-      <div class="hud-score"><span>PREDICTOR</span>AI ENGINE</div>
-    </div>
-    <div class="hist-row">
-      <div class="hist-lbl">LOG▶</div>
-      <div class="history-bar" id="historyBar"></div>
-      <button class="hist-btn" onclick="openHistoryPopup()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </button>
-    </div>
+
+  <header class="topbar">
+    <a class="logo-wrap" href="login.html">
+      <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png" alt="Logo">
+      <span>APNAJ</span>
+    </a>
+    <a class="exit-btn" href="login.html">Exit</a>
+  </header>
+
+  <main class="container fade-up">
+    <h1 class="page-title">LUCKY JET</h1>
+    <p class="page-sub">AI Predictor</p>
+
+    <div class="card">
+      
     <div class="live-strip">
       <div class="ls-left"><div class="ls-dot" id="liveDot"></div><span id="liveStatusBadge">WAITING</span></div>
       <div id="liveStatusValue">--</div>
     </div>
-    <div class="monitor-wrap">
-      <div class="monitor">
-        <div class="monitor-screen">
-          <div class="monitor-scanline"></div>
-          <div class="screen-eyebrow">── PREDICTION UNIT ──</div>
-          <div class="screen-title">NEXT COEFF.</div>
-          <div id="predictionValue">--</div>
-          <div class="screen-divider"></div>
-          <div class="sig-row"><div class="sig-dot"></div><div class="sig-txt">AI SIGNAL LOCKED</div></div>
-        </div>
-        <div class="monitor-base"></div>
-        <div class="monitor-stand"></div>
-        <div class="insert-coins">◄ LUCKY JET AI ENGINE ►</div>
+      <div class="hist-row">
+        <div class="hist-lbl">History</div>
+        <div class="history-bar" id="historyBar"></div>
+        
+      <button class="hist-btn" onclick="openHistoryPopup()" aria-label="History">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </button>
       </div>
+      <div class="predict-panel">
+        <div class="predict-eyebrow">Prediction Unit</div>
+        <div class="predict-label">Next Coefficient</div>
+        <div id="predictionValue">--</div>
+        <div class="predict-divider"></div>
+        <div class="sig-row"><div class="sig-dot"></div><div class="sig-txt">AI Signal Locked</div></div>
+      </div>
+      <div class="engine-tag">LUCKY JET AI Engine</div>
     </div>
-    <div class="footer">
-      <button class="exit-btn" onclick="location.href='login.html'">EXIT</button>
-    </div>
-  </div>
+  </main>
+  
   <div class="history-overlay" id="historyOverlay">
     <div class="history-popup">
       <div class="popup-header">

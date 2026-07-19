@@ -10,21 +10,19 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'DM Sans', sans-serif;
         }
 
         body {
             height: 100vh;
             width: 100vw;
-            background:
-                radial-gradient(circle at center, rgba(180, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.95) 100%),
-                url("https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/5c9e6454-c9d7-4879-8873-75e1c670b345.avif") no-repeat center center;
-            background-size: cover;
-            color: white;
+            background: #07080c;
+            color: #f0f2ff;
             display: flex;
             flex-direction: column;
             align-items: center;
             overflow: hidden;
+            font-family: 'DM Sans', sans-serif;
         }
 
         /* === LOADER TOP BAR === */
@@ -34,15 +32,15 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: rgba(255, 34, 0, 0.15);
+            background: rgba(30, 144, 255, 0.15);
             z-index: 999;
         }
 
         .bar {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #ff2200, #ff8800);
-            box-shadow: 0 0 10px rgba(255, 34, 0, 0.8);
+            background: linear-gradient(90deg, #1e90ff, #5eb3ff);
+            box-shadow: 0 0 10px rgba(30, 144, 255, 0.8);
             transition: width 11s cubic-bezier(0.1, 0.05, 0.3, 1);
         }
 
@@ -54,8 +52,8 @@
             font-size: 32px;
             font-weight: 800;
             letter-spacing: 3px;
-            color: #ff2200;
-            text-shadow: 0 0 20px rgba(255, 34, 0, 0.6);
+            color: #1e90ff;
+            text-shadow: 0 0 20px rgba(30, 144, 255, 0.6);
         }
 
         /* === CENTER === */
@@ -75,8 +73,8 @@
             width: 280px;
             height: 280px;
             border-radius: 50%;
-            border: 5px solid #ff2200;
-            box-shadow: 0 0 50px rgba(255, 34, 0, 0.8), inset 0 0 30px rgba(255, 34, 0, 0.1);
+            border: 5px solid #1e90ff;
+            box-shadow: 0 0 50px rgba(30, 144, 255, 0.8), inset 0 0 30px rgba(30, 144, 255, 0.1);
             background: rgba(0, 0, 0, 0.78);
             display: flex;
             flex-direction: column;
@@ -164,7 +162,7 @@
         .get-btn {
             padding: 16px 60px;
             border-radius: 14px;
-            background: linear-gradient(135deg, #cc1100, #ff4400);
+            background: linear-gradient(135deg, #1470c8, #1e90ff);
             border: none;
             color: white;
             font-size: 18px;
@@ -172,17 +170,17 @@
             letter-spacing: 3px;
             cursor: pointer;
             transition: 0.3s;
-            box-shadow: 0 0 25px rgba(255, 34, 0, 0.5);
+            box-shadow: 0 0 25px rgba(30, 144, 255, 0.5);
             text-transform: uppercase;
         }
 
         .get-btn:hover {
-            box-shadow: 0 0 40px rgba(255, 34, 0, 0.8);
+            box-shadow: 0 0 40px rgba(30, 144, 255, 0.8);
             transform: translateY(-2px);
         }
 
         .get-btn:disabled {
-            background: rgba(60, 20, 10, 0.8);
+            background: rgba(13, 15, 22, 0.85);
             color: rgba(255, 255, 255, 0.3);
             box-shadow: none;
             transform: none;
@@ -193,8 +191,8 @@
             padding: 12px 44px;
             border-radius: 14px;
             background: transparent;
-            border: 2px solid #ff2200;
-            color: #ff2200;
+            border: 2px solid #1e90ff;
+            color: #1e90ff;
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
@@ -203,13 +201,93 @@
         }
 
         .exit-btn:hover {
-            background: #ff2200;
+            background: #1e90ff;
             color: black;
         }
     </style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  
+<style id="apnaj-theme-override">
+  :root {
+    --accent: #1e90ff !important;
+    --accent2: #ff4f4f !important;
+    --bg: #07080c !important;
+    --surface: #0d0f16 !important;
+    --border: rgba(255,255,255,0.07) !important;
+    --text: #f0f2ff !important;
+    --muted: rgba(240,242,255,0.45) !important;
+    --ok: #22c55e !important;
+    /* remaps for various games */
+    --gold: #1e90ff !important;
+    --gold-light: #5eb3ff !important;
+    --gold-dark: #1470c8 !important;
+    --violet: #1e90ff !important;
+    --violet-bright: #5eb3ff !important;
+    --glass: rgba(13,15,22,0.65) !important;
+    --glass-border: rgba(255,255,255,0.07) !important;
+    --ink: #f0f2ff !important;
+    --ink-2: rgba(240,242,255,0.7) !important;
+    --ink-3: rgba(240,242,255,0.45) !important;
+    --paper: #07080c !important;
+    --paper-2: #0d0f16 !important;
+    --card: rgba(13,15,22,0.85) !important;
+    --line: rgba(255,255,255,0.1) !important;
+    --line-2: rgba(255,255,255,0.14) !important;
+    --pitch: #1e90ff !important;
+    --pitch-deep: #1470c8 !important;
+    --pitch-soft: rgba(30,144,255,0.12) !important;
+    --hit: #22c55e !important;
+    --hit-soft: rgba(34,197,94,0.15) !important;
+    --miss: #ff4f4f !important;
+    --miss-soft: rgba(255,79,79,0.15) !important;
+    --pending: #fbbf24 !important;
+    --pending-soft: rgba(251,191,36,0.15) !important;
+    --chalk: #1e90ff !important;
+    --red: #ff4f4f !important;
+    --blue: #1e90ff !important;
+    --green: #22c55e !important;
+    --dark: #07080c !important;
+    --panel: rgba(13,15,22,0.82) !important;
+    --card-bg: #0d0f16 !important;
+    --card-light: #f0f2ff !important;
+    --card-shadow: rgba(0,0,0,0.4) !important;
+    --parchment: #0d0f16 !important;
+    --parchment-dark: #07080c !important;
+    --shadow: rgba(0,0,0,0.6) !important;
+  }
+  html, body {
+    background: #07080c !important;
+    color: #f0f2ff !important;
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  body {
+    background-image: none !important;
+    background-color: #07080c !important;
+  }
+  h1, h2, h3, .header, .title, .brand-title, .page-title {
+    font-family: 'Bebas Neue', sans-serif !important;
+    letter-spacing: 2px;
+  }
+  button, .btn, .generate-btn, .predict-btn, .control-btn {
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  /* common accent remaps */
+  [style*="#1e90ff"], [style*="#ff3c00"] { }
+</style>
+
 </head>
 
-<body>
+<body class="theme-noise">
+<header class="topbar" style="position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(7,8,12,0.9);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,0.07);width:100%;">
+  <a href="login.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+    <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png" alt="Logo" style="width:36px;height:36px;object-fit:contain;">
+    <span style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#1e90ff;line-height:1;">APNAJ</span>
+  </a>
+  <a href="login.html" style="background:#ff4f4f;color:#fff;padding:8px 14px;border-radius:8px;font-weight:800;text-decoration:none;font-size:13px;font-family:'DM Sans',sans-serif;">Exit</a>
+</header>
+
 
     <!-- Page loader -->
     <div id="pg-loader"
@@ -217,13 +295,13 @@
         <div style="position:absolute;inset:0;background:rgba(0,0,0,0.65);"></div>
         <div
             style="position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;">
-            <div style="font-weight:900;font-size:30px;color:#fff;letter-spacing:5px;text-shadow:0 0 25px #ff2200;">
+            <div style="font-weight:900;font-size:30px;color:#fff;letter-spacing:5px;text-shadow:0 0 25px #1e90ff;">
                 AVIATOR</div>
             <div style="font-size:11px;color:rgba(255,255,255,0.6);letter-spacing:4px;">LOADING PREDICTOR...</div>
             <div
                 style="width:72%;max-width:300px;background:rgba(255,255,255,0.15);border-radius:50px;overflow:hidden;height:7px;margin-top:4px;">
                 <div id="pg-bar"
-                    style="height:100%;width:1%;background:linear-gradient(90deg,#ff2200,#ff8800);border-radius:50px;transition:width 0.06s linear;">
+                    style="height:100%;width:1%;background:linear-gradient(90deg,#1e90ff,#5eb3ff);border-radius:50px;transition:width 0.06s linear;">
                 </div>
             </div>
             <div id="pg-pct" style="color:#fff;font-weight:900;font-size:14px;letter-spacing:3px;opacity:0.85;">1%</div>

@@ -7,33 +7,28 @@
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Form Guide — Match Predictor</title>
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@600;700&family=Anton&family=Spline+Sans+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --paper: #efe9dc;
-      --paper-2: #e6dfcf;
-      --card: #f6f2e9;
-      --ink: #16140f;
-      --ink-2: #46413a;
-      --ink-3: #8a8275;
-      --line: #d6cdba;
-      --line-2: #c4b9a2;
-      --pitch: #1f7a4d;
-      --pitch-deep: #155c39;
-      --pitch-soft: #e1ebdf;
+      --paper: #f0f2ff;
+      --paper-2: #0d0f16;
+      --card: rgba(13,15,22,0.85);
+      --ink: #0d0f16;
+      --ink-2: rgba(240,242,255,0.7);
+      --ink-3: rgba(240,242,255,0.45);
+      --line: rgba(255,255,255,0.1);
+      --line-2: rgba(255,255,255,0.14);
+      --pitch: #1e90ff;
+      --pitch-deep: #1470c8;
+      --pitch-soft: rgba(30,144,255,0.12);
       --hit: #1f7a4d;
-      --hit-soft: #dfeadd;
+      --hit-soft: rgba(34,197,94,0.15);
       --miss: #b53a2b;
-      --miss-soft: #f1ddd7;
+      --miss-soft: rgba(255,79,79,0.15);
       --pending: #b07d12;
-      --pending-soft: #f0e6cd;
-      --chalk: #c9472f;
+      --pending-soft: rgba(251,191,36,0.15);
+      --chalk: #1e90ff;
       --r: 4px;
     }
 
@@ -48,9 +43,9 @@
     }
 
     body {
-      font-family: 'Archivo', system-ui, sans-serif;
-      color: var(--ink);
-      background: var(--paper);
+      font-family: 'DM Sans', sans-serif;
+      color: #f0f2ff;
+      background: #07080c;
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
       line-height: 1.4;
@@ -85,18 +80,15 @@
       font-family: inherit;
     }
 
-    ::selection {
-      background: var(--pitch);
-      color: var(--paper);
-    }
+    ::selection { background: #1e90ff; color: #fff; }
 
     .navbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 14px 22px;
-      background: var(--ink);
-      color: var(--paper);
+      background: rgba(7, 8, 12, 0.92);
+      color: #f0f2ff;
       border-bottom: 3px solid var(--pitch);
     }
 
@@ -124,7 +116,7 @@
     }
 
     .nav-name {
-      font-family: 'Anton', sans-serif;
+      font-family: 'Bebas Neue', sans-serif;
       font-size: 26px;
       letter-spacing: 1.5px;
       text-transform: uppercase;
@@ -137,7 +129,7 @@
     }
 
     .nav-tag {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 9px;
       letter-spacing: 3px;
       color: var(--ink-3);
@@ -189,7 +181,7 @@
     }
 
     .hero-eyebrow {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 10px;
       letter-spacing: 4px;
       text-transform: uppercase;
@@ -253,7 +245,7 @@
     }
 
     .hero-vs {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 10px;
       letter-spacing: 3px;
       color: var(--ink-3);
@@ -261,7 +253,7 @@
     }
 
     .hero-time {
-      font-family: 'Anton', sans-serif;
+      font-family: 'Bebas Neue', sans-serif;
       font-size: 2.6rem;
       line-height: 1;
       letter-spacing: 1px;
@@ -270,7 +262,7 @@
     }
 
     .hero-date {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 10px;
       letter-spacing: 2px;
       color: var(--ink-3);
@@ -301,7 +293,7 @@
     }
 
     .coupon-bar-label {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 11px;
       letter-spacing: 2px;
       text-transform: uppercase;
@@ -349,7 +341,7 @@
       color: var(--paper);
       padding: 5px 12px;
       border-radius: 50px;
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 0.72rem;
       font-weight: 600;
       letter-spacing: 1px;
@@ -410,7 +402,7 @@
     }
 
     .day-count {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 9px;
       font-weight: 500;
       letter-spacing: 1px;
@@ -421,7 +413,7 @@
     .day-tab.active {
       background: var(--ink);
       color: var(--paper);
-      border-color: var(--ink);
+      border-color: #f0f2ff;
     }
 
     .day-tab.active .day-count {
@@ -457,7 +449,7 @@
       color: var(--paper);
       padding: 16px 8px;
       text-align: center;
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 0.82rem;
       font-weight: 600;
       letter-spacing: 0.5px;
@@ -498,7 +490,7 @@
     }
 
     .match-comp {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 9.5px;
       letter-spacing: 1px;
       text-transform: uppercase;
@@ -509,7 +501,7 @@
     }
 
     .status-badge {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 9px;
       font-weight: 600;
       letter-spacing: 1.5px;
@@ -586,16 +578,16 @@
     }
 
     .tname.winner {
-      color: var(--ink);
+      color: #f0f2ff;
       font-weight: 700;
     }
 
     .tscore {
-      font-family: 'Anton', sans-serif;
+      font-family: 'Bebas Neue', sans-serif;
       font-size: 1.25rem;
       width: 30px;
       text-align: right;
-      color: var(--ink);
+      color: #f0f2ff;
       font-variant-numeric: tabular-nums;
     }
 
@@ -614,7 +606,7 @@
       padding: 9px 12px;
       border-radius: var(--r);
       border: 1px solid var(--line-2);
-      background: var(--paper);
+      background: #07080c;
       border-left: 3px solid var(--ink-3);
     }
 
@@ -667,7 +659,7 @@
       font-size: 0.95rem;
       letter-spacing: 0.5px;
       text-transform: uppercase;
-      color: var(--ink);
+      color: #f0f2ff;
     }
 
     .pred-value {
@@ -677,21 +669,21 @@
     }
 
     .pred-value .pv-conf {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-weight: 600;
       font-size: 0.92rem;
-      color: var(--ink);
+      color: #f0f2ff;
     }
 
     .pred-value .pv-odds {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 0.66rem;
       color: var(--ink-3);
       letter-spacing: 0.5px;
     }
 
     .pred-conf {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 0.62rem;
       font-weight: 600;
       letter-spacing: 0.5px;
@@ -713,7 +705,7 @@
     .match-expand {
       display: none;
       padding: 16px;
-      background: var(--paper);
+      background: #07080c;
       border-bottom: 1px solid var(--line);
     }
 
@@ -729,7 +721,7 @@
     .prob-label-row {
       display: flex;
       justify-content: space-between;
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 10px;
       letter-spacing: 0.5px;
       color: var(--ink-2);
@@ -768,7 +760,7 @@
     }
 
     .markets-section-label {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 9.5px;
       letter-spacing: 2px;
       text-transform: uppercase;
@@ -815,7 +807,7 @@
     }
 
     .market-pct {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
     }
 
     .market-pick {
@@ -835,7 +827,7 @@
     }
 
     .xg-tag {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 0.72rem;
       font-weight: 600;
       background: var(--ink);
@@ -855,7 +847,7 @@
     }
 
     .analysis-txt strong {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 9.5px;
       letter-spacing: 1.5px;
       text-transform: uppercase;
@@ -900,7 +892,7 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 3px;
       padding: 4px 6px;
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 0.68rem;
       outline: none;
     }
@@ -916,7 +908,7 @@
     }
 
     .standings-tbl th {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 9px;
       letter-spacing: 1px;
       text-transform: uppercase;
@@ -943,13 +935,13 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.3px;
-      color: var(--ink);
+      color: #f0f2ff;
     }
 
     .pts {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-weight: 600;
-      color: var(--ink);
+      color: #f0f2ff;
     }
 
     .pos-num {
@@ -958,7 +950,7 @@
       justify-content: center;
       width: 20px;
       height: 20px;
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 0.72rem;
       font-weight: 600;
       border-radius: 3px;
@@ -988,7 +980,7 @@
     }
 
     .scorer-pos {
-      font-family: 'Anton', sans-serif;
+      font-family: 'Bebas Neue', sans-serif;
       font-size: 1rem;
       color: var(--ink-3);
       width: 22px;
@@ -1004,7 +996,7 @@
       font-family: 'Archivo Narrow', sans-serif;
       font-weight: 600;
       font-size: 0.92rem;
-      color: var(--ink);
+      color: #f0f2ff;
       text-transform: uppercase;
       letter-spacing: 0.3px;
       overflow: hidden;
@@ -1013,7 +1005,7 @@
     }
 
     .scorer-club {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 9px;
       letter-spacing: 0.5px;
       color: var(--ink-3);
@@ -1021,7 +1013,7 @@
     }
 
     .scorer-g {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-weight: 600;
       font-size: 0.82rem;
       color: var(--pitch-deep);
@@ -1202,21 +1194,21 @@
     .coupon-stat {
       flex: 1;
       text-align: center;
-      background: var(--paper);
+      background: #07080c;
       border: 1px solid var(--line-2);
       padding: 12px 6px;
       border-radius: var(--r);
     }
 
     .coupon-stat-val {
-      font-family: 'Anton', sans-serif;
+      font-family: 'Bebas Neue', sans-serif;
       font-size: 1.5rem;
       line-height: 1;
-      color: var(--ink);
+      color: #f0f2ff;
     }
 
     .coupon-stat-lbl {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 8.5px;
       letter-spacing: 1.5px;
       text-transform: uppercase;
@@ -1239,7 +1231,7 @@
     }
 
     .coupon-accuracy-label {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 10px;
       letter-spacing: 1px;
       text-transform: uppercase;
@@ -1254,7 +1246,7 @@
     }
 
     .coupon-section-title {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 9.5px;
       letter-spacing: 2px;
       text-transform: uppercase;
@@ -1286,7 +1278,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 0.78rem;
       font-weight: 600;
     }
@@ -1306,14 +1298,14 @@
       font-size: 0.96rem;
       text-transform: uppercase;
       letter-spacing: 0.3px;
-      color: var(--ink);
+      color: #f0f2ff;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     .coupon-pick-market {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 9.5px;
       letter-spacing: 0.5px;
       text-transform: uppercase;
@@ -1327,7 +1319,7 @@
     }
 
     .coupon-pick-conf {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-weight: 600;
       font-size: 0.95rem;
       color: var(--ink-2);
@@ -1369,7 +1361,7 @@
     }
 
     .pgl-name {
-      font-family: 'Anton', sans-serif;
+      font-family: 'Bebas Neue', sans-serif;
       font-size: 38px;
       letter-spacing: 2px;
       text-transform: uppercase;
@@ -1383,7 +1375,7 @@
     }
 
     .pgl-sub {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 9px;
       letter-spacing: 5px;
       color: var(--ink-3);
@@ -1409,7 +1401,7 @@
     }
 
     #pg-pct {
-      font-family: 'Spline Sans Mono', monospace;
+      font-family: 'DM Sans', sans-serif;
       font-size: 11px;
       letter-spacing: 3px;
       color: var(--ink-3);
@@ -1458,7 +1450,7 @@
         flex-direction: column;
         align-items: center;
         gap: 4px;
-        font-family: 'Spline Sans Mono', monospace;
+        font-family: 'DM Sans', sans-serif;
         font-size: 9px;
         letter-spacing: 1px;
         text-transform: uppercase;
@@ -1515,9 +1507,89 @@
       }
     }
   </style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  
+<style id="apnaj-theme-override">
+  :root {
+    --accent: #1e90ff !important;
+    --accent2: #ff4f4f !important;
+    --bg: #07080c !important;
+    --surface: #0d0f16 !important;
+    --border: rgba(255,255,255,0.07) !important;
+    --text: #f0f2ff !important;
+    --muted: rgba(240,242,255,0.45) !important;
+    --ok: #22c55e !important;
+    /* remaps for various games */
+    --gold: #1e90ff !important;
+    --gold-light: #5eb3ff !important;
+    --gold-dark: #1470c8 !important;
+    --violet: #1e90ff !important;
+    --violet-bright: #5eb3ff !important;
+    --glass: rgba(13,15,22,0.65) !important;
+    --glass-border: rgba(255,255,255,0.07) !important;
+    --ink: #0d0f16;
+    --ink-2: rgba(240,242,255,0.7) !important;
+    --ink-3: rgba(240,242,255,0.45) !important;
+    --paper: #f0f2ff;
+    --paper-2: rgba(240,242,255,0.85);
+    --card: rgba(13,15,22,0.85) !important;
+    --line: rgba(255,255,255,0.1) !important;
+    --line-2: rgba(255,255,255,0.14) !important;
+    --pitch: #1e90ff;
+    --pitch-deep: #1470c8;
+    --pitch-soft: rgba(30,144,255,0.12) !important;
+    --hit: #22c55e !important;
+    --hit-soft: rgba(34,197,94,0.15) !important;
+    --miss: #ff4f4f !important;
+    --miss-soft: rgba(255,79,79,0.15) !important;
+    --pending: #fbbf24 !important;
+    --pending-soft: rgba(251,191,36,0.15) !important;
+    --chalk: #1e90ff;
+    --red: #ff4f4f !important;
+    --blue: #1e90ff !important;
+    --green: #22c55e !important;
+    --dark: #07080c !important;
+    --panel: rgba(13,15,22,0.82) !important;
+    --card-bg: #0d0f16 !important;
+    --card-light: #f0f2ff !important;
+    --card-shadow: rgba(0,0,0,0.4) !important;
+    --parchment: #0d0f16 !important;
+    --parchment-dark: #07080c !important;
+    --shadow: rgba(0,0,0,0.6) !important;
+  }
+  html, body {
+    background: #07080c !important;
+    color: #f0f2ff !important;
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  body {
+    background-image: none !important;
+    background-color: #07080c !important;
+  }
+  h1, h2, h3, .header, .title, .brand-title, .page-title {
+    font-family: 'Bebas Neue', sans-serif !important;
+    letter-spacing: 2px;
+  }
+  button, .btn, .generate-btn, .predict-btn, .control-btn {
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  /* common accent remaps */
+  [style*="#ff2200"], [style*="#ff3c00"] { }
+</style>
+
 </head>
 
-<body>
+<body class="theme-noise">
+<header class="topbar" style="position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(7,8,12,0.9);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,0.07);width:100%;">
+  <a href="login.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+    <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png" alt="Logo" style="width:36px;height:36px;object-fit:contain;">
+    <span style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#1e90ff;line-height:1;">APNAJ</span>
+  </a>
+  <a href="login.html" style="background:#ff4f4f;color:#fff;padding:8px 14px;border-radius:8px;font-weight:800;text-decoration:none;font-size:13px;font-family:'DM Sans',sans-serif;">Exit</a>
+</header>
+
 
   <div id="pg-loader">
     <div class="pgl-name">Form<b>Guide</b></div>
@@ -2071,7 +2143,7 @@
           <span class="xg-tag">xG ${pred.expH}</span>
           <span style="color:var(--ink-3);font-size:.66rem;">vs</span>
           <span class="xg-tag">xG ${pred.expA}</span>
-          <span style="color:var(--ink-3);font-size:.7rem;margin-left:4px;font-family:'Spline Sans Mono',monospace;">Predicted ${pred.correctScore}</span>
+          <span style="color:var(--ink-3);font-size:.7rem;margin-left:4px;font-family:'DM Sans', sans-serif;">Predicted ${pred.correctScore}</span>
         </div>
         <div class="analysis-txt"><strong>Model read</strong> ${pred.analysis}</div>
       </div>
