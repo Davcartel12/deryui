@@ -3,48 +3,54 @@
 
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Contact - APNAJ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090d16" />
+  <title>Support - CHIKE1W</title>
   <script src="js/access-core.js"></script>
   <script src="js/access-guard.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --accent: #1e90ff;
-      --accent2: #ff4f4f;
-      --bg: #07080c;
-      --surface: #0d0f16;
-      --border: rgba(255, 255, 255, 0.07);
-      --text: #f0f2ff;
-      --muted: rgba(240, 242, 255, 0.45);
+      --bg: #090d16;
+      --header: #0c1220;
+      --line: rgba(255, 255, 255, 0.08);
+      --blue: #1a73ff;
+      --green: #00a84f;
+      --text: #ffffff;
+      --muted: #8d97ab;
+      --card: #151b2b;
     }
 
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
+      font-family: Inter, sans-serif;
       min-height: 100vh;
+      min-height: 100dvh;
       overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    /* ── NOISE OVERLAY ── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.35;
+    .shell {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      overflow-x: hidden;
+      padding-bottom: calc(88px + env(safe-area-inset-bottom));
     }
 
-    /* ── TOP BAR ── */
     .topbar {
       position: sticky;
       top: 0;
@@ -52,162 +58,178 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 20px;
-      background: rgba(7, 8, 12, 0.85);
-      backdrop-filter: blur(18px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .logo-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .logo-wrap img {
-      width: 36px;
-      height: 36px;
-      object-fit: contain;
-    }
-
-    .logo-wrap span {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 26px;
-      letter-spacing: 3px;
-      color: var(--accent);
-      line-height: 1;
-    }
-
-    .promo-tag {
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      background: linear-gradient(90deg, var(--accent), #00d4ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .promo-tag span {
-      -webkit-text-fill-color: var(--text);
-      color: var(--muted);
-      font-weight: 400;
-      margin-right: 4px;
-    }
-
-    /* ── PAGE CONTENT ── */
-    .page-content {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 32px 20px 120px;
-    }
-
-    .page-heading {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 32px;
-      letter-spacing: 4px;
-      color: var(--text);
-      margin-bottom: 6px;
-      text-align: center;
-    }
-
-    .page-sub {
-      font-size: 13px;
-      color: var(--muted);
-      text-align: center;
-      margin-bottom: 28px;
-    }
-
-    /* ── CONTACT CARD ── */
-    .contact-card {
-      width: 100%;
-      max-width: 400px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 28px 24px;
-      display: flex;
-      flex-direction: column;
       gap: 12px;
+      min-height: 56px;
+      padding: calc(8px + env(safe-area-inset-top)) 14px 8px;
+      background: var(--header);
+      border-bottom: 1px solid var(--line);
     }
 
-    .contact-link {
+    .brand {
       display: flex;
       align-items: center;
-      gap: 14px;
-      padding: 16px 18px;
-      border-radius: 14px;
-      font-weight: 700;
-      font-size: 14px;
+      min-width: 0;
+      text-decoration: none;
+    }
+
+    .brand img {
+      height: 38px;
+      width: auto;
+      max-width: 150px;
+      object-fit: contain;
+      display: block;
+      mix-blend-mode: screen;
+    }
+
+    .code-btn {
+      flex-shrink: 0;
+      border: 0;
+      border-radius: 10px;
+      background: var(--green);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      padding: 9px 12px;
+      text-decoration: none;
+    }
+
+    .page {
+      padding: 16px 12px 0;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .lead {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
       text-decoration: none;
       color: #fff;
-      transition: transform .2s, box-shadow .2s, filter .2s;
-      letter-spacing: .3px;
     }
 
-    .contact-link:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.1);
+    .link:active {
+      filter: brightness(1.08);
     }
 
-    .contact-link svg {
-      width: 22px;
-      height: 22px;
-      flex-shrink: 0;
-    }
-
-    .telegram-group {
-      background: linear-gradient(135deg, #229ED9, #1a7fb0);
-      box-shadow: 0 6px 20px rgba(34, 158, 217, 0.3);
-    }
-
-    .telegram-chat {
-      background: linear-gradient(135deg, #0088cc, #006fa8);
-      box-shadow: 0 6px 20px rgba(0, 136, 204, 0.3);
-    }
-
-    .whatsapp {
-      background: linear-gradient(135deg, #25D366, #1aaa52);
-      box-shadow: 0 6px 20px rgba(37, 211, 102, 0.3);
-    }
-
-    /* ── BOTTOM NAV ── */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 200;
+    .mark {
+      flex: 0 0 44px;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0;
-      background: rgba(7, 8, 12, 0.92);
-      backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border);
-      padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+    }
+
+    .mark svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .mark.tg {
+      background: rgba(26, 115, 255, 0.16);
+      color: #6aa6ff;
+    }
+
+    .mark.wa {
+      background: rgba(0, 168, 79, 0.16);
+      color: #3dce7a;
+    }
+
+    .link strong {
+      display: block;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .link span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .chev {
+      margin-left: auto;
+      color: var(--muted);
+      flex: 0 0 18px;
+    }
+
+    .chev svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .note {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #101726;
+      border: 1px solid var(--line);
+    }
+
+    .note h2 {
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .note p {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 200;
+      display: flex;
+      background: #0c111c;
+      border-top: 1px solid var(--line);
+      padding: 4px 6px calc(6px + env(safe-area-inset-bottom));
     }
 
     .nav-item {
-      flex: 1;
-      max-width: 90px;
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 52px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      justify-content: center;
+      gap: 3px;
       text-decoration: none;
       color: var(--muted);
-      font-size: 11px;
-      font-weight: 600;
-      transition: color .2s;
-      padding: 4px 0;
-    }
-
-    .nav-item.active {
-      color: var(--accent);
+      font-size: 10px;
+      font-weight: 700;
     }
 
     .nav-item svg {
@@ -215,97 +237,74 @@
       height: 22px;
     }
 
-    .nav-item .dot {
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--accent);
-      opacity: 0;
-      margin-top: -2px;
-      transition: opacity .2s;
-    }
-
-    .nav-item.active .dot {
-      opacity: 1;
+    .nav-item.active {
+      color: var(--blue);
     }
   </style>
 </head>
 
 <body>
-
-  <!-- TOP BAR -->
   <header class="topbar">
-    <div class="logo-wrap">
-      <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png" alt="Logo">
-      <span>APNAJ</span>
-    </div>
-    <div class="promo-tag"><span>Code:</span>APNAJ</div>
+    <a class="brand" href="login.html">
+      <img src="brand-logo.png" alt="CHIKE1W">
+    </a>
+    <a class="code-btn" href="login.html">CHIKE1W</a>
   </header>
 
-  <!-- PAGE CONTENT -->
-  <div class="page-content">
-    <h1 class="page-heading">Contact Us</h1>
-    <p class="page-sub">Reach us directly through Telegram or WhatsApp</p>
+  <div class="shell">
+    <div class="page">
+      <h1>Support</h1>
+      <p class="lead">Need an access code, a deposit, or help with a game? Message CHIKE directly.</p>
 
-    <div class="contact-card">
+      <div class="list">
+        <a class="link" href="https://t.me/Chikeprono" target="_blank" rel="noopener">
+          <div class="mark tg">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.26 13.6l-2.985-.929c-.648-.204-.66-.648.136-.96l11.664-4.498c.54-.196 1.013.132.819.908z"/></svg>
+          </div>
+          <div>
+            <strong>Message admin</strong>
+            <span>Telegram · @Chikeprono</span>
+          </div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+        </a>
 
-      <a href="https://t.me/APNAJ1" target="_blank" class="contact-link telegram-group">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.26 13.6l-2.985-.929c-.648-.204-.66-.648.136-.960l11.664-4.498c.54-.196 1.013.132.819.908z"/>
-        </svg>
-        Join our Telegram Group
-      </a>
+        <a class="link" href="https://wa.me/2348063804264" target="_blank" rel="noopener">
+          <div class="mark wa">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+          </div>
+          <div>
+            <strong>WhatsApp</strong>
+            <span>+234 806 380 4264</span>
+          </div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+        </a>
+      </div>
 
-      <a href="https://t.me/Kingapnaj" target="_blank" class="contact-link telegram-chat">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.26 13.6l-2.985-.929c-.648-.204-.66-.648.136-.960l11.664-4.498c.54-.196 1.013.132.819.908z"/>
-        </svg>
-        Chat with Admin on Telegram
-      </a>
-
-      <a href="https://wa.me/2348063804264" target="_blank" class="contact-link whatsapp">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
-        </svg>
-        Chat with us on WhatsApp
-      </a>
-
+      <div class="note">
+        <h2>Access codes</h2>
+        <p>Codes are created by CHIKE and last for a set time. If yours expired or was used on another phone, message the admin for a new one.</p>
+      </div>
     </div>
   </div>
 
-  <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <a href="login.html" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-      </svg>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
       <span>Home</span>
-      <div class="dot"></div>
     </a>
     <a href="live.html" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
       <span>Live</span>
-      <div class="dot"></div>
     </a>
     <a href="promo.html" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-      </svg>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l7.1-1.01z"/></svg>
       <span>Promo</span>
-      <div class="dot"></div>
     </a>
     <a href="contact.html" class="nav-item active">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span>Support</span>
-      <div class="dot"></div>
     </a>
   </nav>
-
 </body>
 
 </html>
