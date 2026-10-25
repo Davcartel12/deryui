@@ -132,6 +132,23 @@
       border-color: var(--accent)
     }
 
+    input[type="file"] {
+      padding: 10px 12px
+    }
+
+    input[type="file"]::file-selector-button {
+      margin-right: 12px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 8px 12px;
+      cursor: pointer
+    }
+
     input::placeholder,
     textarea::placeholder {
       color: var(--muted)
@@ -582,8 +599,9 @@
       <div class="field"><label>Description</label><textarea id="fDesc" rows="2"
           placeholder="e.g. 50% deposit bonus on 1win"></textarea></div>
       <div class="field">
-        <label>Image URL</label>
-        <input type="url" id="fImg" placeholder="https://..." oninput="previewImg()">
+        <label>Image</label>
+        <input type="file" id="fFile" accept="image/*" onchange="previewFile()">
+        <input type="url" id="fImg" placeholder="or paste an image link" oninput="previewImg()" style="margin-top:8px">
         <img id="imgPreview" class="preview-img" alt="Preview">
       </div>
       <div class="field"><label>Expiry (optional)</label><input type="text" id="fExpiry"
@@ -606,6 +624,8 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, setDoc, getDoc, updateDoc }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCWOqTsV4Nhd6axIPyTWWI-PFo2HOd_KV0",
@@ -621,6 +641,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const storage = getStorage(app);
     const voucherCol = collection(db, "vouchers");
     const codeCol = collection(db, "accessCodes");
     const A = window.AccessCodes;
@@ -645,11 +666,24 @@
     }
     window.doLogout = doLogout;
 
-    function previewImg() {
-      const url = document.getElementById("fImg").value.trim();
+    function showPreview(src) {
       const img = document.getElementById("imgPreview");
-      if (url) { img.src = url; img.style.display = "block"; }
-      else { img.style.display = "none"; }
+      if (src) { img.src = src; img.style.display = "block"; }
+      else { img.removeAttribute("src"); img.style.display = "none"; }
+    }
+
+    function previewFile() {
+      const file = document.getElementById("fFile").files[0];
+      if (!file) { previewImg(); return; }
+      const reader = new FileReader();
+      reader.onload = () => showPreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+    window.previewFile = previewFile;
+
+    function previewImg() {
+      if (document.getElementById("fFile").files[0]) return;
+      showPreview(document.getElementById("fImg").value.trim());
     }
     window.previewImg = previewImg;
 
@@ -666,16 +700,25 @@
       const title = document.getElementById("fTitle").value.trim();
       const code = document.getElementById("fCode").value.trim().toUpperCase();
       const desc = document.getElementById("fDesc").value.trim();
-      const img = document.getElementById("fImg").value.trim();
+      let img = document.getElementById("fImg").value.trim();
+      const file = document.getElementById("fFile").files[0];
       const exp = document.getElementById("fExpiry").value.trim();
       if (!title || !code) { toast("Title and Code are required", false); return; }
       const btn = document.getElementById("addBtn");
-      btn.textContent = "Publishing…"; btn.disabled = true;
+      btn.textContent = file ? "Uploading…" : "Publishing…"; btn.disabled = true;
       try {
+        if (file) {
+          const safe = (file.name || "image").replace(/[^a-zA-Z0-9._-]/g, "_");
+          const stored = ref(storage, "vouchers/" + Date.now() + "-" + safe);
+          await uploadBytes(stored, file, { contentType: file.type || "image/jpeg" });
+          img = await getDownloadURL(stored);
+          btn.textContent = "Publishing…";
+        }
         await addDoc(voucherCol, { title, code, description: desc, imageUrl: img, expiry: exp, createdAt: serverTimestamp() });
         toast("✅ Voucher published!");
         ["fTitle", "fCode", "fDesc", "fImg", "fExpiry"].forEach(id => document.getElementById(id).value = "");
-        document.getElementById("imgPreview").style.display = "none";
+        document.getElementById("fFile").value = "";
+        showPreview("");
       } catch (e) { toast("Error: " + e.message, false); }
       btn.textContent = "Publish Voucher"; btn.disabled = false;
     }
