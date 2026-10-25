@@ -1,101 +1,724 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crash Predictor - APNAJ</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="theme.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#141415" />
+  <title>Crash - CHIKE1W</title>
+  <script src="js/access-core.js"></script>
+  <script src="js/access-guard.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #141415;
+      --panel: #1d1e20;
+      --line: rgba(255, 255, 255, 0.08);
+      --blue: #73b3ff;
+      --mid: #ba90ff;
+      --gold: #fdd75a;
+      --text: #f0f2f5;
+      --muted: #9aa1b1;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+    }
+
+    .back,
+    .info {
+      flex: 0 0 36px;
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .back svg,
+    .info svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .title {
+      flex: 1;
+      text-align: center;
+    }
+
+    .title img {
+      height: 22px;
+      width: auto;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .history-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px 10px;
+    }
+
+    .history {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: -6px;
+      scrollbar-width: none;
+    }
+
+    .history::-webkit-scrollbar {
+      display: none;
+    }
+
+    .pill {
+      flex: 0 0 auto;
+      min-width: 52px;
+      height: 28px;
+      padding: 0 8px;
+      border: 0;
+      border-radius: 8px;
+      background: rgba(129, 135, 148, 0.12);
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .pill.mid {
+      color: var(--mid);
+    }
+
+    .pill.high {
+      color: var(--gold);
+    }
+
+    .pill.empty {
+      color: var(--muted);
+      cursor: default;
+    }
+
+    .clock {
+      flex: 0 0 34px;
+      width: 34px;
+      height: 28px;
+      border: 0;
+      border-radius: 8px;
+      background: rgba(129, 135, 148, 0.12);
+      color: #ffd27a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .clock svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .stage {
+      position: relative;
+      flex: 1;
+      min-height: 320px;
+      margin: 0 12px 12px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #141415;
+    }
+
+    .stage canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hud {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .mult {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .mult-value {
+      color: #f0f2f5;
+      font-weight: 600;
+      font-size: 50px;
+      letter-spacing: -1.25px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .mult-value small {
+      font-size: 0.56em;
+      margin-right: 2px;
+      font-weight: 600;
+    }
+
+    .mult-label {
+      display: none;
+      margin-top: 6px;
+      color: #0075ff;
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    .hud[data-phase="crashed"] .mult-label,
+    .hud[data-phase="waiting"] .mult-label,
+    .hud[data-phase="idle"] .mult-label,
+    .hud[data-phase="loading"] .mult-label {
+      display: block;
+    }
+
+    .hud[data-phase="waiting"] .mult-value,
+    .hud[data-phase="idle"] .mult-value,
+    .hud[data-phase="loading"] .mult-value {
+      display: none;
+    }
+
+    .hud[data-phase="waiting"] .mult-label,
+    .hud[data-phase="idle"] .mult-label,
+    .hud[data-phase="loading"] .mult-label {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .bets {
+      display: grid;
+      gap: 10px;
+      padding: 12px 12px 0;
+    }
+
+    .bet {
+      background: #1d1e20;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 10px 12px 12px;
+    }
+
+    .place {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 76px;
+      padding: 0 12px 8px;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #ff8a00 0%, #ffa41b 55%, #ffc24a 100%);
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.16), 0 8px 24px rgba(255, 164, 27, 0.38);
+      color: #fff;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .place::after {
+      content: "";
+      position: absolute;
+      left: 18%;
+      right: 18%;
+      bottom: 4px;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .place-label {
+      display: block;
+      transition: font-size 0.2s, opacity 0.2s;
+    }
+
+    .place-value {
+      display: none;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+
+    .place-value small {
+      font-size: 0.6em;
+    }
+
+    .place.has-value .place-label {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      opacity: 0.85;
+      margin-bottom: 3px;
+    }
+
+    .place.has-value .place-value {
+      display: block;
+    }
+
+    .place.hit {
+      background: linear-gradient(135deg, #0f9d58 0%, #22c55e 60%, #5ee39a 100%);
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.16), 0 8px 24px rgba(34, 197, 94, 0.35);
+    }
+
+    .place.miss {
+      background: linear-gradient(135deg, #b42318 0%, #e0442f 60%, #ff7a66 100%);
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.16), 0 8px 24px rgba(224, 68, 47, 0.35);
+    }
+
+    .sheet {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: rgba(5, 8, 18, 0.62);
+      display: none;
+      align-items: flex-end;
+    }
+
+    .sheet.show {
+      display: flex;
+    }
+
+    .sheet-card {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background: #1d1e20;
+      border-radius: 18px 18px 0 0;
+      padding: 16px 16px calc(18px + env(safe-area-inset-bottom));
+    }
+
+    .sheet-card h2 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .sheet-card p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .sheet-card button {
+      margin-top: 14px;
+      width: 100%;
+      height: 44px;
+      border: 0;
+      border-radius: 12px;
+      background: #0075ff;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+  </style>
 </head>
-<body class="theme-noise">
-  <div id="pg-loader">
-    <div class="loader-title">CRASH</div>
-    <div class="loader-sub">Loading…</div>
-    <div class="loader-track"><div id="pg-bar"></div></div>
-    <div id="pg-pct">1%</div>
-  </div>
-  <script>
-    (function(){var dur=2000+Math.random()*1500,p=1,b=document.getElementById('pg-bar'),t=document.getElementById('pg-pct'),o=document.getElementById('pg-loader');var iv=setInterval(function(){p+=Math.floor(Math.random()*6)+2;if(p>=100){p=100;clearInterval(iv);setTimeout(function(){o.style.transition='opacity 0.5s';o.style.opacity='0';setTimeout(function(){o.remove();},500);},150);}b.style.width=p+'%';t.textContent=p+'%';},Math.round(dur/35));})();
-  </script>
 
-  <header class="topbar">
-    <a class="logo-wrap" href="login.html">
-      <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png" alt="Logo">
-      <span>APNAJ</span>
-    </a>
-    <a class="exit-btn" href="login.html">Exit</a>
-  </header>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="back" href="login.html" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </a>
+      <div class="title"><img src="crash/logo.png" alt="Crash"></div>
+      <button class="info" type="button" id="infoBtn" aria-label="About this screen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+      </button>
+    </header>
 
-  <main class="container fade-up">
-    <h1 class="page-title">CRASH</h1>
-    <p class="page-sub">History Stats</p>
-
-    <div class="card">
-      
-      <div class="hist-row">
-        <div class="hist-lbl">History</div>
-        <div class="history-bar" id="historyBar"></div>
-        
+    <div class="history-wrap">
+      <div class="history" id="historyBar">
+        <button class="pill empty" type="button">--</button>
       </div>
-      <div class="predict-panel">
-        <div class="predict-eyebrow">Prediction Unit</div>
-        <div class="predict-label">History Median (not a prediction)</div>
-        <div id="predictionValue">--</div>
-        <div class="predict-divider"></div>
-        <div class="sig-row"><div class="sig-dot"></div><div class="sig-txt">Statistical summary only</div></div>
-      </div>
-      <div class="engine-tag">CRASH AI Engine</div>
+      <button class="clock" type="button" id="clockBtn" aria-label="Full history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+      </button>
     </div>
-  </main>
-  
-    <script src="js/stats.js"></script>
+
+    <section class="stage" id="stage">
+      <canvas id="sky"></canvas>
+      <div class="hud" id="hud" data-phase="loading">
+        <div class="mult">
+          <div class="mult-value" id="liveMult"><small>x</small>--</div>
+          <div class="mult-label" id="multLabel">Waiting for the next round</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="bets">
+      <article class="bet">
+        <button type="button" class="place" data-mode="assurance" data-min="1.10" data-max="1.99">
+          <span class="place-label">ASSURANCE</span>
+          <strong class="place-value"></strong>
+        </button>
+      </article>
+      <article class="bet">
+        <button type="button" class="place" data-mode="coefficient" data-min="2.00" data-max="4.00">
+          <span class="place-label">COEFFICIENT</span>
+          <strong class="place-value"></strong>
+        </button>
+      </article>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet">
+    <div class="sheet-card">
+      <h2>Crash</h2>
+      <p>The graph on this screen follows the live Crash round. The strip above it shows rounds that already finished. Assurance and coefficient are local picks for the round in progress. They do not tell you where it will stop.</p>
+      <button type="button" id="sheetClose">Close</button>
+    </div>
+  </div>
+
+  <script>
+    window.Flight = (function () {
+      const stage = document.getElementById("stage");
+      const canvas = document.getElementById("sky");
+      const ctx = canvas.getContext("2d");
+      const multEl = document.getElementById("liveMult");
+      const labelEl = document.getElementById("multLabel");
+      const hudEl = document.getElementById("hud");
+      const WAIT_MS = 5000;
+      const LINE = "#0075ff";
+
+      let W = 0;
+      let H = 0;
+      let dpr = 1;
+      let lastText = "";
+      let lastLabel = "";
+      let lastPhase = "";
+      const sim = {
+        state: "loading",
+        id: null,
+        coef: 1,
+        server: 1,
+        sampleAt: 0,
+        k: 0.09,
+        flightStart: 0,
+        stop: null,
+        crashedAt: 0,
+        waitingSince: 0,
+        waitEndsAt: 0,
+        waitTotal: WAIT_MS
+      };
+
+      function resize() {
+        const rect = stage.getBoundingClientRect();
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        W = Math.max(1, Math.round(rect.width));
+        H = Math.max(1, Math.round(rect.height));
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function setPhase(phase, text, label) {
+        if (phase !== lastPhase) { hudEl.dataset.phase = phase; lastPhase = phase; }
+        if (text != null && text !== lastText) { multEl.innerHTML = "<small>x</small>" + text; lastText = text; }
+        if (label != null && label !== lastLabel) { labelEl.textContent = label; lastLabel = label; }
+      }
+
+      function headPoint(coef) {
+        const alt = Math.log(Math.max(coef, 1)) / Math.LN2;
+        const climb = Math.max(0, Math.min(1, alt / 4));
+        return {
+          x: W * 0.78,
+          y: H * 0.86 - climb * H * 0.68
+        };
+      }
+
+      function curve(coef, now) {
+        const head = headPoint(coef);
+        const y0 = H * 0.9;
+        const pts = [];
+        const steps = 42;
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const rise = Math.pow(t, 1.65);
+          const wave = Math.sin(t * 8.5 + now / 380) * (1 - t) * Math.min(7, H * 0.02);
+          pts.push({
+            x: head.x * t,
+            y: y0 + (head.y - y0) * rise + wave
+          });
+        }
+        return pts;
+      }
+
+      function drawGraph(coef, now, alpha) {
+        if (alpha <= 0) return;
+        const pts = curve(coef, now);
+        const head = pts[pts.length - 1];
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.lineTo(head.x, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        const fill = ctx.createLinearGradient(head.x, head.y, head.x * 0.2, H);
+        fill.addColorStop(0, "rgba(0, 117, 255, 0.28)");
+        fill.addColorStop(1, "rgba(0, 117, 255, 0)");
+        ctx.fillStyle = fill;
+        ctx.fill();
+
+        const stroke = ctx.createLinearGradient(0, 0, head.x, 0);
+        stroke.addColorStop(0, "rgba(0, 117, 255, 0)");
+        stroke.addColorStop(1, LINE);
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = 2;
+        ctx.lineJoin = "round";
+        ctx.stroke();
+
+        const up = ctx.createLinearGradient(head.x, head.y, head.x, 0);
+        up.addColorStop(0, "rgba(0, 117, 255, 0.85)");
+        up.addColorStop(1, "rgba(0, 117, 255, 0)");
+        ctx.strokeStyle = up;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(head.x, head.y);
+        ctx.lineTo(head.x, 0);
+        ctx.stroke();
+        const down = ctx.createLinearGradient(head.x, head.y, head.x, H);
+        down.addColorStop(0, "rgba(0, 117, 255, 0.85)");
+        down.addColorStop(1, "rgba(0, 117, 255, 0)");
+        ctx.strokeStyle = down;
+        ctx.beginPath();
+        ctx.moveTo(head.x, head.y);
+        ctx.lineTo(head.x, H);
+        ctx.stroke();
+
+        const pulse = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(now / 160));
+        ctx.beginPath();
+        ctx.arc(head.x, head.y, 16 + (1 - pulse) * 8, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(0, 117, 255, " + (0.35 * pulse) + ")";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(head.x, head.y, 16, 0, Math.PI * 2);
+        ctx.strokeStyle = LINE;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(head.x, head.y, 8, 0, Math.PI * 2);
+        ctx.fillStyle = LINE;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function paintBase() {
+        ctx.fillStyle = "#141415";
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      function frame(now) {
+        if (!W) resize();
+        paintBase();
+        if (sim.state === "flying") {
+          const since = (now - sim.sampleAt) / 1000;
+          const target = sim.server * Math.exp(sim.k * Math.min(since, 2.5));
+          sim.coef += (target - sim.coef) * 0.18;
+          drawGraph(sim.coef, now, 1);
+          setPhase("flying", sim.coef.toFixed(2), "");
+        } else if (sim.state === "crashed") {
+          const fade = Math.max(0, 1 - (now - sim.crashedAt) / 700);
+          drawGraph(sim.stop || 1, now, fade);
+          setPhase("crashed", (sim.stop || 0).toFixed(2), "Round ended");
+        } else if (sim.state === "waiting") {
+          setPhase("waiting", null, "Waiting for the next round");
+        } else {
+          setPhase(sim.state === "loading" ? "loading" : "idle", "--", "Feed unavailable");
+        }
+        requestAnimationFrame(frame);
+      }
+
+      window.addEventListener("resize", function () { W = 0; });
+      requestAnimationFrame(frame);
+
+      return {
+        update: function (snapshot) {
+          const now = performance.now();
+          const newRound = snapshot.id != null && snapshot.id !== sim.id;
+          if (newRound) sim.id = snapshot.id;
+
+          if (snapshot.stop != null) {
+            if (sim.state !== "crashed" || newRound) {
+              sim.state = "crashed";
+              sim.crashedAt = now;
+              sim.stop = Number(snapshot.stop);
+              sim.coef = sim.stop;
+            }
+            return;
+          }
+
+          if (snapshot.coef != null) {
+            const value = Number(snapshot.coef);
+            if (sim.state !== "flying" || newRound) {
+              sim.state = "flying";
+              sim.coef = value;
+              sim.server = value;
+              sim.sampleAt = now;
+              sim.flightStart = now - (Math.log(Math.max(value, 1.001)) / sim.k) * 1000;
+              sim.stop = null;
+              return;
+            }
+            const dt = (now - sim.sampleAt) / 1000;
+            if (dt > 0.3 && value > sim.server) {
+              const observed = Math.log(value / sim.server) / dt;
+              if (isFinite(observed) && observed > 0.01 && observed < 0.6) sim.k = sim.k * 0.7 + observed * 0.3;
+            }
+            sim.server = value;
+            sim.sampleAt = now;
+            if (sim.coef > value * 1.02) sim.coef = value;
+            return;
+          }
+
+          if (sim.state !== "waiting") {
+            sim.state = "waiting";
+            sim.waitingSince = now;
+            sim.waitEndsAt = now + WAIT_MS;
+            sim.waitTotal = WAIT_MS;
+          }
+          if (snapshot.phase === "betting" && snapshot.nextAt && snapshot.changedAt && snapshot.serverNow) {
+            sim.waitTotal = Math.max(1000, snapshot.nextAt - snapshot.changedAt);
+            sim.waitEndsAt = now + Math.max(0, snapshot.nextAt - snapshot.serverNow);
+          } else if (snapshot.phase === "waiting") {
+            sim.waitEndsAt = Math.min(sim.waitEndsAt, now);
+          }
+        },
+        idle: function () {
+          if (sim.state === "flying" || sim.state === "crashed") return;
+          sim.state = "idle";
+        }
+      };
+    })();
+  </script>
   <script src="js/crash-engine.js"></script>
   <script>
     (function () {
-      const HISTORY_URL = "https://crash-gateway-grm-cr.100hp.app/history";
-      const SESSION_ID = "453d5725-41ad-430f-8920-0c664b4e5dc7";
+      const GATEWAY = "https://crash-gateway-grm-cr.gamedev-tech.cc";
+      const HISTORY_URL = GATEWAY + "/history";
+      const STATE_URL = GATEWAY + "/state";
+      const SESSION_ID = "f7950cf2c5a2ea8b6033ff8b19659b2d763836767b230dc736d046f2ea91b82a2f80d807aee07428abd3fe86819f184af9710334040dbf58cd2cde83de671f23c9e96218b9e9d6be039605653a3ca4348b5fefbac323a07a4b48aa9cce4b5ac8c46ab509334bb4bdf3cddad6612c1899ee459fd4f170a17a862558dcde37865d2d5e0233e3cf050ea0e3e24ca99e30323a3dac6088ec54a5844c7604ff6f60900916c8c508b413d338b2fdd3.a221b405c909b9d0d716bbf36d632599.077dee8d-c923-4c02-9bee-757573662e69";
       const CUSTOMER_ID = "077dee8d-c923-4c02-9bee-757573662e69";
-      const MAX_CAP = null;
       const historyBar = document.getElementById("historyBar");
-      const predEl = document.getElementById("predictionValue");
-      const labelEl = document.querySelector(".predict-label");
-      const sigTxt = document.querySelector(".sig-txt");
-      if (labelEl) labelEl.textContent = "History Median (not a prediction)";
-      if (sigTxt) sigTxt.textContent = "Statistical summary only";
       let rounds = [];
       let lastSeenId = null;
 
-      function renderHistory() {
-        historyBar.innerHTML = "";
-        rounds.slice(0, 18).forEach(function (r) {
-          const c = r.coef;
-          const pill = document.createElement("div");
-          pill.className = "history-pill" + (c >= 5 ? " high" : c < 1.5 ? " low" : "");
-          pill.innerText = c.toFixed(2) + "x";
-          historyBar.appendChild(pill);
-        });
+      function band(coef) {
+        if (coef >= 10) return "high";
+        if (coef >= 2) return "mid";
+        return "";
       }
 
-      function showStats() {
-        const coefs = rounds.map(function (r) { return r.coef; });
-        const analysis = CrashEngine.analyzeCrashHistory(coefs, { maxCap: MAX_CAP, minSample: 10, newestFirst: true });
-        if (analysis.status !== "ok") {
-          predEl.textContent = "n/a";
-          if (sigTxt) sigTxt.textContent = analysis.message || "Insufficient data";
+      function money(coef) {
+        return Number(coef).toFixed(2) + "x";
+      }
+
+      function parseRounds(data) {
+        if (window.CrashEngine && CrashEngine.normalizeHistoryResponse) {
+          const norm = CrashEngine.normalizeHistoryResponse(data);
+          if (norm && norm.status === "ok" && norm.rounds && norm.rounds.length) {
+            return norm.rounds.map(function (round) {
+              return { id: round.id, coef: Number(round.coef) };
+            }).filter(function (round) { return isFinite(round.coef) && round.coef > 0; });
+          }
+        }
+        const raw = Array.isArray(data) ? data : (data && (data.rounds || data.history || data.items || data.data)) || [];
+        if (!Array.isArray(raw)) return [];
+        return raw.map(function (item, index) {
+          let coef;
+          if (typeof item === "number") {
+            coef = item;
+          } else {
+            const first = Array.isArray(item.finalValues) ? item.finalValues[0] : undefined;
+            coef = Number(item.topCoefficient ?? first ?? item.coef ?? item.coefficient ?? item.multiplier ?? item.crash);
+          }
+          return { id: item && item.id != null ? item.id : index, coef: coef };
+        }).filter(function (round) { return isFinite(round.coef) && round.coef > 0; });
+      }
+
+      const FADE = [1, 1, 0.62, 0.4, 0.3];
+      function renderHistory() {
+        historyBar.innerHTML = "";
+        if (!rounds.length) {
+          const empty = document.createElement("button");
+          empty.className = "pill empty";
+          empty.type = "button";
+          empty.textContent = "--";
+          historyBar.appendChild(empty);
           return;
         }
-        predEl.textContent = BotStats.formatFixed(analysis.median, 2) + "x";
-        if (sigTxt) {
-          const r2 = analysis.rates.ge_2;
-          const pct = (r2.rate * 100).toFixed(0);
-          const lo = (r2.ci95.low * 100).toFixed(0);
-          const hi = (r2.ci95.high * 100).toFixed(0);
-          sigTxt.textContent = "≥2x rate " + pct + "% (95% CI " + lo + "–" + hi + "%) · n=" + analysis.sampleSize;
-        }
-        predEl.classList.remove("pop");
-        void predEl.offsetWidth;
-        predEl.classList.add("pop");
-        setTimeout(function () { predEl.classList.remove("pop"); }, 500);
+        rounds.slice(0, 24).forEach(function (round, index) {
+          const pill = document.createElement("button");
+          pill.type = "button";
+          pill.className = "pill " + band(round.coef);
+          pill.textContent = money(round.coef);
+          pill.style.opacity = FADE[Math.min(index, FADE.length - 1)];
+          historyBar.appendChild(pill);
+        });
       }
 
       async function fetchHistory() {
@@ -104,33 +727,151 @@
             headers: { accept: "application/json", "session-id": SESSION_ID, "customer-id": CUSTOMER_ID }
           });
           const data = await res.json();
-          const norm = CrashEngine.normalizeHistoryResponse(data);
-          if (norm.status !== "ok" || !norm.rounds.length) {
-            if (sigTxt) sigTxt.textContent = "History unavailable";
-            return;
-          }
+          const next = parseRounds(data);
+          if (!next.length) return;
           if (!rounds.length) {
-            rounds = norm.rounds;
+            rounds = next.slice(0, 500);
             lastSeenId = rounds[0] && rounds[0].id;
             renderHistory();
-            showStats();
             return;
           }
-          const latest = norm.rounds[0];
-          if (latest && latest.id != null && latest.id === lastSeenId) return;
-          rounds = CrashEngine.mergeRounds(rounds, norm.rounds).slice(0, 500);
+          if (next[0] && next[0].id != null && next[0].id === lastSeenId) return;
+          const seen = {};
+          rounds.forEach(function (round) { if (round.id != null) seen[round.id] = true; });
+          const fresh = next.filter(function (round) { return round.id == null || !seen[round.id]; });
+          rounds = fresh.concat(rounds).slice(0, 500);
           lastSeenId = rounds[0] && rounds[0].id;
           renderHistory();
-          showStats();
-        } catch (e) {
-          console.error(e);
-          if (sigTxt) sigTxt.textContent = "History unavailable";
-          predEl.textContent = "n/a";
+        } catch (error) { /* strip keeps its last contents */ }
+      }
+
+      let stateFailures = 0;
+      let lastStopId = null;
+      async function fetchState() {
+        try {
+          const res = await fetch(STATE_URL, {
+            headers: { accept: "application/json", "session-id": SESSION_ID, "customer-id": CUSTOMER_ID }
+          });
+          if (!res.ok) throw new Error("state " + res.status);
+          const data = await res.json();
+          const current = Array.isArray(data.currentCoefficients) ? data.currentCoefficients[0] : null;
+          const stop = Array.isArray(data.stopCoefficients) ? data.stopCoefficients[0] : null;
+          const id = data.roundConfig && data.roundConfig.id != null ? data.roundConfig.id : null;
+          const ms = function (value) { const t = Date.parse(value); return isFinite(t) ? t : null; };
+          stateFailures = 0;
+          Flight.update({
+            id: id, coef: current, stop: stop,
+            phase: data.currentState || null,
+            changedAt: ms(data.stateChangedAt),
+            nextAt: ms(data.nextStateTime),
+            serverNow: ms(data.currentTime)
+          });
+          Predict.sync({ id: id, stop: stop });
+
+          if (stop != null && id != null && id !== lastStopId) {
+            lastStopId = id;
+            const known = rounds.some(function (round) { return round.id === id; });
+            if (!known) {
+              rounds = [{ id: id, coef: Number(stop) }].concat(rounds).slice(0, 500);
+              lastSeenId = id;
+              renderHistory();
+            }
+          }
+        } catch (error) {
+          stateFailures++;
+          if (stateFailures >= 4) Flight.idle();
         }
       }
+
+      const Predict = (function () {
+        const buttons = Array.prototype.slice.call(document.querySelectorAll(".place"));
+        const picks = {};
+        let roundId = null;
+        let roundSettled = false;
+
+        function fmt(value) { return "<small>x</small>" + value.toFixed(2); }
+
+        function draw(min, max) {
+          const t = Math.pow(Math.random(), 1.6);
+          return Math.round((min + (max - min) * t) * 100) / 100;
+        }
+
+        function render(button) {
+          const pick = picks[button.dataset.mode];
+          const valueEl = button.querySelector(".place-value");
+          button.classList.remove("has-value", "hit", "miss");
+          if (!pick) {
+            valueEl.innerHTML = "";
+            return;
+          }
+          button.classList.add("has-value");
+          valueEl.innerHTML = fmt(pick.value);
+          if (pick.outcome) button.classList.add(pick.outcome);
+        }
+
+        function pickFor(button) {
+          picks[button.dataset.mode] = {
+            roundId: roundId,
+            value: draw(Number(button.dataset.min), Number(button.dataset.max)),
+            outcome: null
+          };
+          render(button);
+        }
+
+        buttons.forEach(function (button) {
+          button.addEventListener("click", function () {
+            const pick = picks[button.dataset.mode];
+            if (pick && pick.roundId === roundId) return;
+            if (roundSettled) return;
+            pickFor(button);
+          });
+        });
+
+        return {
+          sync: function (snapshot) {
+            if (snapshot.id != null && snapshot.id !== roundId) {
+              roundId = snapshot.id;
+              roundSettled = snapshot.stop != null;
+              Object.keys(picks).forEach(function (mode) { delete picks[mode]; });
+              buttons.forEach(function (button) {
+                if (roundSettled) render(button); else pickFor(button);
+              });
+            }
+            if (snapshot.stop != null && !roundSettled) {
+              roundSettled = true;
+              const stop = Number(snapshot.stop);
+              buttons.forEach(function (button) {
+                const pick = picks[button.dataset.mode];
+                if (pick && pick.roundId === roundId && !pick.outcome) {
+                  pick.outcome = stop >= pick.value ? "hit" : "miss";
+                  render(button);
+                }
+              });
+            }
+          }
+        };
+      })();
+
+      const sheet = document.getElementById("sheet");
+      document.getElementById("infoBtn").addEventListener("click", function () {
+        sheet.classList.add("show");
+      });
+      document.getElementById("clockBtn").addEventListener("click", function () {
+        sheet.classList.add("show");
+      });
+      document.getElementById("sheetClose").addEventListener("click", function () {
+        sheet.classList.remove("show");
+      });
+      sheet.addEventListener("click", function (event) {
+        if (event.target === sheet) sheet.classList.remove("show");
+      });
+
       fetchHistory();
       setInterval(fetchHistory, 5000);
+      fetchState();
+      setInterval(fetchState, 600);
     })();
   </script>
 </body>
+
 </html>
