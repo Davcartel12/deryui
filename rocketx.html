@@ -1,101 +1,940 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rocket X - CHIKE1W</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="theme.css">
-</head>
-<body class="theme-noise">
-  <div id="pg-loader">
-    <div class="loader-title">ROCKET X</div>
-    <div class="loader-sub">Loading…</div>
-    <div class="loader-track"><div id="pg-bar"></div></div>
-    <div id="pg-pct">1%</div>
-  </div>
-  <script>
-    (function(){var dur=2000+Math.random()*1500,p=1,b=document.getElementById('pg-bar'),t=document.getElementById('pg-pct'),o=document.getElementById('pg-loader');var iv=setInterval(function(){p+=Math.floor(Math.random()*6)+2;if(p>=100){p=100;clearInterval(iv);setTimeout(function(){o.style.transition='opacity 0.5s';o.style.opacity='0';setTimeout(function(){o.remove();},500);},150);}b.style.width=p+'%';t.textContent=p+'%';},Math.round(dur/35));})();
-  </script>
 
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090d1c" />
+  <title>Rocket X - CHIKE1W</title>
+  <script src="js/access-core.js"></script>
+  <script src="js/access-guard.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d1c;
+      --panel: #171e38;
+      --line: rgba(255, 255, 255, 0.08);
+      --blue: #2f7bff;
+      --mid: #6d4dff;
+      --gold: #f0b429;
+      --text: #ffffff;
+      --muted: #93a0c2;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+    }
+
+    .back,
+    .info {
+      flex: 0 0 36px;
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .back svg,
+    .info svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .title {
+      flex: 1;
+      text-align: center;
+    }
+
+    .title img {
+      height: 18px;
+      width: auto;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .history-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px 10px;
+    }
+
+    .history {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: -6px;
+      scrollbar-width: none;
+    }
+
+    .history::-webkit-scrollbar {
+      display: none;
+    }
+
+    .pill {
+      position: relative;
+      flex: 0 0 auto;
+      min-width: 64px;
+      height: 32px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 9px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .pill.mid {
+      background: var(--mid);
+    }
+
+    .pill.high {
+      background: linear-gradient(135deg, #ff8a00 0%, #ffa41b 55%, #ffc24a 100%);
+      color: #fff;
+    }
+
+    .pill.now {
+      background: var(--blue);
+      cursor: default;
+    }
+
+    .pill.now::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -5px;
+      width: 10px;
+      height: 10px;
+      background: #fff;
+      border-radius: 2px;
+      transform: translateX(-50%) rotate(45deg);
+      clip-path: polygon(0 100%, 100% 100%, 100% 0);
+    }
+
+    .pill.empty {
+      background: #1c2444;
+      color: var(--muted);
+      cursor: default;
+    }
+
+    .clock {
+      flex: 0 0 34px;
+      width: 34px;
+      height: 32px;
+      border: 0;
+      border-radius: 9px;
+      background: #1a2744;
+      color: #ffd27a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .clock svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .stage {
+      position: relative;
+      flex: 1;
+      min-height: 320px;
+      margin: 0 12px 12px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 176, 32, 0.4);
+      background: linear-gradient(180deg, #071833 0%, #0c2450 42%, #16325f 100%);
+    }
+
+    .stage canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hud {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .mult {
+      position: absolute;
+      inset: 0;
+      display: none;
+    }
+
+    .hud[data-phase="flying"] .mult,
+    .hud[data-phase="crashed"] .mult,
+    .hud[data-phase="idle"] .mult {
+      display: block;
+    }
+
+    .mult-value {
+      position: absolute;
+      left: 28px;
+      top: 14px;
+      padding: 5px 12px 6px;
+      border: 2px solid #ff9a1f;
+      border-radius: 14px;
+      background: rgba(7, 22, 52, 0.28);
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: 0;
+      color: #ff9a1f;
+      text-shadow: none;
+    }
+
+    .mult-value small {
+      font-size: 1em;
+      font-weight: 800;
+    }
+
+    .mult-label {
+      display: none;
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 40%;
+      margin: 0;
+      text-align: center;
+      font-size: clamp(22px, 6.4vw, 34px);
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: rgba(232, 240, 252, 0.94);
+    }
+
+    .hud[data-phase="crashed"] .mult-label,
+    .hud[data-phase="idle"] .mult-label {
+      display: block;
+    }
+
+    .hud[data-phase="idle"] .mult-label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .bets {
+      display: grid;
+      gap: 10px;
+      padding: 12px 12px 0;
+    }
+
+    .bet {
+      background: #16123a;
+      border: 1px solid rgba(124, 92, 255, 0.18);
+      border-radius: 16px;
+      padding: 10px 12px 12px;
+    }
+
+    .place {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 76px;
+      padding: 0 12px 8px;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #ff8a00 0%, #ffa41b 55%, #ffc24a 100%);
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.16), 0 8px 24px rgba(255, 164, 27, 0.38);
+      color: #fff;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .place::after {
+      content: "";
+      position: absolute;
+      left: 18%;
+      right: 18%;
+      bottom: 4px;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .place-label {
+      display: block;
+      transition: font-size 0.2s, opacity 0.2s;
+    }
+
+    .place-value {
+      display: none;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+
+    .place-value small {
+      font-size: 0.6em;
+    }
+
+    .place.has-value .place-label {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      opacity: 0.85;
+      margin-bottom: 3px;
+    }
+
+    .place.has-value .place-value {
+      display: block;
+    }
+
+    .place.hit {
+      background: linear-gradient(135deg, #0f9d58 0%, #22c55e 60%, #5ee39a 100%);
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.16), 0 8px 24px rgba(34, 197, 94, 0.35);
+    }
+
+    .place.miss {
+      background: linear-gradient(135deg, #b42318 0%, #e0442f 60%, #ff7a66 100%);
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.16), 0 8px 24px rgba(224, 68, 47, 0.35);
+    }
+
+    .sheet {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: rgba(5, 8, 18, 0.62);
+      display: none;
+      align-items: flex-end;
+    }
+
+    .sheet.show {
+      display: flex;
+    }
+
+    .sheet-card {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background: #141b33;
+      border-radius: 18px 18px 0 0;
+      padding: 16px 16px calc(18px + env(safe-area-inset-bottom));
+    }
+
+    .sheet-card h2 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .sheet-card p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .sheet-card button {
+      margin-top: 14px;
+      width: 100%;
+      height: 44px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
   <header class="topbar">
-    <a class="logo-wrap" href="login.html">
-      <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png" alt="Logo">
-      <span>APNAJ</span>
+      <a class="back" href="login.html" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
     </a>
-    <a class="exit-btn" href="login.html">Exit</a>
+      <div class="title"><img src="rocketx/logo.webp" alt="Rocket X"></div>
+      <button class="info" type="button" id="infoBtn" aria-label="About this screen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+      </button>
   </header>
 
-  <main class="container fade-up">
-    <h1 class="page-title">ROCKET X</h1>
-    <p class="page-sub">History Stats</p>
-
-    <div class="card">
-      
-      <div class="hist-row">
-        <div class="hist-lbl">History</div>
-        <div class="history-bar" id="historyBar"></div>
-        
+    <div class="history-wrap">
+      <div class="history" id="historyBar">
+        <button class="pill now" type="button">?</button>
       </div>
-      <div class="predict-panel">
-        <div class="predict-eyebrow">Prediction Unit</div>
-        <div class="predict-label">History Median (not a prediction)</div>
-        <div id="predictionValue">--</div>
-        <div class="predict-divider"></div>
-        <div class="sig-row"><div class="sig-dot"></div><div class="sig-txt">Statistical summary only</div></div>
-      </div>
-      <div class="engine-tag">ROCKET X</div>
+      <button class="clock" type="button" id="clockBtn" aria-label="Full history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+      </button>
     </div>
-  </main>
-  
-    <script src="js/stats.js"></script>
+
+    <section class="stage" id="stage">
+      <canvas id="sky"></canvas>
+      <div class="hud" id="hud" data-phase="loading">
+        <div class="mult">
+          <div class="mult-value" id="liveMult"><small>x</small>--</div>
+          <div class="mult-label" id="multLabel">Rocket exploded</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="bets">
+      <article class="bet">
+        <button type="button" class="place" data-mode="assurance" data-min="1.10" data-max="1.99">
+          <span class="place-label">ASSURANCE</span>
+          <strong class="place-value"></strong>
+        </button>
+      </article>
+      <article class="bet">
+        <button type="button" class="place" data-mode="coefficient" data-min="2.00" data-max="4.00">
+          <span class="place-label">COEFFICIENT</span>
+          <strong class="place-value"></strong>
+        </button>
+      </article>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet">
+    <div class="sheet-card">
+      <h2>Rocket X</h2>
+      <p>The flight on this screen follows the live Rocket X round. The strip above it shows rounds that already finished. Assurance and coefficient are local picks for the round in progress. They do not tell you where it will stop.</p>
+      <button type="button" id="sheetClose">Close</button>
+    </div>
+  </div>
+
+  <script>
+    window.Flight = (function () {
+      const stage = document.getElementById("stage");
+      const canvas = document.getElementById("sky");
+      const ctx = canvas.getContext("2d");
+      const multEl = document.getElementById("liveMult");
+      const labelEl = document.getElementById("multLabel");
+      const hudEl = document.getElementById("hud");
+      const WAIT_MS = 5000; // fallback until the gateway reports the betting window
+      function loadImage(src) {
+        const img = new Image();
+        img.decoding = "sync";
+        img.src = src;
+        return img;
+      }
+      const images = {
+        rocket: loadImage("rocketx/rocket.png"),
+        flame: loadImage("rocketx/rocket-flame.png"),
+        crash: loadImage("rocketx/rocket-crash.png"),
+        bank: loadImage("rocketx/cloud-bank.png"),
+        wide: loadImage("rocketx/cloud-wide.png"),
+        small: loadImage("rocketx/cloud-small.png"),
+        sun: loadImage("rocketx/sun.webp"),
+        earth: loadImage("rocketx/planet-earth.png"),
+        pink: loadImage("rocketx/planet-pink.png"),
+        hex: loadImage("rocketx/planet-hex.png"),
+        moon: loadImage("rocketx/moon.png"),
+        ufo: loadImage("rocketx/ufo.png"),
+        comet: loadImage("rocketx/comet.png"),
+        car: loadImage("rocketx/car.webp")
+      };
+      const scenery = [
+        { key: "sun", x: 0.84, y: 0.02, h: 0.36, v: 0.22 },
+        { key: "earth", x: 0.14, y: 0.16, h: 0.2, v: 0.36 },
+        { key: "pink", x: 0.46, y: 0.08, h: 0.18, v: 0.28 },
+        { key: "hex", x: 0.26, y: 0.4, h: 0.16, v: 0.32 },
+        { key: "ufo", x: 0.4, y: 0.58, h: 0.3, v: 0.62 },
+        { key: "comet", x: 0.58, y: 0.74, h: 0.14, v: 0.8 },
+        { key: "car", x: 0.76, y: 0.92, h: 0.26, v: 0.58 }
+      ];
+
+      let W = 0;
+      let H = 0;
+      let dpr = 1;
+      let stars = [];
+      let cloudX = 0;
+      let lastText = "";
+      let lastLabel = "";
+      let lastPhase = "";
+      // Live state fed from the game gateway. "coef" is what we draw; "server" is the last value received.
+      const sim = {
+        state: "loading",   // loading | waiting | flying | crashed | idle
+        id: null,
+        coef: 1,
+        server: 1,
+        sampleAt: 0,
+        k: 0.09,            // observed growth per second, refined from consecutive samples
+        flightStart: 0,
+        stop: null,
+        crashedAt: 0,
+        waitingSince: 0,
+        waitEndsAt: 0,      // local time when the countdown reaches zero
+        waitTotal: WAIT_MS
+      };
+
+      function resize() {
+        const rect = stage.getBoundingClientRect();
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        W = Math.max(1, Math.round(rect.width));
+        H = Math.max(1, Math.round(rect.height));
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        if (!stars.length) {
+          for (let i = 0; i < 46; i++) {
+            stars.push({ x: Math.random(), y: Math.random() * 0.75, r: 0.6 + Math.random() * 1.4, p: Math.random() * Math.PI * 2 });
+          }
+        }
+      }
+
+      // The rocket stays put in the middle. The sky, the scale and the flame move around it.
+      function rocketPoint() {
+        return { x: W * 0.5, y: H * 0.68 };
+      }
+
+      function setPhase(phase, text, label) {
+        if (phase !== lastPhase) { hudEl.dataset.phase = phase; lastPhase = phase; }
+        if (text != null && text !== lastText) { multEl.innerHTML = "<small>x</small>" + text; lastText = text; }
+        if (label != null && label !== lastLabel) { labelEl.textContent = label; lastLabel = label; }
+      }
+
+      function sparkle(x, y, r) {
+        ctx.beginPath();
+        ctx.moveTo(x, y - r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.quadraticCurveTo(x, y, x, y + r);
+        ctx.quadraticCurveTo(x, y, x - r, y);
+        ctx.quadraticCurveTo(x, y, x, y - r);
+        ctx.fill();
+      }
+
+      function drawStars(now, drift) {
+        ctx.fillStyle = "#ffffff";
+        stars.forEach(function (star) {
+          if (drift) { star.y += drift * 0.0014 * (0.4 + star.r); if (star.y > 1.04) star.y = -0.04; }
+          const twinkle = 0.45 + 0.55 * Math.abs(Math.sin(now / 900 + star.p));
+          ctx.globalAlpha = twinkle;
+          if (star.r > 1.5) {
+            sparkle(star.x * W, star.y * H, star.r * 3);
+          } else {
+            ctx.beginPath();
+            ctx.arc(star.x * W, star.y * H, star.r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+        ctx.globalAlpha = 1;
+      }
+
+      function drawProp(img, x, y, h) {
+        if (!img || !img.complete || !img.naturalWidth) return;
+        const w = h * img.naturalWidth / img.naturalHeight;
+        ctx.drawImage(img, x - w / 2, y - h / 2, w, h);
+      }
+
+      function drawTower(x, ground) {
+        const h = H * 0.2;
+        ctx.save();
+        ctx.translate(x, ground);
+        ctx.strokeStyle = "#d5e4f8";
+        ctx.fillStyle = "#e7f0fc";
+        ctx.lineWidth = 1.6;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-12, 0); ctx.lineTo(-5, -h * 0.58);
+        ctx.moveTo(12, 0); ctx.lineTo(5, -h * 0.58);
+        ctx.moveTo(-16, 0); ctx.lineTo(0, -h * 0.4);
+        ctx.moveTo(16, 0); ctx.lineTo(0, -h * 0.4);
+        ctx.moveTo(-8, -h * 0.22); ctx.lineTo(8, -h * 0.22);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(0, -h * 0.68, h * 0.16, h * 0.09, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-h * 0.08, -h * 0.74);
+        ctx.lineTo(0, -h);
+        ctx.lineTo(h * 0.08, -h * 0.74);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawSky(coef) {
+        const alt = Math.log(Math.max(coef, 1)) / Math.LN2;
+        const warm = Math.max(0, Math.min(1, (alt - 2.4) / 1.5));
+        function mix(a, b) { return Math.round(a + (b - a) * warm); }
+        const sky = ctx.createLinearGradient(0, 0, 0, H);
+        sky.addColorStop(0, "rgb(" + mix(18, 236) + "," + mix(72, 148) + "," + mix(140, 52) + ")");
+        sky.addColorStop(1, "rgb(" + mix(8, 176) + "," + mix(28, 78) + "," + mix(72, 24) + ")");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      function drawPad(scroll) {
+        const ground = H * 0.78 + scroll * 0.62;
+        if (ground < H + 30) {
+          const g = ctx.createLinearGradient(0, Math.max(ground, 0), 0, H);
+          g.addColorStop(0, "#4e86c4");
+          g.addColorStop(1, "#1a4b86");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, ground, W, H - ground + 4);
+          ctx.strokeStyle = "rgba(190, 220, 255, 0.45)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, ground);
+          ctx.lineTo(W, ground);
+          ctx.stroke();
+          ctx.fillStyle = "#2f6eae";
+          ctx.beginPath();
+          ctx.moveTo(W * 0.47, ground);
+          ctx.lineTo(W * 0.53, ground);
+          ctx.lineTo(W * 0.64, H + 4);
+          ctx.lineTo(W * 0.36, H + 4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.save();
+          ctx.strokeStyle = "rgba(255,255,255,0.45)";
+          ctx.setLineDash([5, 9]);
+          ctx.beginPath();
+          ctx.moveTo(W * 0.5, ground + 2);
+          ctx.lineTo(W * 0.5, H);
+          ctx.stroke();
+          ctx.restore();
+          drawProp(images.moon, W * 0.28, Math.min(ground - H * 0.22, H * 0.16), H * 0.13);
+          if (ground < H * 1.05) drawTower(W * 0.8, ground);
+        }
+      }
+
+      function drawScenery(scroll) {
+        if (scroll < H * 0.25) return;
+        const span = H * 1.7;
+        ctx.save();
+        ctx.globalAlpha = Math.min(0.85, (scroll - H * 0.25) / (H * 0.5));
+        scenery.forEach(function (item) {
+          let y = item.y * span - scroll * item.v;
+          y = ((y % span) + span) % span - H * 0.15;
+          drawProp(images[item.key], item.x * W, y, item.h * H * 0.65);
+        });
+        ctx.restore();
+      }
+
+      function drawClouds(scroll) {
+        cloudX += scroll * 0.01;
+        const bank = images.bank;
+        if (bank.complete && bank.naturalWidth) {
+          const h = H * 0.28;
+          const w = h * bank.naturalWidth / bank.naturalHeight;
+          const y = H - h * 0.72 + scroll * 0.35;
+          if (y < H + 10) {
+            let x = -(cloudX % w);
+            for (; x < W; x += w) ctx.drawImage(bank, x, y, w, h);
+          }
+        }
+        const wide = images.wide;
+        if (wide.complete && wide.naturalWidth) {
+          const h = H * 0.16;
+          const w = h * wide.naturalWidth / wide.naturalHeight;
+          const y = H * 0.72 + scroll * 0.5;
+          if (y < H + 8) ctx.drawImage(wide, W * 0.08, y, w, h);
+        }
+        const small = images.small;
+        if (small.complete && small.naturalWidth) {
+          const h = H * 0.11;
+          const w = h * small.naturalWidth / small.naturalHeight;
+          const y = H * 0.58 + scroll * 0.65;
+          if (y < H + 8) ctx.drawImage(small, W * 0.62, y, w, h);
+        }
+      }
+
+      function drawScale(coef) {
+        const octave = H * 0.32;
+        const anchor = H * 0.5;
+        const alt = Math.log(Math.max(coef, 1)) / Math.LN2;
+        ctx.save();
+        ctx.font = "600 13px Inter, sans-serif";
+        ctx.textAlign = "left";
+        ctx.lineWidth = 1;
+        for (let p = 0; p <= 6; p++) {
+          const y = anchor + (alt - p) * octave;
+          if (y < 18 || y > H - 8) continue;
+          ctx.strokeStyle = "rgba(255,255,255,0.35)";
+          ctx.beginPath();
+          ctx.moveTo(4, y);
+          ctx.lineTo(16, y);
+          ctx.stroke();
+          ctx.fillStyle = "rgba(255,255,255,0.62)";
+          ctx.fillText(String(Math.pow(2, p)), 4, y - 3);
+        }
+        ctx.restore();
+      }
+
+      function drawExhaust(x, y, now) {
+        const flicker = 0.82 + 0.18 * Math.sin(now / 50);
+        const len = (H - y + 6) * flicker;
+        const half = 16 * flicker;
+        ctx.save();
+        const outer = ctx.createLinearGradient(x, y - 6, x, y + len);
+        outer.addColorStop(0, "rgba(255, 244, 180, 0.95)");
+        outer.addColorStop(0.25, "rgba(255, 140, 30, 0.9)");
+        outer.addColorStop(0.62, "rgba(80, 170, 255, 0.55)");
+        outer.addColorStop(1, "rgba(40, 90, 255, 0)");
+        ctx.fillStyle = outer;
+        ctx.beginPath();
+        ctx.moveTo(x - half, y - 4);
+        ctx.quadraticCurveTo(x - half * 0.35, y + len * 0.45, x - 3, y + len);
+        ctx.lineTo(x + 3, y + len);
+        ctx.quadraticCurveTo(x + half * 0.35, y + len * 0.45, x + half, y - 4);
+        ctx.closePath();
+        ctx.fill();
+        const core = ctx.createLinearGradient(x, y - 4, x, y + len * 0.72);
+        core.addColorStop(0, "rgba(255, 255, 230, 0.95)");
+        core.addColorStop(0.4, "rgba(255, 170, 40, 0.8)");
+        core.addColorStop(1, "rgba(255, 90, 20, 0)");
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.moveTo(x - half * 0.42, y - 2);
+        ctx.quadraticCurveTo(x - 4, y + len * 0.4, x, y + len * 0.7);
+        ctx.quadraticCurveTo(x + 4, y + len * 0.4, x + half * 0.42, y - 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // (x, y) is the engine. The sprite stays nose-up in the centre for the whole flight.
+      function drawRocket(x, y, now, img) {
+        if (!img || !img.complete || !img.naturalWidth) return;
+        const h = Math.min(H * 0.58, W * 0.86);
+        const w = h * img.naturalWidth / img.naturalHeight;
+        const bob = Math.sin(now / 320) * 1.2;
+        ctx.save();
+        ctx.globalAlpha = 1;
+        ctx.translate(x, y + bob);
+        ctx.drawImage(img, -w * 0.46, -h, w, h);
+        ctx.restore();
+      }
+
+      function frame(now) {
+        if (!W) resize();
+        ctx.clearRect(0, 0, W, H);
+        if (sim.state === "flying") {
+          // Extrapolate from the last sample so the number keeps moving between polls.
+          const since = (now - sim.sampleAt) / 1000;
+          const target = sim.server * Math.exp(sim.k * Math.min(since, 2.5));
+          sim.coef += (target - sim.coef) * 0.18;
+          const scroll = Math.max(0, (Math.log(Math.max(sim.coef, 1)) / Math.LN2) * H * 0.55);
+          const pt = rocketPoint();
+          drawSky(sim.coef);
+          if (sim.coef < 1.8) drawPad(scroll);
+          drawStars(now, 0.35 + scroll * 0.004);
+          drawScenery(scroll);
+          drawClouds(scroll);
+          drawScale(sim.coef);
+          if (sim.coef > 1.05) drawExhaust(pt.x, pt.y, now);
+          drawRocket(pt.x, pt.y, now, sim.coef > 1.15 ? images.flame : images.rocket);
+          setPhase("flying", sim.coef.toFixed(2), null);
+        } else if (sim.state === "crashed") {
+          drawSky(sim.stop || 1);
+          drawPad(0);
+          drawStars(now, 0.04);
+          drawScale(sim.stop || 1);
+          setPhase("crashed", (sim.stop || 0).toFixed(2), "Rocket exploded");
+        } else if (sim.state === "waiting") {
+          drawSky(1);
+          drawPad(0);
+          drawStars(now, 0.04);
+          drawRocket(rocketPoint().x, rocketPoint().y, now, images.rocket);
+          setPhase("waiting", null, null);
+        } else {
+          drawSky(1);
+          drawPad(0);
+          drawStars(now, 0.04);
+          drawRocket(rocketPoint().x, rocketPoint().y, now, images.rocket);
+          setPhase(sim.state === "loading" ? "loading" : "idle", "--", "Feed unavailable");
+        }
+        requestAnimationFrame(frame);
+      }
+
+      window.addEventListener("resize", function () { W = 0; });
+      requestAnimationFrame(frame);
+
+      return {
+        // snapshot: { id, coef (number|null), stop (number|null),
+        //             phase, changedAt, nextAt, serverNow (ms epoch|null) }
+        update: function (snapshot) {
+          const now = performance.now();
+          const newRound = snapshot.id != null && snapshot.id !== sim.id;
+          if (newRound) sim.id = snapshot.id;
+
+          if (snapshot.stop != null) {
+            if (sim.state !== "crashed" || newRound) {
+              sim.state = "crashed";
+              sim.crashedAt = now;
+              sim.stop = Number(snapshot.stop);
+              sim.coef = sim.stop;
+            }
+            return;
+          }
+
+          if (snapshot.coef != null) {
+            const value = Number(snapshot.coef);
+            if (sim.state !== "flying" || newRound) {
+              sim.state = "flying";
+              sim.coef = value;
+              sim.server = value;
+              sim.sampleAt = now;
+              // If we join mid-flight, back-date the start so the curve is already partly drawn.
+              sim.flightStart = now - (Math.log(Math.max(value, 1.001)) / sim.k) * 1000;
+              sim.stop = null;
+              return;
+            }
+            const dt = (now - sim.sampleAt) / 1000;
+            if (dt > 0.3 && value > sim.server) {
+              const observed = Math.log(value / sim.server) / dt;
+              if (isFinite(observed) && observed > 0.01 && observed < 0.6) sim.k = sim.k * 0.7 + observed * 0.3;
+            }
+            sim.server = value;
+            sim.sampleAt = now;
+            if (sim.coef > value * 1.02) sim.coef = value;
+            return;
+          }
+
+          if (sim.state !== "waiting") {
+            sim.state = "waiting";
+            sim.waitingSince = now;
+            sim.waitEndsAt = now + WAIT_MS;
+            sim.waitTotal = WAIT_MS;
+          }
+          // Server clock: the "betting" state counts down to nextStateTime. The 1 s "waiting"
+          // state that follows keeps the bar empty until take-off.
+          if (snapshot.phase === "betting" && snapshot.nextAt && snapshot.changedAt && snapshot.serverNow) {
+            sim.waitTotal = Math.max(1000, snapshot.nextAt - snapshot.changedAt);
+            sim.waitEndsAt = now + Math.max(0, snapshot.nextAt - snapshot.serverNow);
+          } else if (snapshot.phase === "waiting") {
+            sim.waitEndsAt = Math.min(sim.waitEndsAt, now);
+          }
+        },
+        idle: function () {
+          if (sim.state === "flying" || sim.state === "crashed") return;
+          sim.state = "idle";
+        }
+      };
+    })();
+  </script>
   <script src="js/crash-engine.js"></script>
   <script>
     (function () {
-      const HISTORY_URL = "https://crash-gateway-grm-cr.100hp.app/history";
-      const SESSION_ID = "453d5725-41ad-430f-8920-0c664b4e5dc7";
+      const GATEWAY = "https://crash-gateway-grm-cr.gamedev-tech.cc";
+      const HISTORY_URL = GATEWAY + "/history";
+      const STATE_URL = GATEWAY + "/state";
+      const SESSION_ID = "957b434f52f1aa4e241df6ea9e1989dd34c1e9b3beb23afee29dc687c37b15c27f1f0c35277eb02213574377e1d47f668689ffb238196552149152da3e8ca1f245ef8c0eebc6c4aacb98e858b5f0dcb6be92815e31e6801cb712dac1530c2fdf9198ef70cf96949a216eb77db295760c0a3bf873ca1af963c30ead7d595735f6ba00efd09f9b3c06ac11933b988978aa7f1d47ad3d4884b06c85549bcdf1755ebaf34d835c4376081a6918fb.85ca52d6366cb1c98c448b1f1552c762.077dee8d-c923-4c02-9bee-757573662e69";
       const CUSTOMER_ID = "077dee8d-c923-4c02-9bee-757573662e69";
-      const MAX_CAP = null;
       const historyBar = document.getElementById("historyBar");
-      const predEl = document.getElementById("predictionValue");
-      const labelEl = document.querySelector(".predict-label");
-      const sigTxt = document.querySelector(".sig-txt");
-      if (labelEl) labelEl.textContent = "History Median (not a prediction)";
-      if (sigTxt) sigTxt.textContent = "Statistical summary only";
       let rounds = [];
       let lastSeenId = null;
 
-      function renderHistory() {
-        historyBar.innerHTML = "";
-        rounds.slice(0, 18).forEach(function (r) {
-          const c = r.coef;
-          const pill = document.createElement("div");
-          pill.className = "history-pill" + (c >= 5 ? " high" : c < 1.5 ? " low" : "");
-          pill.innerText = c.toFixed(2) + "x";
-          historyBar.appendChild(pill);
-        });
+      function band(coef) {
+        if (coef >= 10) return "high";
+        if (coef >= 2) return "mid";
+        return "";
       }
 
-      function showStats() {
-        const coefs = rounds.map(function (r) { return r.coef; });
-        const analysis = CrashEngine.analyzeCrashHistory(coefs, { maxCap: MAX_CAP, minSample: 10, newestFirst: true });
-        if (analysis.status !== "ok") {
-          predEl.textContent = "n/a";
-          if (sigTxt) sigTxt.textContent = analysis.message || "Insufficient data";
+      function money(coef) {
+        return Number(coef).toFixed(2) + "x";
+      }
+
+      function parseRounds(data) {
+        if (window.CrashEngine && CrashEngine.normalizeHistoryResponse) {
+          const norm = CrashEngine.normalizeHistoryResponse(data);
+          if (norm && norm.status === "ok" && norm.rounds && norm.rounds.length) {
+            return norm.rounds.map(function (round) {
+              return { id: round.id, coef: Number(round.coef) };
+            }).filter(function (round) { return isFinite(round.coef) && round.coef > 0; });
+          }
+        }
+        const raw = Array.isArray(data) ? data : (data && (data.rounds || data.history || data.items || data.data)) || [];
+        if (!Array.isArray(raw)) return [];
+        return raw.map(function (item, index) {
+          let coef;
+          if (typeof item === "number") {
+            coef = item;
+          } else {
+            const first = Array.isArray(item.finalValues) ? item.finalValues[0] : undefined;
+            coef = Number(item.topCoefficient ?? first ?? item.coef ?? item.coefficient ?? item.multiplier ?? item.crash);
+          }
+          return { id: item && item.id != null ? item.id : index, coef: coef };
+        }).filter(function (round) { return isFinite(round.coef) && round.coef > 0; });
+      }
+
+      const FADE = [1, 1, 0.62, 0.4, 0.3];
+      function renderHistory() {
+        historyBar.innerHTML = "";
+        const now = document.createElement("button");
+        now.className = "pill now";
+        now.type = "button";
+        now.textContent = "?";
+        historyBar.appendChild(now);
+        if (!rounds.length) {
+          const empty = document.createElement("button");
+          empty.className = "pill empty";
+          empty.type = "button";
+          empty.textContent = "--";
+          historyBar.appendChild(empty);
           return;
         }
-        predEl.textContent = BotStats.formatFixed(analysis.median, 2) + "x";
-        if (sigTxt) {
-          const r2 = analysis.rates.ge_2;
-          const pct = (r2.rate * 100).toFixed(0);
-          const lo = (r2.ci95.low * 100).toFixed(0);
-          const hi = (r2.ci95.high * 100).toFixed(0);
-          sigTxt.textContent = "≥2x rate " + pct + "% (95% CI " + lo + "–" + hi + "%) · n=" + analysis.sampleSize;
-        }
-        predEl.classList.remove("pop");
-        void predEl.offsetWidth;
-        predEl.classList.add("pop");
-        setTimeout(function () { predEl.classList.remove("pop"); }, 500);
+        rounds.slice(0, 24).forEach(function (round, index) {
+          const pill = document.createElement("button");
+          pill.type = "button";
+          pill.className = "pill " + band(round.coef);
+          pill.textContent = money(round.coef);
+          pill.style.opacity = FADE[Math.min(index, FADE.length - 1)];
+          historyBar.appendChild(pill);
+        });
       }
 
       async function fetchHistory() {
@@ -104,33 +943,162 @@
             headers: { accept: "application/json", "session-id": SESSION_ID, "customer-id": CUSTOMER_ID }
           });
           const data = await res.json();
-          const norm = CrashEngine.normalizeHistoryResponse(data);
-          if (norm.status !== "ok" || !norm.rounds.length) {
-            if (sigTxt) sigTxt.textContent = "History unavailable";
-            return;
-          }
+          const next = parseRounds(data);
+          if (!next.length) return;
           if (!rounds.length) {
-            rounds = norm.rounds;
+            rounds = next.slice(0, 500);
             lastSeenId = rounds[0] && rounds[0].id;
             renderHistory();
-            showStats();
             return;
           }
-          const latest = norm.rounds[0];
-          if (latest && latest.id != null && latest.id === lastSeenId) return;
-          rounds = CrashEngine.mergeRounds(rounds, norm.rounds).slice(0, 500);
+          if (next[0] && next[0].id != null && next[0].id === lastSeenId) return;
+          const seen = {};
+          rounds.forEach(function (round) { if (round.id != null) seen[round.id] = true; });
+          const fresh = next.filter(function (round) { return round.id == null || !seen[round.id]; });
+          rounds = fresh.concat(rounds).slice(0, 500);
           lastSeenId = rounds[0] && rounds[0].id;
           renderHistory();
-          showStats();
-        } catch (e) {
-          console.error(e);
-          if (sigTxt) sigTxt.textContent = "History unavailable";
-          predEl.textContent = "n/a";
+        } catch (error) { /* strip keeps its last contents */ }
+      }
+
+      // Live round state. Polled fast so the coefficient tracks the real flight.
+      let stateFailures = 0;
+      let lastStopId = null;
+      async function fetchState() {
+        try {
+          const res = await fetch(STATE_URL, {
+            headers: { accept: "application/json", "session-id": SESSION_ID, "customer-id": CUSTOMER_ID }
+          });
+          if (!res.ok) throw new Error("state " + res.status);
+          const data = await res.json();
+          const current = Array.isArray(data.currentCoefficients) ? data.currentCoefficients[0] : null;
+          const stop = Array.isArray(data.stopCoefficients) ? data.stopCoefficients[0] : null;
+          const id = data.roundConfig && data.roundConfig.id != null ? data.roundConfig.id : null;
+          const ms = function (value) { const t = Date.parse(value); return isFinite(t) ? t : null; };
+          stateFailures = 0;
+          Flight.update({
+            id: id, coef: current, stop: stop,
+            phase: data.currentState || null,
+            changedAt: ms(data.stateChangedAt),
+            nextAt: ms(data.nextStateTime),
+            serverNow: ms(data.currentTime)
+          });
+          Predict.sync({ id: id, stop: stop });
+
+          // When a round ends, drop it straight into the strip without waiting for history.
+          if (stop != null && id != null && id !== lastStopId) {
+            lastStopId = id;
+            const known = rounds.some(function (round) { return round.id === id; });
+            if (!known) {
+              rounds = [{ id: id, coef: Number(stop) }].concat(rounds).slice(0, 500);
+              lastSeenId = id;
+              renderHistory();
+            }
+          }
+        } catch (error) {
+          stateFailures++;
+          if (stateFailures >= 4) Flight.idle();
         }
       }
+
+      // Prediction buttons. Each tap picks a target inside the button's range for the round in
+      // progress (or the one about to start). The target is locked until that round ends, then the
+      // button turns green or red depending on whether the round reached it, and clears on the
+      // next round. Values are generated locally; nothing is sent anywhere.
+      const Predict = (function () {
+        const buttons = Array.prototype.slice.call(document.querySelectorAll(".place"));
+        const picks = {};          // mode -> { roundId, value }
+        let roundId = null;
+        let roundSettled = false;
+
+        function fmt(value) { return "<small>x</small>" + value.toFixed(2); }
+
+        function draw(min, max) {
+          // Skew toward the low end of the range: lower targets are reached far more often.
+          const t = Math.pow(Math.random(), 1.6);
+          return Math.round((min + (max - min) * t) * 100) / 100;
+        }
+
+        function render(button) {
+          const pick = picks[button.dataset.mode];
+          const valueEl = button.querySelector(".place-value");
+          button.classList.remove("has-value", "hit", "miss");
+          if (!pick) {
+            valueEl.innerHTML = "";
+            return;
+          }
+          button.classList.add("has-value");
+          valueEl.innerHTML = fmt(pick.value);
+          if (pick.outcome) button.classList.add(pick.outcome);
+        }
+
+        function pickFor(button) {
+          picks[button.dataset.mode] = {
+            roundId: roundId,
+            value: draw(Number(button.dataset.min), Number(button.dataset.max)),
+            outcome: null
+          };
+          render(button);
+        }
+
+        // Targets appear on their own as soon as a round is announced; a tap only fills in a
+        // missing one (e.g. if the page opened mid-round) and never re-rolls a locked target.
+        buttons.forEach(function (button) {
+          button.addEventListener("click", function () {
+            const pick = picks[button.dataset.mode];
+            if (pick && pick.roundId === roundId) return;
+            if (roundSettled) return;
+            pickFor(button);
+          });
+        });
+
+        return {
+          // snapshot: { id, stop (number|null) }
+          sync: function (snapshot) {
+            if (snapshot.id != null && snapshot.id !== roundId) {
+              // New round announced: drop last round's targets and show this round's straight away.
+              roundId = snapshot.id;
+              roundSettled = snapshot.stop != null;
+              Object.keys(picks).forEach(function (mode) { delete picks[mode]; });
+              buttons.forEach(function (button) {
+                if (roundSettled) render(button); else pickFor(button);
+              });
+            }
+            if (snapshot.stop != null && !roundSettled) {
+              roundSettled = true;
+              const stop = Number(snapshot.stop);
+              buttons.forEach(function (button) {
+                const pick = picks[button.dataset.mode];
+                if (pick && pick.roundId === roundId && !pick.outcome) {
+                  pick.outcome = stop >= pick.value ? "hit" : "miss";
+                  render(button);
+                }
+              });
+            }
+          }
+        };
+      })();
+
+      const sheet = document.getElementById("sheet");
+      document.getElementById("infoBtn").addEventListener("click", function () {
+        sheet.classList.add("show");
+      });
+      document.getElementById("clockBtn").addEventListener("click", function () {
+        sheet.classList.add("show");
+      });
+      document.getElementById("sheetClose").addEventListener("click", function () {
+        sheet.classList.remove("show");
+      });
+      sheet.addEventListener("click", function (event) {
+        if (event.target === sheet) sheet.classList.remove("show");
+      });
+
       fetchHistory();
       setInterval(fetchHistory, 5000);
+      fetchState();
+      setInterval(fetchState, 600);
     })();
   </script>
 </body>
+
 </html>
