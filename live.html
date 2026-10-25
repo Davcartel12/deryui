@@ -441,7 +441,7 @@
       }
       grid.innerHTML = snap.docs.map((doc) => {
         const data = doc.data();
-        const image = typeof data.imageUrl === "string" && /^https?:\/\//i.test(data.imageUrl)
+        const image = typeof data.imageUrl === "string" && /^(https?:\/\/|data:image\/)/i.test(data.imageUrl)
           ? `<img class="voucher-img" src="${esc(data.imageUrl)}" alt="">`
           : "";
         const expiry = data.expiry

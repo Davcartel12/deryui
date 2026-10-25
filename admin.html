@@ -624,8 +624,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, setDoc, getDoc, updateDoc }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL }
-      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCWOqTsV4Nhd6axIPyTWWI-PFo2HOd_KV0",
@@ -641,7 +639,6 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const storage = getStorage(app);
     const voucherCol = collection(db, "vouchers");
     const codeCol = collection(db, "accessCodes");
     const A = window.AccessCodes;
@@ -666,18 +663,57 @@
     }
     window.doLogout = doLogout;
 
+    let preparedFile = null;
+    let preparedData = null;
+    let preparing = null;
+    let prepareToken = 0;
+
     function showPreview(src) {
       const img = document.getElementById("imgPreview");
       if (src) { img.src = src; img.style.display = "block"; }
       else { img.removeAttribute("src"); img.style.display = "none"; }
     }
 
+    function blobToDataUrl(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Could not read that image"));
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    // Scale down as the file is decoded, then save one small JPEG. A phone photo
+    // stays well under Firestore's 1 MB limit and uploads much faster.
+    async function shrinkFile(file) {
+      if (!window.createImageBitmap) throw new Error("This browser cannot prepare images");
+      const source = await createImageBitmap(file);
+      const maxSide = 640;
+      const scale = Math.min(1, maxSide / Math.max(source.width, source.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(source.width * scale));
+      canvas.height = Math.max(1, Math.round(source.height * scale));
+      canvas.getContext("2d").drawImage(source, 0, 0, canvas.width, canvas.height);
+      source.close();
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.7));
+      if (!blob) throw new Error("Could not read that image");
+      return blobToDataUrl(blob);
+    }
+
     function previewFile() {
       const file = document.getElementById("fFile").files[0];
+      const token = ++prepareToken;
+      preparedFile = null;
+      preparedData = null;
       if (!file) { previewImg(); return; }
-      const reader = new FileReader();
-      reader.onload = () => showPreview(reader.result);
-      reader.readAsDataURL(file);
+      preparing = shrinkFile(file).then((data) => {
+        if (token !== prepareToken) return;
+        preparedFile = file;
+        preparedData = data;
+        showPreview(data);
+      }).catch((error) => {
+        if (token === prepareToken) toast(error.message, false);
+      });
     }
     window.previewFile = previewFile;
 
@@ -705,19 +741,21 @@
       const exp = document.getElementById("fExpiry").value.trim();
       if (!title || !code) { toast("Title and Code are required", false); return; }
       const btn = document.getElementById("addBtn");
-      btn.textContent = file ? "Uploading…" : "Publishing…"; btn.disabled = true;
+      btn.textContent = "Publishing…"; btn.disabled = true;
       try {
         if (file) {
-          const safe = (file.name || "image").replace(/[^a-zA-Z0-9._-]/g, "_");
-          const stored = ref(storage, "vouchers/" + Date.now() + "-" + safe);
-          await uploadBytes(stored, file, { contentType: file.type || "image/jpeg" });
-          img = await getDownloadURL(stored);
-          btn.textContent = "Publishing…";
+          if (preparedFile !== file) {
+            if (preparing) await preparing;
+            if (preparedFile !== file) preparedData = await shrinkFile(file);
+          }
+          img = preparedData;
         }
         await addDoc(voucherCol, { title, code, description: desc, imageUrl: img, expiry: exp, createdAt: serverTimestamp() });
         toast("✅ Voucher published!");
         ["fTitle", "fCode", "fDesc", "fImg", "fExpiry"].forEach(id => document.getElementById(id).value = "");
         document.getElementById("fFile").value = "";
+        preparedFile = null;
+        preparedData = null;
         showPreview("");
       } catch (e) { toast("Error: " + e.message, false); }
       btn.textContent = "Publish Voucher"; btn.disabled = false;
