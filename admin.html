@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin - APNAJ Coupons</title>
+  <title>Admin - APNAJ Vouchers</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap"
     rel="stylesheet">
   <style>
@@ -208,7 +208,7 @@
       border: 1px solid var(--border)
     }
 
-    .coupon-item {
+    .voucher-item {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 16px;
@@ -334,7 +334,182 @@
       color: var(--muted);
       font-size: 13px
     }
+
+    /* Access codes */
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    .inline {
+      display: flex;
+      gap: 8px
+    }
+
+    .inline input {
+      flex: 1
+    }
+
+    select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none
+    }
+
+    .btn.ghost {
+      background: rgba(255, 255, 255, .06);
+      color: var(--text);
+      width: auto;
+      padding: 12px 14px;
+      white-space: nowrap
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      letter-spacing: 0;
+      text-transform: none;
+      color: var(--text);
+      margin-bottom: 16px
+    }
+
+    .check input {
+      width: 18px;
+      height: 18px;
+      padding: 0
+    }
+
+    .code-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px
+    }
+
+    .code-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px
+    }
+
+    .code-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 24px;
+      letter-spacing: 3px;
+      color: var(--accent);
+      cursor: pointer
+    }
+
+    .status {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 99px;
+      white-space: nowrap
+    }
+
+    .status.unused {
+      background: rgba(30, 144, 255, .12);
+      color: var(--accent)
+    }
+
+    .status.active {
+      background: rgba(45, 255, 126, .12);
+      color: var(--green)
+    }
+
+    .status.expired,
+    .status.revoked {
+      background: rgba(255, 79, 79, .12);
+      color: var(--red)
+    }
+
+    .code-meta {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6
+    }
+
+    .code-meta b {
+      color: var(--text);
+      font-weight: 600
+    }
+
+    .code-edit {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      margin-top: 12px
+    }
+
+    .code-edit input,
+    .code-edit select {
+      padding: 10px 12px;
+      font-size: 13px
+    }
+
+    .code-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px
+    }
+
+    .code-actions button {
+      flex: 1 1 auto;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer
+    }
+
+    .code-actions button.warn {
+      color: var(--red);
+      border-color: rgba(255, 79, 79, .3)
+    }
+
+    .rules-note {
+      background: rgba(255, 79, 79, .08);
+      border: 1px solid rgba(255, 79, 79, .3);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.6;
+      margin-bottom: 16px;
+      display: none
+    }
+
+    .rules-note code {
+      display: block;
+      white-space: pre;
+      overflow-x: auto;
+      background: rgba(0, 0, 0, .35);
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 8px;
+      font-size: 11px
+    }
   </style>
+  <script src="js/access-core.js"></script>
 </head>
 
 <body>
@@ -347,7 +522,7 @@
   <div id="loginGate">
     <div class="login-box">
       <h2>Admin Login</h2>
-      <p>Enter password to manage coupons</p>
+      <p>Enter password to manage vouchers</p>
       <div class="field">
         <label>Password</label>
         <input type="password" id="pwInput" placeholder="Enter admin password"
@@ -359,8 +534,48 @@
   </div>
 
   <div id="adminPanel">
+    <div class="section-title">Access Codes</div>
+    <div class="rules-note" id="rulesNote">
+      Firestore is refusing access to the <b>accessCodes</b> collection. In the Firebase console open
+      Firestore &rarr; Rules and add this block inside <b>match /databases/{database}/documents</b>, then publish:
+      <code>match /accessCodes/{code} {
+  allow read, write: if true;
+}</code>
+    </div>
     <div class="form-card">
-      <h3>➕ Add New Coupon</h3>
+      <h3>Create access code</h3>
+      <div class="field">
+        <label>Code</label>
+        <div class="inline">
+          <input type="text" id="acCode" placeholder="Leave empty to generate" style="text-transform:uppercase">
+          <button class="btn ghost" type="button" onclick="genCode()">Generate</button>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Lasts for</label><input type="number" id="acAmount" min="1" step="1" value="1"></div>
+        <div class="field"><label>Unit</label>
+          <select id="acUnit">
+            <option value="hours">Hours</option>
+            <option value="days" selected>Days</option>
+            <option value="weeks">Weeks</option>
+            <option value="months">Months (30 days)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Note (optional)</label><input type="text" id="acNote" placeholder="e.g. customer name or Telegram handle"></div>
+      <label class="check"><input type="checkbox" id="acLock" checked> Lock the code to the first device that uses it</label>
+      <button class="btn" id="acAddBtn" onclick="addCode()">Create Code</button>
+    </div>
+    <div id="codeList">
+      <div class="loading-wrap">
+        <div class="spinner"></div>Loading…
+      </div>
+    </div>
+
+    <br>
+    <div class="section-title">Vouchers</div>
+    <div class="form-card">
+      <h3>➕ Add New Voucher</h3>
       <div class="field"><label>Title *</label><input type="text" id="fTitle" placeholder="e.g. Weekend Bonus"></div>
       <div class="field"><label>Promo Code *</label><input type="text" id="fCode" placeholder="e.g. APNAJ50"
           style="text-transform:uppercase"></div>
@@ -373,10 +588,10 @@
       </div>
       <div class="field"><label>Expiry (optional)</label><input type="text" id="fExpiry"
           placeholder="e.g. Expires midnight tonight"></div>
-      <button class="btn" id="addBtn" onclick="addCoupon()">Publish Coupon</button>
+      <button class="btn" id="addBtn" onclick="addVoucher()">Publish Voucher</button>
     </div>
-    <div class="section-title">Published Coupons</div>
-    <div id="couponList">
+    <div class="section-title">Published Vouchers</div>
+    <div id="voucherList">
       <div class="loading-wrap">
         <div class="spinner"></div>Loading…
       </div>
@@ -389,24 +604,26 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp }
+    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, setDoc, getDoc, updateDoc }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyA5Y4KswhImaWK8k-T_bpyqmBTKnIU-aeQ",
-      authDomain: "admin-8f6df.firebaseapp.com",
-      projectId: "admin-8f6df",
-      storageBucket: "admin-8f6df.firebasestorage.app",
-      messagingSenderId: "321300416512",
-      appId: "1:321300416512:web:ea5763ce2cc3462c07f0e5",
-      measurementId: "G-C58C8GBYWP"
+      apiKey: "AIzaSyCWOqTsV4Nhd6axIPyTWWI-PFo2HOd_KV0",
+      authDomain: "chike1w.firebaseapp.com",
+      projectId: "chike1w",
+      storageBucket: "chike1w.firebasestorage.app",
+      messagingSenderId: "276077991026",
+      appId: "1:276077991026:web:235211079b963440051eeb",
+      measurementId: "G-E2X3HD8ZWR"
     };
 
     const ADMIN_PASSWORD = "apnaj2024";
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const couponCol = collection(db, "coupons");
+    const voucherCol = collection(db, "vouchers");
+    const codeCol = collection(db, "accessCodes");
+    const A = window.AccessCodes;
 
     function doLogin() {
       const pw = document.getElementById("pwInput").value;
@@ -414,6 +631,7 @@
         document.getElementById("loginGate").style.display = "none";
         document.getElementById("adminPanel").style.display = "block";
         startListening();
+        startCodeListening();
       } else {
         document.getElementById("loginErr").style.display = "block";
       }
@@ -444,7 +662,7 @@
       setTimeout(() => t.classList.remove("show"), 2500);
     }
 
-    async function addCoupon() {
+    async function addVoucher() {
       const title = document.getElementById("fTitle").value.trim();
       const code = document.getElementById("fCode").value.trim().toUpperCase();
       const desc = document.getElementById("fDesc").value.trim();
@@ -454,36 +672,201 @@
       const btn = document.getElementById("addBtn");
       btn.textContent = "Publishing…"; btn.disabled = true;
       try {
-        await addDoc(couponCol, { title, code, description: desc, imageUrl: img, expiry: exp, createdAt: serverTimestamp() });
-        toast("✅ Coupon published!");
+        await addDoc(voucherCol, { title, code, description: desc, imageUrl: img, expiry: exp, createdAt: serverTimestamp() });
+        toast("✅ Voucher published!");
         ["fTitle", "fCode", "fDesc", "fImg", "fExpiry"].forEach(id => document.getElementById(id).value = "");
         document.getElementById("imgPreview").style.display = "none";
       } catch (e) { toast("Error: " + e.message, false); }
-      btn.textContent = "Publish Coupon"; btn.disabled = false;
+      btn.textContent = "Publish Voucher"; btn.disabled = false;
     }
-    window.addCoupon = addCoupon;
+    window.addVoucher = addVoucher;
 
-    async function deleteCoupon(id) {
-      if (!confirm("Delete this coupon?")) return;
+    async function deleteVoucher(id) {
+      if (!confirm("Delete this voucher?")) return;
       try {
-        await deleteDoc(doc(db, "coupons", id));
-        toast("🗑️ Coupon deleted");
+        await deleteDoc(doc(db, "vouchers", id));
+        toast("🗑️ Voucher deleted");
       } catch (e) { toast("Error: " + e.message, false); }
     }
-    window.deleteCoupon = deleteCoupon;
+    window.deleteVoucher = deleteVoucher;
+
+    // ── Access codes ──────────────────────────────────────────────
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function durationFromInputs(amountId, unitId) {
+      const amount = Math.max(1, Math.round(Number(document.getElementById(amountId).value) || 0));
+      const unit = document.getElementById(unitId).value;
+      return amount * A.UNITS[unit];
+    }
+
+    function genCode() {
+      document.getElementById("acCode").value = A.randomCode();
+    }
+    window.genCode = genCode;
+
+    async function addCode() {
+      let code = A.normalizeCode(document.getElementById("acCode").value);
+      if (!code) code = A.randomCode();
+      if (code.length < 4) { toast("Code must be at least 4 characters", false); return; }
+      const durationMs = durationFromInputs("acAmount", "acUnit");
+      if (!durationMs) { toast("Enter how long the code lasts", false); return; }
+      const btn = document.getElementById("acAddBtn");
+      btn.textContent = "Creating…"; btn.disabled = true;
+      try {
+        const ref = doc(db, "accessCodes", code);
+        if ((await getDoc(ref)).exists()) { toast("That code already exists", false); }
+        else {
+          await setDoc(ref, {
+            code,
+            durationMs,
+            note: document.getElementById("acNote").value.trim(),
+            lockDevice: document.getElementById("acLock").checked,
+            active: true,
+            activatedAt: null,
+            deviceId: null,
+            createdAt: serverTimestamp()
+          });
+          toast("Code " + code + " created");
+          document.getElementById("acCode").value = "";
+          document.getElementById("acNote").value = "";
+        }
+      } catch (e) { toast("Error: " + e.message, false); showRulesNoteIfDenied(e); }
+      btn.textContent = "Create Code"; btn.disabled = false;
+    }
+    window.addCode = addCode;
+
+    async function saveDuration(id) {
+      const durationMs = durationFromInputs("dur-" + id, "unit-" + id);
+      try {
+        await updateDoc(doc(db, "accessCodes", id), { durationMs });
+        toast("Duration updated to " + A.formatDuration(durationMs));
+      } catch (e) { toast("Error: " + e.message, false); }
+    }
+    window.saveDuration = saveDuration;
+
+    async function toggleCode(id, active) {
+      try {
+        await updateDoc(doc(db, "accessCodes", id), { active });
+        toast(active ? "Code reactivated" : "Code deactivated");
+      } catch (e) { toast("Error: " + e.message, false); }
+    }
+    window.toggleCode = toggleCode;
+
+    async function resetDevice(id) {
+      try {
+        await updateDoc(doc(db, "accessCodes", id), { deviceId: null });
+        toast("Device unlinked. The next device to use the code will be linked.");
+      } catch (e) { toast("Error: " + e.message, false); }
+    }
+    window.resetDevice = resetDevice;
+
+    async function restartClock(id) {
+      if (!confirm("Restart this code's time from now?")) return;
+      try {
+        await updateDoc(doc(db, "accessCodes", id), { activatedAt: serverTimestamp() });
+        toast("Clock restarted");
+      } catch (e) { toast("Error: " + e.message, false); }
+    }
+    window.restartClock = restartClock;
+
+    async function deleteCode(id) {
+      if (!confirm("Delete code " + id + "? Anyone using it loses access.")) return;
+      try {
+        await deleteDoc(doc(db, "accessCodes", id));
+        toast("Code deleted");
+      } catch (e) { toast("Error: " + e.message, false); }
+    }
+    window.deleteCode = deleteCode;
+
+    function copyCode(code) {
+      if (navigator.clipboard) navigator.clipboard.writeText(code).then(() => toast("Copied " + code));
+    }
+    window.copyCode = copyCode;
+
+    function showRulesNoteIfDenied(e) {
+      if (/permission|insufficient/i.test(String(e && (e.code || e.message)))) {
+        document.getElementById("rulesNote").style.display = "block";
+      }
+    }
+
+    function unitParts(ms) {
+      const order = ["months", "weeks", "days", "hours"];
+      for (const unit of order) {
+        if (ms >= A.UNITS[unit] && ms % A.UNITS[unit] === 0) return { amount: ms / A.UNITS[unit], unit };
+      }
+      return { amount: Math.max(1, Math.round(ms / A.UNITS.hours)), unit: "hours" };
+    }
+
+    function renderCodes(docs) {
+      const list = document.getElementById("codeList");
+      if (!docs.length) { list.innerHTML = `<div class="empty-list">No access codes yet. Create one above.</div>`; return; }
+      const now = Date.now();
+      list.innerHTML = docs.map(d => {
+        const c = d.data();
+        const activatedAt = A.toMillis(c.activatedAt);
+        const expiresAt = activatedAt != null ? activatedAt + Number(c.durationMs) : null;
+        let status, label;
+        if (c.active === false) { status = "revoked"; label = "Deactivated"; }
+        else if (expiresAt != null && now > expiresAt) { status = "expired"; label = "Expired"; }
+        else if (activatedAt != null) { status = "active"; label = A.formatRemaining(expiresAt - now); }
+        else { status = "unused"; label = "Not used yet"; }
+        const parts = unitParts(Number(c.durationMs));
+        const units = ["hours", "days", "weeks", "months"].map(u =>
+          `<option value="${u}"${u === parts.unit ? " selected" : ""}>${u[0].toUpperCase() + u.slice(1)}</option>`).join("");
+        return `
+          <div class="code-item">
+            <div class="code-head">
+              <div class="code-value" onclick="copyCode('${esc(d.id)}')" title="Copy">${esc(d.id)}</div>
+              <span class="status ${status}">${label}</span>
+            </div>
+            <div class="code-meta">
+              ${c.note ? `<div><b>${esc(c.note)}</b></div>` : ""}
+              <div>Lasts <b>${A.formatDuration(c.durationMs)}</b> from first use${c.lockDevice === false ? "" : " &middot; locked to one device"}</div>
+              ${activatedAt != null ? `<div>Started <b>${A.formatDate(activatedAt)}</b> &middot; ends <b>${A.formatDate(expiresAt)}</b></div>` : `<div>The clock starts when the customer enters the code.</div>`}
+              ${c.deviceId ? `<div>Device linked</div>` : ""}
+            </div>
+            <div class="code-edit">
+              <input type="number" id="dur-${esc(d.id)}" min="1" step="1" value="${parts.amount}">
+              <select id="unit-${esc(d.id)}">${units}</select>
+              <button class="btn ghost" type="button" onclick="saveDuration('${esc(d.id)}')">Save length</button>
+            </div>
+            <div class="code-actions">
+              ${c.active === false
+                ? `<button type="button" onclick="toggleCode('${esc(d.id)}', true)">Reactivate</button>`
+                : `<button type="button" class="warn" onclick="toggleCode('${esc(d.id)}', false)">Deactivate</button>`}
+              ${activatedAt != null ? `<button type="button" onclick="restartClock('${esc(d.id)}')">Restart clock</button>` : ""}
+              ${c.deviceId ? `<button type="button" onclick="resetDevice('${esc(d.id)}')">Unlink device</button>` : ""}
+              <button type="button" class="warn" onclick="deleteCode('${esc(d.id)}')">Delete</button>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    let codeDocs = [];
+    function startCodeListening() {
+      const q = query(codeCol, orderBy("createdAt", "desc"));
+      onSnapshot(q, snap => { codeDocs = snap.docs; renderCodes(codeDocs); }, e => {
+        document.getElementById("codeList").innerHTML = `<div class="empty-list">Could not load codes: ${esc(e.message)}</div>`;
+        showRulesNoteIfDenied(e);
+      });
+      // Keep the "time left" labels fresh.
+      setInterval(() => { if (codeDocs.length) renderCodes(codeDocs); }, 60000);
+    }
 
     function startListening() {
-      const q = query(couponCol, orderBy("createdAt", "desc"));
+      const q = query(voucherCol, orderBy("createdAt", "desc"));
       onSnapshot(q, snap => {
-        const list = document.getElementById("couponList");
-        if (snap.empty) { list.innerHTML = `<div class="empty-list">No coupons yet. Add one above.</div>`; return; }
+        const list = document.getElementById("voucherList");
+        if (snap.empty) { list.innerHTML = `<div class="empty-list">No vouchers yet. Add one above.</div>`; return; }
         list.innerHTML = snap.docs.map(d => {
           const c = d.data();
           const thumb = c.imageUrl
             ? `<img class="ci-thumb" src="${c.imageUrl}" alt="${c.title}">`
             : `<div class="ci-thumb-placeholder">🎟️</div>`;
           return `
-            <div class="coupon-item">
+            <div class="voucher-item">
               ${thumb}
               <div class="ci-body">
                 <div class="ci-title">${c.title}</div>
@@ -491,7 +874,7 @@
                 <div class="ci-desc">${c.description || ""}</div>
               </div>
               <div class="ci-actions">
-                <button class="del-btn" onclick="deleteCoupon('${d.id}')">🗑️</button>
+                <button class="del-btn" onclick="deleteVoucher('${d.id}')">🗑️</button>
               </div>
             </div>`;
         }).join("");

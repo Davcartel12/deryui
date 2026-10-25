@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mines Predictor</title>
+    <title>Mines Simulator</title>
     <style>
         * {
             margin: 0;
@@ -262,7 +262,7 @@
 
 
     <div id="pg-loader"
-        style="position:fixed;inset:0;z-index:99999;background:url('https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/24be5673-1030-4ea6-9379-d4cd050176f2.avif') center/cover no-repeat;">
+        style="position:fixed;inset:0;z-index:99999;background:url('games/mines.png') center/cover no-repeat;">
         <div style="position:absolute;inset:0;background:rgba(0,0,0,0.7);"></div>
         <div
             style="position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;">
@@ -308,7 +308,10 @@
 
     </div>
 
-    <script>
+    <script src="js/stats.js"></script>
+<script src="js/rng.js"></script>
+<script src="js/rng-games.js"></script>
+<script>
         const TILE_IMG = 'https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/e6b29cd6-c737-427d-8d03-7f5b388eaa9b.png';
         const TRAP_IMG = 'https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/0d90809d-116e-4cc0-83b6-117a67c2e891.png';
 
@@ -347,22 +350,21 @@
             });
         }
 
-        function shuffle(arr) {
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
-        }
+        function shuffle(arr) { return BotRng.cryptoShuffle(arr); }
 
         document.getElementById('playBtn').addEventListener('click', () => {
             resetGrid();
             const trapVal = TRAP_OPTIONS[trapIndex];
             const numTraps = TRAP_COUNTS[trapVal];
-            const indices = shuffle([...Array(25).keys()]).slice(0, numTraps);
-            indices.forEach(i => {
+            const placed = RngGames.placeMines(25, numTraps, {
+                shuffle: (a) => BotRng.cryptoShuffle(a),
+                int: (a, b) => BotRng.cryptoInt(a, b)
+            });
+            placed.mines.forEach(i => {
                 tiles[i].style.backgroundImage = "url('" + TRAP_IMG + "')";
             });
+            console.info('Mines simulation:', placed.odds, placed.disclaimer);
+        });
         });
     </script>
 </body>

@@ -1,123 +1,406 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Promo - APNAJ</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090d16" />
+  <title>Promo - CHIKE1W</title>
+  <script src="js/access-core.js"></script>
+  <script src="js/access-guard.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root{--accent:#1e90ff;--accent2:#ff4f4f;--bg:#07080c;--surface:#0d0f16;--border:rgba(255,255,255,0.07);--text:#f0f2ff;--muted:rgba(240,242,255,0.45);}
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
-    .topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(7,8,12,.85);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
-    .logo-wrap{display:flex;align-items:center;gap:10px}
-    .logo-wrap img{width:36px;height:36px;object-fit:contain}
-    .logo-wrap span{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--accent);line-height:1}
-    .promo-tag{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;background:linear-gradient(90deg,var(--accent),#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .promo-tag span{-webkit-text-fill-color:var(--text);color:var(--muted);font-weight:400;margin-right:4px}
-    .page{position:relative;z-index:1;padding:24px 20px 120px}
-    .hero{background:linear-gradient(135deg,rgba(30,144,255,.18),rgba(0,212,255,.08));border:1px solid rgba(30,144,255,.25);border-radius:20px;padding:28px 24px;text-align:center;margin-bottom:24px;position:relative;overflow:hidden}
-    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(30,144,255,.15),transparent)}
-    .hero-code{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:8px;background:linear-gradient(90deg,var(--accent),#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;position:relative;z-index:1}
-    .hero-label{font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;position:relative;z-index:1}
-    .hero-desc{font-size:13px;color:var(--muted);margin-top:10px;position:relative;z-index:1}
-    .copy-btn{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:12px 28px;border-radius:99px;background:var(--accent);color:#fff;font-size:13px;font-weight:800;border:none;cursor:pointer;letter-spacing:1px;transition:.2s;position:relative;z-index:1}
-    .copy-btn:hover{background:#1a7fe0;transform:translateY(-1px)}
-    .copy-btn svg{width:16px;height:16px}
-    .sec-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--muted);margin-bottom:14px}
-    .offer-list{display:flex;flex-direction:column;gap:12px}
-    .offer-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 16px;display:flex;align-items:center;gap:14px}
-    .offer-icon{font-size:32px;width:52px;text-align:center;flex-shrink:0}
-    .offer-title{font-size:14px;font-weight:800;margin-bottom:4px}
-    .offer-text{font-size:12px;color:var(--muted);line-height:1.5}
-    .offer-badge{margin-left:auto;flex-shrink:0;background:rgba(30,144,255,.15);border:1px solid rgba(30,144,255,.3);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:800;color:var(--accent);white-space:nowrap}
-    .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(7,8,12,.92);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:10px 0 calc(10px + env(safe-area-inset-bottom))}
-    .nav-item{flex:1;max-width:90px;display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:var(--muted);font-size:11px;font-weight:600;transition:color .2s;padding:4px 0}
-    .nav-item.active{color:var(--accent)}
-    .nav-item svg{width:22px;height:22px}
-    .dot{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:0;margin-top:-2px;transition:opacity .2s}
-    .nav-item.active .dot{opacity:1}
-    .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--accent);color:#fff;font-size:13px;font-weight:700;padding:10px 22px;border-radius:99px;opacity:0;pointer-events:none;transition:.3s;z-index:9999}
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    :root {
+      --bg: #090d16;
+      --header: #0c1220;
+      --line: rgba(255, 255, 255, 0.08);
+      --blue: #1a73ff;
+      --green: #00a84f;
+      --text: #ffffff;
+      --muted: #8d97ab;
+      --card: #151b2b;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      overflow-x: hidden;
+      padding-bottom: calc(88px + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 56px;
+      padding: calc(8px + env(safe-area-inset-top)) 14px 8px;
+      background: var(--header);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      text-decoration: none;
+    }
+
+    .brand img {
+      height: 38px;
+      width: auto;
+      max-width: 150px;
+      object-fit: contain;
+      display: block;
+      mix-blend-mode: screen;
+    }
+
+    .code-btn {
+      flex-shrink: 0;
+      border: 0;
+      border-radius: 10px;
+      background: var(--green);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      padding: 9px 12px;
+      text-decoration: none;
+    }
+
+    .page {
+      padding: 16px 12px 0;
+    }
+
+    .code-card {
+      background: linear-gradient(180deg, #172033 0%, #121826 100%);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px 16px 16px;
+      text-align: center;
+    }
+
+    .code-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .code-value {
+      margin-top: 6px;
+      font-size: clamp(32px, 10vw, 44px);
+      font-weight: 800;
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+
+    .code-desc {
+      margin-top: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+      min-height: 44px;
+      padding: 0 22px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .copy-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .sec-title {
+      margin: 22px 4px 12px;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .offer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .offer-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .offer-icon {
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(26, 115, 255, 0.14);
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .offer-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .offer-body {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .offer-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .offer-title {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .offer-text {
+      margin-top: 4px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .offer-badge {
+      flex-shrink: 0;
+      border-radius: 999px;
+      background: rgba(26, 115, 255, 0.14);
+      color: #8eb7ff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      padding: 4px 8px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(78px + env(safe-area-inset-bottom));
+      transform: translateX(-50%) translateY(8px);
+      background: #1b2333;
+      border: 1px solid var(--line);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 16px;
+      border-radius: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.25s;
+      z-index: 300;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 200;
+      display: flex;
+      background: #0c111c;
+      border-top: 1px solid var(--line);
+      padding: 4px 6px calc(6px + env(safe-area-inset-bottom));
+    }
+
+    .nav-item {
+      flex: 1;
+      min-height: 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .nav-item.active {
+      color: var(--blue);
+    }
   </style>
 </head>
+
 <body>
   <header class="topbar">
-    <div class="logo-wrap">
-      <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png" alt="Logo">
-      <span>APNAJ</span>
-    </div>
-    <div class="promo-tag"><span>Code:</span>APNAJ</div>
+    <a class="brand" href="login.html">
+      <img src="brand-logo.png" alt="CHIKE1W 1win">
+    </a>
+    <a class="code-btn" href="login.html">CHIKE1W</a>
   </header>
 
-  <div class="page">
+  <div class="shell">
+    <div class="page">
+      <div class="code-card">
+        <div class="code-label">Promo code</div>
+        <div class="code-value">CHIKE1W</div>
+        <p class="code-desc">Enter this code when you claim a bonus. Copy it and keep it ready.</p>
+        <button class="copy-btn" type="button" onclick="copyCode()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy code
+        </button>
+      </div>
 
-    <!-- HERO CODE -->
-    <div class="hero">
-      <div class="hero-label">Your Promo Code</div>
-      <div class="hero-code">APNAJ</div>
-      <div class="hero-desc">Use this code on 1win to get exclusive bonuses & free bets</div>
-      <button class="copy-btn" id="copyBtn" onclick="copyCode()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Copy Code
-      </button>
+      <h2 class="sec-title" id="offers">Active offers</h2>
+      <div class="offer-list">
+        <article class="offer-card">
+          <div class="offer-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><path d="M17 7.5c0-1.9-2.2-3.5-5-3.5S7 5.6 7 7.5 9.2 11 12 11s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5"/></svg>
+          </div>
+          <div class="offer-body">
+            <div class="offer-top">
+              <div class="offer-title">Welcome bonus</div>
+              <div class="offer-badge">HOT</div>
+            </div>
+            <p class="offer-text">Up to 500% on the first deposit when the code CHIKE1W is used.</p>
+          </div>
+        </article>
+
+        <article class="offer-card">
+          <div class="offer-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/></svg>
+          </div>
+          <div class="offer-body">
+            <div class="offer-top">
+              <div class="offer-title">Free spins</div>
+              <div class="offer-badge">WEEKLY</div>
+            </div>
+            <p class="offer-text">50 free spins on selected crash games every Friday.</p>
+          </div>
+        </article>
+
+        <article class="offer-card">
+          <div class="offer-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4"/><path d="M17 6h3a3 3 0 0 1-3 4"/></svg>
+          </div>
+          <div class="offer-body">
+            <div class="offer-top">
+              <div class="offer-title">VIP cashback</div>
+              <div class="offer-badge">VIP</div>
+            </div>
+            <p class="offer-text">Up to 30% cashback each week for VIP members.</p>
+          </div>
+        </article>
+
+        <article class="offer-card">
+          <div class="offer-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a3 3 0 0 1 0 5.75"/></svg>
+          </div>
+          <div class="offer-body">
+            <div class="offer-top">
+              <div class="offer-title">Refer a friend</div>
+              <div class="offer-badge">NEW</div>
+            </div>
+            <p class="offer-text">Earn 10% of every deposit your referrals make.</p>
+          </div>
+        </article>
+      </div>
     </div>
-
-    <!-- OFFERS -->
-    <div class="sec-title">🎁 Active Offers</div>
-    <div class="offer-list">
-      <div class="offer-card">
-        <div class="offer-icon">💰</div>
-        <div>
-          <div class="offer-title">Welcome Bonus</div>
-          <div class="offer-text">Get up to 500% on your first deposit when you use code APNAJ</div>
-        </div>
-        <div class="offer-badge">HOT</div>
-      </div>
-      <div class="offer-card">
-        <div class="offer-icon">🎰</div>
-        <div>
-          <div class="offer-title">Free Spins</div>
-          <div class="offer-text">50 free spins on selected crash games every Friday</div>
-        </div>
-        <div class="offer-badge">WEEKLY</div>
-      </div>
-      <div class="offer-card">
-        <div class="offer-icon">🏆</div>
-        <div>
-          <div class="offer-title">VIP Cashback</div>
-          <div class="offer-text">Earn up to 30% cashback weekly as a VIP member</div>
-        </div>
-        <div class="offer-badge">VIP</div>
-      </div>
-      <div class="offer-card">
-        <div class="offer-icon">🤝</div>
-        <div>
-          <div class="offer-title">Refer a Friend</div>
-          <div class="offer-text">Earn 10% of every deposit your referrals make, forever</div>
-        </div>
-        <div class="offer-badge">NEW</div>
-      </div>
-    </div>
-
   </div>
 
-  <div class="toast" id="toast">✅ Code copied!</div>
+  <div class="toast" id="toast">Code copied</div>
 
   <nav class="bottom-nav">
-    <a href="login.html" class="nav-item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span><div class="dot"></div></a>
-    <a href="live.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg><span>Live</span><div class="dot"></div></a>
-    <a href="promo.html" class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span>Promo</span><div class="dot"></div></a>
-    <a href="contact.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Support</span><div class="dot"></div></a>
+    <a href="login.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="live.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      <span>Live</span>
+    </a>
+    <a href="promo.html" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l7.1-1.01z"/></svg>
+      <span>Promo</span>
+    </a>
+    <a href="contact.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Support</span>
+    </a>
   </nav>
 
   <script>
-    function copyCode(){
-      navigator.clipboard.writeText("APNAJ").catch(()=>{});
-      const t=document.getElementById("toast");
-      t.classList.add("show");
-      setTimeout(()=>t.classList.remove("show"),2200);
+    function copyCode() {
+      const done = () => {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText('CHIKE1W').then(done).catch(done);
+      } else {
+        done();
+      }
     }
   </script>
 </body>
+
 </html>

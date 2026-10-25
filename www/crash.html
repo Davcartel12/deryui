@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crash Predictor - APNAJ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+</head>
+<body class="theme-noise">
+  <div id="pg-loader">
+    <div class="loader-title">CRASH</div>
+    <div class="loader-sub">Loading…</div>
+    <div class="loader-track"><div id="pg-bar"></div></div>
+    <div id="pg-pct">1%</div>
+  </div>
+  <script>
+    (function(){var dur=2000+Math.random()*1500,p=1,b=document.getElementById('pg-bar'),t=document.getElementById('pg-pct'),o=document.getElementById('pg-loader');var iv=setInterval(function(){p+=Math.floor(Math.random()*6)+2;if(p>=100){p=100;clearInterval(iv);setTimeout(function(){o.style.transition='opacity 0.5s';o.style.opacity='0';setTimeout(function(){o.remove();},500);},150);}b.style.width=p+'%';t.textContent=p+'%';},Math.round(dur/35));})();
+  </script>
+
+  <header class="topbar">
+    <a class="logo-wrap" href="login.html">
+      <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png" alt="Logo">
+      <span>APNAJ</span>
+    </a>
+    <a class="exit-btn" href="login.html">Exit</a>
+  </header>
+
+  <main class="container fade-up">
+    <h1 class="page-title">CRASH</h1>
+    <p class="page-sub">History Stats</p>
+
+    <div class="card">
+      
+      <div class="hist-row">
+        <div class="hist-lbl">History</div>
+        <div class="history-bar" id="historyBar"></div>
+        
+      </div>
+      <div class="predict-panel">
+        <div class="predict-eyebrow">Prediction Unit</div>
+        <div class="predict-label">History Median (not a prediction)</div>
+        <div id="predictionValue">--</div>
+        <div class="predict-divider"></div>
+        <div class="sig-row"><div class="sig-dot"></div><div class="sig-txt">Statistical summary only</div></div>
+      </div>
+      <div class="engine-tag">CRASH AI Engine</div>
+    </div>
+  </main>
+  
+    <script src="js/stats.js"></script>
+  <script src="js/crash-engine.js"></script>
+  <script>
+    (function () {
+      const HISTORY_URL = "https://crash-gateway-grm-cr.100hp.app/history";
+      const SESSION_ID = "453d5725-41ad-430f-8920-0c664b4e5dc7";
+      const CUSTOMER_ID = "077dee8d-c923-4c02-9bee-757573662e69";
+      const MAX_CAP = null;
+      const historyBar = document.getElementById("historyBar");
+      const predEl = document.getElementById("predictionValue");
+      const labelEl = document.querySelector(".predict-label");
+      const sigTxt = document.querySelector(".sig-txt");
+      if (labelEl) labelEl.textContent = "History Median (not a prediction)";
+      if (sigTxt) sigTxt.textContent = "Statistical summary only";
+      let rounds = [];
+      let lastSeenId = null;
+
+      function renderHistory() {
+        historyBar.innerHTML = "";
+        rounds.slice(0, 18).forEach(function (r) {
+          const c = r.coef;
+          const pill = document.createElement("div");
+          pill.className = "history-pill" + (c >= 5 ? " high" : c < 1.5 ? " low" : "");
+          pill.innerText = c.toFixed(2) + "x";
+          historyBar.appendChild(pill);
+        });
+      }
+
+      function showStats() {
+        const coefs = rounds.map(function (r) { return r.coef; });
+        const analysis = CrashEngine.analyzeCrashHistory(coefs, { maxCap: MAX_CAP, minSample: 10, newestFirst: true });
+        if (analysis.status !== "ok") {
+          predEl.textContent = "n/a";
+          if (sigTxt) sigTxt.textContent = analysis.message || "Insufficient data";
+          return;
+        }
+        predEl.textContent = BotStats.formatFixed(analysis.median, 2) + "x";
+        if (sigTxt) {
+          const r2 = analysis.rates.ge_2;
+          const pct = (r2.rate * 100).toFixed(0);
+          const lo = (r2.ci95.low * 100).toFixed(0);
+          const hi = (r2.ci95.high * 100).toFixed(0);
+          sigTxt.textContent = "≥2x rate " + pct + "% (95% CI " + lo + "–" + hi + "%) · n=" + analysis.sampleSize;
+        }
+        predEl.classList.remove("pop");
+        void predEl.offsetWidth;
+        predEl.classList.add("pop");
+        setTimeout(function () { predEl.classList.remove("pop"); }, 500);
+      }
+
+      async function fetchHistory() {
+        try {
+          const res = await fetch(HISTORY_URL, {
+            headers: { accept: "application/json", "session-id": SESSION_ID, "customer-id": CUSTOMER_ID }
+          });
+          const data = await res.json();
+          const norm = CrashEngine.normalizeHistoryResponse(data);
+          if (norm.status !== "ok" || !norm.rounds.length) {
+            if (sigTxt) sigTxt.textContent = "History unavailable";
+            return;
+          }
+          if (!rounds.length) {
+            rounds = norm.rounds;
+            lastSeenId = rounds[0] && rounds[0].id;
+            renderHistory();
+            showStats();
+            return;
+          }
+          const latest = norm.rounds[0];
+          if (latest && latest.id != null && latest.id === lastSeenId) return;
+          rounds = CrashEngine.mergeRounds(rounds, norm.rounds).slice(0, 500);
+          lastSeenId = rounds[0] && rounds[0].id;
+          renderHistory();
+          showStats();
+        } catch (e) {
+          console.error(e);
+          if (sigTxt) sigTxt.textContent = "History unavailable";
+          predEl.textContent = "n/a";
+        }
+      }
+      fetchHistory();
+      setInterval(fetchHistory, 5000);
+    })();
+  </script>
+</body>
+</html>

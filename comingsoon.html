@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090d16" />
+  <title>Coming soon - CHIKE1W</title>
+  <script src="js/access-core.js"></script>
+  <script src="js/access-guard.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --header: #0c1220;
+      --line: rgba(255, 255, 255, 0.08);
+      --blue: #1a73ff;
+      --green: #00a84f;
+      --text: #ffffff;
+      --muted: #8d97ab;
+      --card: #151b2b;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    a,
+    button {
+      font-family: inherit;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 56px;
+      padding: calc(8px + env(safe-area-inset-top)) 14px 8px;
+      background: var(--header);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .back {
+      flex: 0 0 36px;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
+    .back svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .brand {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .brand img {
+      height: 38px;
+      width: auto;
+      max-width: 150px;
+      object-fit: contain;
+      display: block;
+      mix-blend-mode: screen;
+    }
+
+    .code-btn {
+      flex-shrink: 0;
+      border: 0;
+      border-radius: 10px;
+      background: var(--green);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      padding: 9px 12px;
+      cursor: pointer;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 18px 16px calc(96px + env(safe-area-inset-bottom));
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px 16px 20px;
+      text-align: center;
+    }
+
+    .cover {
+      position: relative;
+      width: 150px;
+      aspect-ratio: 3 / 4;
+      margin: 0 auto 16px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #0f1424;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: saturate(0.75) brightness(0.9);
+    }
+
+    .cover::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(9, 13, 22, 0) 45%, rgba(9, 13, 22, 0.75) 100%);
+    }
+
+    .badge {
+      position: absolute;
+      left: 50%;
+      bottom: 10px;
+      transform: translateX(-50%);
+      z-index: 1;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .kicker {
+      margin-top: 6px;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+
+    p {
+      margin: 12px auto 0;
+      max-width: 320px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 46px;
+      border: 0;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .btn.primary img {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      object-fit: cover;
+    }
+
+    .btn.ghost {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+    }
+
+    .progress {
+      margin-top: 18px;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .progress i {
+      display: block;
+      width: 38%;
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--blue), #6aa6ff);
+      animation: load 2.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes load {
+      from { width: 24%; }
+      to { width: 62%; }
+    }
+
+    .progress-label {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 300;
+      display: flex;
+      align-items: stretch;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--header);
+      border-top: 1px solid var(--line);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .nav-item {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 9px 4px 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .nav-item.active {
+      color: #fff;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <a class="back" href="login.html" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <a class="brand" href="login.html"><img src="brand-logo.png" alt="CHIKE1W"></a>
+    <button class="code-btn" type="button">CHIKE1W</button>
+  </header>
+
+  <main class="shell">
+    <section class="card">
+      <div class="cover">
+        <img id="cover" src="games/crash.png" alt="">
+        <span class="badge">Coming soon</span>
+      </div>
+      <h1 id="title">This game</h1>
+      <div class="kicker">Not available yet</div>
+      <p id="message">We are still connecting this game to its live feed. It will appear here as soon as it is ready.</p>
+      <div class="progress"><i></i></div>
+      <div class="progress-label">In development</div>
+      <div class="actions">
+        <a class="btn primary" href="luckyjet.html"><img src="games/lucky-jet.png" alt="">Open Lucky Jet</a>
+        <a class="btn ghost" href="login.html">Back to games</a>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="login.html" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="live.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      <span>Live</span>
+    </a>
+    <a href="promo.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      <span>Promo</span>
+    </a>
+    <a href="contact.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Support</span>
+    </a>
+  </nav>
+
+  <script>
+    (function () {
+      // Same keys as the home page's openGame() map.
+      var games = {
+        rocketx: ["Rocket X", "games/rocket-x.png"],
+        crash: ["Crash", "games/crash.png"],
+        rocketqueen: ["Rocket Queen", "games/rocket-queen.png"],
+        metacrash: ["Meta Crash", "games/meta-crash.png"],
+        metacrashbtc: ["Meta Crash", "games/meta-crash-btc.png"],
+        fortunecrash: ["Fortune Crash", "games/fortune-crash.png"],
+        astronaut: ["Astronaut", "games/astronaut.png"],
+        tropicana: ["Tropicana", "games/tropicana.png"],
+        crimeempire: ["Crime Empire", "games/crime-empire.png"],
+        aviator: ["Aviator", "https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/5c9e6454-c9d7-4879-8873-75e1c670b345.avif"],
+        starx: ["StarX", "games/starx.png"],
+        airjet: ["AirJet", "games/airjet.png"],
+        speedncash: ["Speed n Cash", "games/speed-n-cash.png"],
+        mines: ["Mines", "games/mines.png"],
+        mines2: ["Mines Classic", "games/mines-classic.png"],
+        poker: ["Poker", "games/poker.png"],
+        blackjack: ["Blackjack", "games/blackjack.png"],
+        roulette: ["Roulette", "https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/0ca8cea1-ca1d-413e-91a7-4715861391a3.png"],
+        thimble: ["King Thimbles", "games/king-thimbles.png"],
+        coinflip: ["Coinflip", "games/coinflip.png"],
+        dice: ["Dice", "games/dice.png"],
+        football: ["Football", "https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/87fa017c-a631-4e91-91c6-1750406774c7.png"]
+      };
+      var key = new URLSearchParams(location.search).get("game");
+      var game = games[key];
+      var title = document.getElementById("title");
+      var cover = document.getElementById("cover");
+      if (game) {
+        title.textContent = game[0];
+        cover.src = game[1];
+        cover.alt = game[0];
+        document.title = game[0] + " - Coming soon - CHIKE1W";
+        document.getElementById("message").textContent =
+          "We are still connecting " + game[0] + " to its live feed. It will appear here as soon as it is ready.";
+      } else {
+        cover.parentNode.style.display = "none";
+      }
+    })();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090d16" />
+  <title>Live - CHIKE1W</title>
+  <script src="js/access-core.js"></script>
+  <script src="js/access-guard.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --header: #0c1220;
+      --line: rgba(255, 255, 255, 0.08);
+      --blue: #1a73ff;
+      --green: #00a84f;
+      --text: #ffffff;
+      --muted: #8d97ab;
+      --card: #151b2b;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      overflow-x: hidden;
+      padding-bottom: calc(88px + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 56px;
+      padding: calc(8px + env(safe-area-inset-top)) 14px 8px;
+      background: var(--header);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      text-decoration: none;
+    }
+
+    .brand img {
+      height: 38px;
+      width: auto;
+      max-width: 150px;
+      object-fit: contain;
+      display: block;
+      mix-blend-mode: screen;
+    }
+
+    .code-btn {
+      flex-shrink: 0;
+      border: 0;
+      border-radius: 10px;
+      background: var(--green);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      padding: 9px 12px;
+      text-decoration: none;
+    }
+
+    .page {
+      padding: 16px 12px 0;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .page-head h1 {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .page-head p {
+      margin-top: 4px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+
+    .live-badge {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(0, 168, 79, 0.14);
+      color: #3ddea0;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: blink 1.2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%,
+      100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .voucher-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .voucher-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .voucher-img {
+      display: block;
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+
+    .voucher-body {
+      padding: 14px;
+    }
+
+    .voucher-title {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .voucher-desc {
+      margin-top: 4px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .voucher-footer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .voucher-code-box {
+      flex: 1;
+      min-width: 0;
+      background: rgba(26, 115, 255, 0.08);
+      border: 1px dashed rgba(26, 115, 255, 0.35);
+      border-radius: 12px;
+      padding: 8px 12px;
+    }
+
+    .code-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .code-val {
+      margin-top: 2px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      color: #fff;
+      overflow-wrap: anywhere;
+    }
+
+    .copy-btn {
+      flex-shrink: 0;
+      min-height: 42px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .voucher-expires {
+      display: inline-flex;
+      margin-top: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 196, 64, 0.1);
+      color: #ffc440;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .empty,
+    .loading {
+      text-align: center;
+      padding: 48px 16px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      margin: 0 auto 12px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(78px + env(safe-area-inset-bottom));
+      transform: translateX(-50%) translateY(8px);
+      background: #1b2333;
+      border: 1px solid var(--line);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 16px;
+      border-radius: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.25s;
+      z-index: 300;
+      max-width: calc(100% - 32px);
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 200;
+      display: flex;
+      background: #0c111c;
+      border-top: 1px solid var(--line);
+      padding: 4px 6px calc(6px + env(safe-area-inset-bottom));
+    }
+
+    .nav-item {
+      flex: 1;
+      min-height: 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .nav-item.active {
+      color: var(--blue);
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <a class="brand" href="login.html">
+      <img src="brand-logo.png" alt="CHIKE1W 1win">
+    </a>
+    <a class="code-btn" href="login.html">CHIKE1W</a>
+  </header>
+
+  <div class="shell">
+    <div class="page">
+      <div class="page-head">
+        <div>
+          <h1>Live vouchers</h1>
+          <p>Bonus codes you can copy right now.</p>
+        </div>
+        <div class="live-badge"><span class="live-dot"></span>Live</div>
+      </div>
+      <div class="voucher-grid" id="voucherGrid">
+        <div class="loading">
+          <div class="spinner"></div>
+          Loading vouchers
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied</div>
+
+  <nav class="bottom-nav">
+    <a href="login.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="live.html" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      <span>Live</span>
+    </a>
+    <a href="promo.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l7.1-1.01z"/></svg>
+      <span>Promo</span>
+    </a>
+    <a href="contact.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Support</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCWOqTsV4Nhd6axIPyTWWI-PFo2HOd_KV0",
+      authDomain: "chike1w.firebaseapp.com",
+      projectId: "chike1w",
+      storageBucket: "chike1w.firebasestorage.app",
+      messagingSenderId: "276077991026",
+      appId: "1:276077991026:web:235211079b963440051eeb",
+      measurementId: "G-E2X3HD8ZWR"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const grid = document.getElementById("voucherGrid");
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch]));
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2000);
+    }
+
+    function copyCode(code) {
+      const done = () => showToast(code + " copied");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(done).catch(done);
+      } else {
+        done();
+      }
+    }
+
+    grid.addEventListener("click", (event) => {
+      const button = event.target.closest(".copy-btn");
+      if (!button) return;
+      copyCode(button.dataset.code || "");
+    });
+
+    function emptyState(message) {
+      grid.innerHTML = `<div class="empty"><p>${message}</p></div>`;
+    }
+
+    const vouchers = query(collection(db, "vouchers"), orderBy("createdAt", "desc"));
+    onSnapshot(vouchers, (snap) => {
+      if (snap.empty) {
+        emptyState("No vouchers available right now. Check back soon.");
+        return;
+      }
+      grid.innerHTML = snap.docs.map((doc) => {
+        const data = doc.data();
+        const image = typeof data.imageUrl === "string" && /^https?:\/\//i.test(data.imageUrl)
+          ? `<img class="voucher-img" src="${esc(data.imageUrl)}" alt="">`
+          : "";
+        const expiry = data.expiry
+          ? `<div class="voucher-expires">Ends ${esc(data.expiry)}</div>`
+          : "";
+        return `
+          <article class="voucher-card">
+            ${image}
+            <div class="voucher-body">
+              <div class="voucher-title">${esc(data.title || "Voucher")}</div>
+              <p class="voucher-desc">${esc(data.description || "")}</p>
+              <div class="voucher-footer">
+                <div class="voucher-code-box">
+                  <div class="code-label">Promo code</div>
+                  <div class="code-val">${esc(data.code || "")}</div>
+                </div>
+                <button class="copy-btn" type="button" data-code="${esc(data.code || "")}">Copy</button>
+              </div>
+              ${expiry}
+            </div>
+          </article>`;
+      }).join("");
+    }, () => {
+      emptyState("Vouchers could not be loaded. Try again in a moment.");
+    });
+  </script>
+</body>
+
+</html>

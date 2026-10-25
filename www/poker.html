@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Poker Analyzer</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #07080c;
+            --card-bg: #2a2a3e;
+            --card-light: #e8e8f0;
+            --card-shadow: #b8b8cc;
+            --red: #e03030;
+            --dark: #111118;
+            --gold: #1e90ff;
+            --green: #2ecc71;
+            --blue: #3498db;
+            --text: #ccc;
+            --panel: #14141f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #07080c;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 8px 40px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        body>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Header ── */
+        .header {
+            text-align: center;
+            margin-bottom: 18px;
+        }
+
+        .header .brand {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: #fff;
+        }
+
+        .header .brand span {
+            color: var(--gold);
+        }
+
+        .header .sub {
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: #555;
+            margin-top: 2px;
+        }
+
+        /* ── Pay table ── */
+        .paytable {
+            width: 100%;
+            max-width: 500px;
+            background: var(--panel);
+            border: 1px solid #2a2a3a;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+
+        .paytable-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px 8px;
+        }
+
+        .pt-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 0;
+            border-bottom: 1px solid #1e1e2e;
+            font-size: 12px;
+        }
+
+        .pt-row:last-child {
+            border: none;
+        }
+
+        .pt-name {
+            color: #aaa;
+        }
+
+        .pt-mult {
+            color: var(--gold);
+            font-weight: 700;
+            font-family: 'Bebas Neue', sans-serif;
+        }
+
+        /* ── Card area ── */
+        .card-area {
+            width: 100%;
+            max-width: 500px;
+            background: #0e0e1a;
+            border-radius: 14px;
+            padding: 18px 12px 14px;
+            margin-bottom: 14px;
+            border: 1px solid #1e1e2e;
+        }
+
+        .section-label {
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: #444;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .cards-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ── Card (matches 1win style) ── */
+        .card {
+            width: 76px;
+            height: 100px;
+            border-radius: 10px;
+            background: linear-gradient(160deg, #dde0ec 0%, #b8bcd0 100%);
+            box-shadow: 0 4px 12px #0008, inset 0 1px 0 #fff4;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            flex-shrink: 0;
+            overflow: hidden;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5px 6px;
+            user-select: none;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px #0009;
+        }
+
+        .card.selected {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 2px var(--gold), 0 6px 20px #f0b42944;
+            transform: translateY(-6px);
+        }
+
+        .card.empty {
+            background: linear-gradient(160deg, #1e1e2e 0%, #16161f 100%);
+            border: 2px dashed #333;
+            cursor: default;
+        }
+
+        .card.empty:hover {
+            transform: none;
+            box-shadow: 0 4px 12px #0008;
+        }
+
+        /* Suit watermark bottom-right */
+        .card .watermark {
+            position: absolute;
+            bottom: 6px;
+            right: 8px;
+            font-size: 38px;
+            line-height: 1;
+            opacity: 0.18;
+            color: #444;
+        }
+
+        .card.red-card .watermark {
+            color: #c00;
+        }
+
+        .card .rank-top {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1;
+            color: #1a1a2a;
+        }
+
+        .card .suit-top {
+            font-size: 14px;
+            line-height: 1;
+            color: #1a1a2a;
+        }
+
+        .card.red-card .rank-top,
+        .card.red-card .suit-top {
+            color: var(--red);
+        }
+
+        /* Hold badge */
+        .hold-badge {
+            position: absolute;
+            bottom: -26px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gold);
+            color: #000;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+
+        .card-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            position: relative;
+            padding-bottom: 30px;
+        }
+
+        /* ── Picker ── */
+        .picker {
+            width: 100%;
+            max-width: 500px;
+            background: var(--panel);
+            border: 1px solid #2a2a3a;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 14px;
+            display: none;
+        }
+
+        .picker.active {
+            display: block;
+        }
+
+        .picker-title {
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+
+        .suit-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .suit-tab {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background: #1a1a2a;
+            color: #ccc;
+            font-size: 18px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.1s;
+        }
+
+        .suit-tab.active-tab {
+            background: #2a2a3e;
+            border-color: var(--gold);
+        }
+
+        .suit-tab.red-tab {
+            color: var(--red);
+        }
+
+        .ranks-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .rank-btn {
+            aspect-ratio: 1;
+            background: linear-gradient(160deg, #dde0ec 0%, #b8bcd0 100%);
+            border: none;
+            border-radius: 6px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a2a;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 0 2px 6px #0005;
+        }
+
+        .rank-btn.red {
+            color: var(--red);
+        }
+
+        .rank-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .rank-btn.used {
+            opacity: 0.2;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ── Controls ── */
+        .controls {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .ctrl-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .ctrl-label {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #555;
+            width: 100px;
+            flex-shrink: 0;
+        }
+
+        .opp-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .opp-btn {
+            width: 34px;
+            height: 30px;
+            background: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            color: #aaa;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .opp-btn.active {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+        }
+
+        /* ── Analyze button ── */
+        .analyze-btn {
+            width: 100%;
+            max-width: 500px;
+            padding: 14px;
+            background: linear-gradient(135deg, #f0b429, #e08000);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: #000;
+            cursor: pointer;
+            margin-bottom: 14px;
+            transition: all 0.2s;
+            box-shadow: 0 0 20px #f0b42944;
+        }
+
+        .analyze-btn:disabled {
+            background: #222;
+            color: #555;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .analyze-btn:not(:disabled):hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px #f0b42966;
+        }
+
+        /* ── Results ── */
+        .results {
+            width: 100%;
+            max-width: 500px;
+            background: var(--panel);
+            border: 1px solid #2a2a3a;
+            border-radius: 14px;
+            padding: 18px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .res-hand {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .res-hand .hand-label {
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: #444;
+            margin-bottom: 4px;
+        }
+
+        .res-hand .hand-name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            text-shadow: 0 0 20px currentColor;
+        }
+
+        .meters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .meter {
+            flex: 1;
+            text-align: center;
+        }
+
+        .meter .pct {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .meter .mlabel {
+            font-size: 10px;
+            color: #555;
+            letter-spacing: 2px;
+            margin-top: 2px;
+        }
+
+        .meter .bar {
+            height: 5px;
+            background: #1e1e2e;
+            border-radius: 3px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .meter .fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.8s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        .rec-box {
+            background: #0e0e1a;
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+            margin-bottom: 14px;
+        }
+
+        .rec-label {
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: #444;
+            margin-bottom: 6px;
+        }
+
+        .rec-action {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 4px;
+        }
+
+        .outs-box {
+            background: #0e0e1a;
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .outs-left .ol {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #444;
+            margin-bottom: 2px;
+        }
+
+        .outs-left .ov {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--blue);
+        }
+
+        .outs-right {
+            font-size: 12px;
+            color: #555;
+            text-align: right;
+        }
+
+        /* hold suggestion strip */
+        .hold-strip {
+            background: #0e0e1a;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+        }
+
+        .hold-strip .hl {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #444;
+            margin-bottom: 6px;
+        }
+
+        .hold-cards {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .hold-chip {
+            background: #1e1e2e;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Bebas Neue', sans-serif;
+        }
+
+        .hold-chip.red {
+            color: var(--red);
+        }
+
+        .sim-note {
+            font-size: 10px;
+            color: #333;
+            text-align: right;
+            margin-top: 8px;
+        }
+
+        .reset-btn {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #aaa;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            border-color: #555;
+            color: #aaa;
+        }
+
+        .exit-btn-container {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 10px;
+        }
+
+        .exit-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            color: var(--gold);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .exit-btn:hover {
+            background: var(--gold);
+            color: #000;
+        }
+    </style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  
+<style id="apnaj-theme-override">
+  :root {
+    --accent: #1e90ff !important;
+    --accent2: #ff4f4f !important;
+    --bg: #07080c;
+    --surface: #0d0f16 !important;
+    --border: rgba(255,255,255,0.07) !important;
+    --text: #f0f2ff !important;
+    --muted: rgba(240,242,255,0.45) !important;
+    --ok: #22c55e !important;
+    /* remaps for various games */
+    --gold: #1e90ff;
+    --gold-light: #5eb3ff !important;
+    --gold-dark: #1470c8 !important;
+    --violet: #1e90ff !important;
+    --violet-bright: #5eb3ff !important;
+    --glass: rgba(13,15,22,0.65) !important;
+    --glass-border: rgba(255,255,255,0.07) !important;
+    --ink: #f0f2ff !important;
+    --ink-2: rgba(240,242,255,0.7) !important;
+    --ink-3: rgba(240,242,255,0.45) !important;
+    --paper: #07080c !important;
+    --paper-2: #0d0f16 !important;
+    --card: rgba(13,15,22,0.85) !important;
+    --line: rgba(255,255,255,0.1) !important;
+    --line-2: rgba(255,255,255,0.14) !important;
+    --pitch: #1e90ff !important;
+    --pitch-deep: #1470c8 !important;
+    --pitch-soft: rgba(30,144,255,0.12) !important;
+    --hit: #22c55e !important;
+    --hit-soft: rgba(34,197,94,0.15) !important;
+    --miss: #ff4f4f !important;
+    --miss-soft: rgba(255,79,79,0.15) !important;
+    --pending: #fbbf24 !important;
+    --pending-soft: rgba(251,191,36,0.15) !important;
+    --chalk: #1e90ff !important;
+    --red: #ff4f4f !important;
+    --blue: #1e90ff !important;
+    --green: #22c55e !important;
+    --dark: #07080c !important;
+    --panel: rgba(13,15,22,0.82) !important;
+    --card-bg: #0d0f16 !important;
+    --card-light: #f0f2ff !important;
+    --card-shadow: rgba(0,0,0,0.4) !important;
+    --parchment: #0d0f16 !important;
+    --parchment-dark: #07080c !important;
+    --shadow: rgba(0,0,0,0.6) !important;
+  }
+  html, body {
+    background: #07080c !important;
+    color: #f0f2ff !important;
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  body {
+    background-image: none !important;
+    background-color: #07080c !important;
+  }
+  h1, h2, h3, .header, .title, .brand-title, .page-title {
+    font-family: 'Bebas Neue', sans-serif !important;
+    letter-spacing: 2px;
+  }
+  button, .btn, .generate-btn, .predict-btn, .control-btn {
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  /* common accent remaps */
+  [style*="#ff2200"], [style*="#ff3c00"] { }
+</style>
+
+</head>
+
+<body class="theme-noise">
+<header class="topbar" style="position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(7,8,12,0.9);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,0.07);width:100%;">
+  <a href="login.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+    <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png" alt="Logo" style="width:36px;height:36px;object-fit:contain;">
+    <span style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#1e90ff;line-height:1;">APNAJ</span>
+  </a>
+  <a href="login.html" style="background:#ff4f4f;color:#fff;padding:8px 14px;border-radius:8px;font-weight:800;text-decoration:none;font-size:13px;font-family:'DM Sans',sans-serif;">Exit</a>
+</header>
+
+
+    <!-- Loading screen -->
+    <div id="pg-loader"
+        style="position:fixed;inset:0;z-index:99999;background:url('games/poker.png') center/cover no-repeat;">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div>
+        <div
+            style="position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;">
+            <div
+                style="font-family:'Bebas Neue', sans-serif;font-weight:900;font-size:clamp(20px,6vw,28px);color:#fff;letter-spacing:5px;text-shadow:0 0 25px #f0b429;">
+                POKER PREDICTOR</div>
+            <div
+                style="font-size:clamp(9px,2.5vw,11px);color:rgba(255,255,255,0.6);letter-spacing:4px;font-family:Arial,sans-serif;">
+                LOADING PREDICTOR...</div>
+            <div
+                style="width:72%;max-width:300px;background:rgba(255,255,255,0.15);border-radius:50px;overflow:hidden;height:7px;margin-top:4px;">
+                <div id="pg-bar"
+                    style="height:100%;width:1%;background:linear-gradient(90deg,#f0b429,#e08000);border-radius:50px;transition:width 0.06s linear;">
+                </div>
+            </div>
+            <div id="pg-pct"
+                style="color:#fff;font-weight:900;font-size:clamp(12px,3.5vw,14px);letter-spacing:3px;font-family:Arial,sans-serif;opacity:0.85;">
+                1%</div>
+        </div>
+    </div>
+    <script>(function () { var dur = 5000 + Math.random() * 5000; var p = 1, b = document.getElementById('pg-bar'), t = document.getElementById('pg-pct'), o = document.getElementById('pg-loader'); var iv = setInterval(function () { p += Math.floor(Math.random() * 4) + 1; if (p >= 100) { p = 100; clearInterval(iv); setTimeout(function () { o.style.transition = 'opacity 0.6s'; o.style.opacity = '0'; setTimeout(function () { o.remove(); }, 650); }, 200); } b.style.width = p + '%'; t.textContent = p + '%'; }, Math.round(dur / 40)); })();</script>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="brand">POKER <span>ANALYZER</span></div>
+        <div class="sub">VIDEO POKER · MONTE CARLO ENGINE</div>
+    </div>
+
+    <!-- Pay table -->
+    <div class="paytable">
+        <div class="paytable-grid">
+            <div class="pt-row"><span class="pt-name">Q. Flush R.</span><span class="pt-mult">×800</span></div>
+            <div class="pt-row"><span class="pt-name">Quinte Flush</span><span class="pt-mult">×50</span></div>
+            <div class="pt-row"><span class="pt-name">Carré</span><span class="pt-mult">×25</span></div>
+            <div class="pt-row"><span class="pt-name">Full</span><span class="pt-mult">×8</span></div>
+            <div class="pt-row"><span class="pt-name">Couleur</span><span class="pt-mult">×6</span></div>
+            <div class="pt-row"><span class="pt-name">Suite</span><span class="pt-mult">×4</span></div>
+            <div class="pt-row"><span class="pt-name">Brelan</span><span class="pt-mult">×3</span></div>
+            <div class="pt-row"><span class="pt-name">Double Paire</span><span class="pt-mult">×2</span></div>
+            <div class="pt-row"><span class="pt-name">Valets ou Mieux</span><span class="pt-mult">×1</span></div>
+        </div>
+    </div>
+
+    <!-- Your 5 Cards -->
+    <div class="card-area">
+        <div class="section-label">Your Hand — click a card to change it</div>
+        <div class="cards-row" id="handRow"></div>
+    </div>
+
+    <!-- Picker -->
+    <div class="picker" id="picker">
+        <div class="picker-title">▶ SELECT CARD <span id="pickerSlot"></span></div>
+        <div class="suit-tabs" id="suitTabs"></div>
+        <div class="ranks-grid" id="ranksGrid"></div>
+    </div>
+
+    <!-- Opponents -->
+    <div class="controls">
+        <div class="ctrl-row">
+            <span class="ctrl-label">OPPONENTS</span>
+            <div class="opp-btns" id="oppBtns"></div>
+        </div>
+    </div>
+
+    <!-- Analyze -->
+    <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">⚡ ANALYZE HAND</button>
+
+    <!-- Results -->
+    <div class="results" id="results"></div>
+
+    <button class="reset-btn" onclick="resetAll()">↺ RESET TABLE</button>
+
+    <div class="exit-btn-container">
+        <button class="exit-btn" onclick="location.href='login.html'">EXIT PREDICTOR</button>
+    </div>
+
+    <script>
+        const SUITS = ['♠', '♥', '♦', '♣'];
+        const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        const RV = { 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, J: 11, Q: 12, K: 13, A: 14 };
+        const isRed = s => s === '♥' || s === '♦';
+
+        let hand = [null, null, null, null, null]; // 5 video poker cards
+        let activeSlot = null;
+        let activeSuit = '♠';
+        let numOpponents = 3;
+
+        function cardKey(c) { return c ? `${c.rank}${c.suit}` : null; }
+        function allUsed() { return new Set(hand.filter(Boolean).map(cardKey)); }
+
+        // ─── Render hand ───
+        function renderHand() {
+            const row = document.getElementById('handRow');
+            row.innerHTML = '';
+            hand.forEach((card, i) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'card-wrap';
+
+                const c = document.createElement('div');
+                c.className = 'card' + (card && isRed(card.suit) ? ' red-card' : '') + (activeSlot === i ? ' selected' : '') + (!card ? ' empty' : '');
+                c.onclick = () => openPicker(i);
+
+                if (card) {
+                    c.innerHTML = `
+        <div>
+          <div class="rank-top">${card.rank}</div>
+          <div class="suit-top">${card.suit}</div>
+        </div>
+        <div class="watermark">${card.suit}</div>`;
+                } else {
+                    c.innerHTML = `<div style="color:#333;font-size:22px;margin:auto">+</div>`;
+                }
+
+                const badge = document.createElement('div');
+                badge.className = 'hold-badge';
+                badge.id = `hold-${i}`;
+                badge.style.opacity = '0';
+                badge.textContent = 'HOLD';
+
+                wrap.appendChild(c);
+                wrap.appendChild(badge);
+                row.appendChild(wrap);
+            });
+            updateBtn();
+        }
+
+        // ─── Picker ───
+        function openPicker(slot) {
+            activeSlot = slot;
+            activeSuit = '♠';
+            document.getElementById('picker').classList.add('active');
+            document.getElementById('pickerSlot').textContent = `→ SLOT ${slot + 1}`;
+            renderSuitTabs();
+            renderRanks();
+            renderHand();
+            document.getElementById('picker').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function renderSuitTabs() {
+            const el = document.getElementById('suitTabs');
+            el.innerHTML = '';
+            SUITS.forEach(s => {
+                const b = document.createElement('button');
+                b.className = 'suit-tab' + (s === activeSuit ? ' active-tab' : '') + (isRed(s) ? ' red-tab' : '');
+                b.textContent = s;
+                b.onclick = () => { activeSuit = s; renderSuitTabs(); renderRanks(); };
+                el.appendChild(b);
+            });
+        }
+
+        function renderRanks() {
+            const used = allUsed();
+            const el = document.getElementById('ranksGrid');
+            el.innerHTML = '';
+            RANKS.forEach(r => {
+                const card = { rank: r, suit: activeSuit };
+                const key = cardKey(card);
+                const isUsed = used.has(key) && !(hand[activeSlot] && cardKey(hand[activeSlot]) === key);
+                const b = document.createElement('button');
+                b.className = 'rank-btn' + (isRed(activeSuit) ? ' red' : '') + (isUsed ? ' used' : '');
+                b.textContent = r;
+                b.onclick = () => {
+                    if (isUsed) return;
+                    hand[activeSlot] = card;
+                    activeSlot = null;
+                    document.getElementById('picker').classList.remove('active');
+                    renderHand();
+                    clearResults();
+                };
+                el.appendChild(b);
+            });
+        }
+
+        // ─── Opponents ───
+        function renderOppBtns() {
+            const el = document.getElementById('oppBtns');
+            el.innerHTML = '';
+            [1, 2, 3, 4, 5, 6, 7, 8].forEach(n => {
+                const b = document.createElement('button');
+                b.className = 'opp-btn' + (n === numOpponents ? ' active' : '');
+                b.textContent = n;
+                b.onclick = () => { numOpponents = n; renderOppBtns(); clearResults(); };
+                el.appendChild(b);
+            });
+        }
+
+        function updateBtn() {
+            document.getElementById('analyzeBtn').disabled = hand.filter(Boolean).length < 5;
+        }
+
+        function clearResults() {
+            document.getElementById('results').classList.remove('show');
+        }
+
+        // ─── Poker engine ───
+        function buildDeck() { const d = []; for (const s of SUITS) for (const r of RANKS) d.push({ rank: r, suit: s }); return d; }
+        function shuffle(d) { const a = [...d]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+        function getCombos(arr, k) {
+            if (k === arr.length) return [arr];
+            if (k === 1) return arr.map(x => [x]);
+            const res = [];
+            for (let i = 0; i <= arr.length - k; i++) {
+                for (const r of getCombos(arr.slice(i + 1), k - 1)) res.push([arr[i], ...r]);
+            }
+            return res;
+        }
+
+        function score5(cards) {
+            const vals = cards.map(c => RV[c.rank]).sort((a, b) => b - a);
+            const suits = cards.map(c => c.suit);
+            const flush = suits.every(s => s === suits[0]);
+            const straight = checkStr(vals);
+            const cnt = {};
+            for (const v of vals) cnt[v] = (cnt[v] || 0) + 1;
+            const freq = Object.values(cnt).sort((a, b) => b - a);
+            let hr, name;
+            if (flush && straight && vals[0] === 14 && vals[4] === 10) { hr = 9; name = 'Royal Flush'; }
+            else if (flush && straight) { hr = 8; name = 'Straight Flush'; }
+            else if (freq[0] === 4) { hr = 7; name = 'Four of a Kind'; }
+            else if (freq[0] === 3 && freq[1] === 2) { hr = 6; name = 'Full House'; }
+            else if (flush) { hr = 5; name = 'Flush'; }
+            else if (straight) { hr = 4; name = 'Straight'; }
+            else if (freq[0] === 3) { hr = 3; name = 'Three of a Kind'; }
+            else if (freq[0] === 2 && freq[1] === 2) { hr = 2; name = 'Two Pair'; }
+            else if (freq[0] === 2) {
+                const pairVal = parseInt(Object.keys(cnt).find(k => cnt[k] === 2));
+                if (pairVal >= 11) { hr = 1; name = 'Jacks or Better'; }
+                else { hr = 0; name = 'High Card'; }
+            }
+            else { hr = 0; name = 'High Card'; }
+            const tb = vals.reduce((a, v, i) => a + v * Math.pow(15, 4 - i), 0);
+            return { value: hr * 1e6 + tb, name, rank: hr };
+        }
+
+        function checkStr(sv) {
+            const u = [...new Set(sv)];
+            if (u.length < 5) return false;
+            if (u[0] - u[4] === 4) return true;
+            if (u[0] === 14 && u[1] === 5 && u[2] === 4 && u[3] === 3 && u[4] === 2) return true;
+            return false;
+        }
+
+        function evalHand(cards) {
+            if (cards.length < 5) return { rank: 0, name: 'Incomplete', value: 0 };
+            const combos = getCombos(cards, 5);
+            let best = null;
+            for (const c of combos) { const s = score5(c); if (!best || s.value > best.value) best = s; }
+            return best;
+        }
+
+        function monteCarlo(myCards, n = 50000) {
+            const used = new Set(myCards.map(cardKey));
+            let wins = 0, ties = 0, losses = 0;
+            for (let i = 0; i < n; i++) {
+                const deck = shuffle(buildDeck().filter(c => !used.has(cardKey(c))));
+                const myScore = evalHand(myCards);
+                let bestOpp = -Infinity;
+                let idx = 0;
+                for (let o = 0; o < numOpponents; o++) {
+                    const oHole = [deck[idx++], deck[idx++]];
+                    const board = [deck[idx++], deck[idx++], deck[idx++], deck[idx++], deck[idx++]];
+                    const os = evalHand([...oHole, ...board]);
+                    if (os.value > bestOpp) bestOpp = os.value;
+                }
+                if (myScore.value > bestOpp) wins++;
+                else if (myScore.value === bestOpp) ties++;
+                else losses++;
+            }
+            return {
+                win: (wins / n * 100).toFixed(1),
+                tie: (ties / n * 100).toFixed(1),
+                loss: (losses / n * 100).toFixed(1)
+            };
+        }
+
+        // Best hold suggestion for video poker (Jacks or Better rules)
+        function suggestHold(cards) {
+            const current = evalHand(cards);
+            if (current.rank >= 6) return { indices: [0, 1, 2, 3, 4], reason: 'Keep your ' + current.name };
+
+            const used = new Set(cards.map(cardKey));
+            const deck = buildDeck().filter(c => !used.has(cardKey(c)));
+
+            let bestAvg = -Infinity, bestCombo = null;
+            // Try all 2^5 hold combinations
+            for (let mask = 0; mask < 32; mask++) {
+                const held = cards.filter((_, i) => mask & (1 << i));
+                let total = 0, count = 0;
+                const sampleSize = Math.min(deck.length, held.length >= 3 ? 50 : 30);
+                const sample = shuffle(deck).slice(0, sampleSize);
+                // sample draw combinations
+                const draw = cards.length - held.length;
+                if (draw === 0) { total = evalHand(held).rank; count = 1; }
+                else {
+                    const drawCombos = getCombos(sample, draw);
+                    for (const dc of drawCombos.slice(0, 120)) {
+                        const newHand = [...held, ...dc];
+                        total += evalHand(newHand).rank;
+                        count++;
+                    }
+                }
+                const avg = total / count;
+                if (avg > bestAvg) { bestAvg = avg; bestCombo = mask; }
+            }
+
+            return { indices: cards.map((_, i) => bestCombo & (1 << i) ? i : -1).filter(x => x >= 0) };
+        }
+
+        // ─── Colors ───
+        const handColors = {
+            'Royal Flush': '#FFD700', 'Straight Flush': '#FFD700', 'Four of a Kind': '#e74c3c',
+            'Full House': '#9b59b6', 'Flush': '#3498db', 'Straight': '#2ecc71',
+            'Three of a Kind': '#1abc9c', 'Two Pair': '#f39c12', 'Jacks or Better': '#e67e22',
+            'One Pair': '#e67e22', 'High Card': '#777'
+        };
+        function recommendation(w) {
+            const p = parseFloat(w);
+            if (p >= 70) return { text: 'RAISE 🚀', color: '#2ecc71' };
+            if (p >= 50) return { text: 'CALL 👍', color: '#f39c12' };
+            if (p >= 30) return { text: 'CHECK / FOLD 🤔', color: '#e67e22' };
+            return { text: 'FOLD ❌', color: '#e74c3c' };
+        }
+
+        // ─── Analyze ───
+        function analyze() {
+            const cards = hand.filter(Boolean);
+            if (cards.length < 5) return;
+
+            document.getElementById('analyzeBtn').textContent = '⟳ RUNNING 50,000 SIMULATIONS...';
+            document.getElementById('analyzeBtn').disabled = true;
+
+            setTimeout(() => {
+                const myHand = evalHand(cards);
+                const stats = monteCarlo(cards);
+                const rec = recommendation(stats.win);
+                const hold = suggestHold(cards);
+                const hColor = handColors[myHand.name] || '#aaa';
+
+                // Show hold badges
+                hand.forEach((_, i) => {
+                    const badge = document.getElementById(`hold-${i}`);
+                    if (badge) badge.style.opacity = hold.indices.includes(i) ? '1' : '0';
+                });
+
+                const el = document.getElementById('results');
+                el.innerHTML = `
+      <div class="res-hand">
+        <div class="hand-label">CURRENT HAND</div>
+        <div class="hand-name" style="color:${hColor}">${myHand.name}</div>
+      </div>
+
+      <div class="meters">
+        <div class="meter">
+          <div class="pct" style="color:#2ecc71">${stats.win}%</div>
+          <div class="mlabel">WIN</div>
+          <div class="bar"><div class="fill" style="width:${stats.win}%;background:#2ecc71"></div></div>
+        </div>
+        <div class="meter">
+          <div class="pct" style="color:#f39c12">${stats.tie}%</div>
+          <div class="mlabel">TIE</div>
+          <div class="bar"><div class="fill" style="width:${stats.tie}%;background:#f39c12"></div></div>
+        </div>
+        <div class="meter">
+          <div class="pct" style="color:#e74c3c">${stats.loss}%</div>
+          <div class="mlabel">LOSE</div>
+          <div class="bar"><div class="fill" style="width:${stats.loss}%;background:#e74c3c"></div></div>
+        </div>
+      </div>
+
+      <div class="rec-box" style="border:1px solid ${rec.color}33">
+        <div class="rec-label">RECOMMENDED ACTION</div>
+        <div class="rec-action" style="color:${rec.color}">${rec.text}</div>
+      </div>
+
+      ${hold.indices.length > 0 ? `
+      <div class="hold-strip">
+        <div class="hl">SUGGESTED HOLDS</div>
+        <div class="hold-cards">
+          ${hold.indices.map(i => {
+                    const c = cards[i];
+                    return `<div class="hold-chip ${isRed(c.suit) ? 'red' : ''}">${c.rank}${c.suit}</div>`;
+                }).join('')}
+        </div>
+      </div>`: ''}
+
+      <div class="sim-note">Monte Carlo · 50,000 simulations · ${numOpponents} opponent${numOpponents > 1 ? 's' : ''} · ±0.5% margin</div>
+    `;
+                el.classList.add('show');
+
+                document.getElementById('analyzeBtn').textContent = '⚡ ANALYZE HAND';
+                document.getElementById('analyzeBtn').disabled = false;
+                el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 60);
+        }
+
+        function resetAll() {
+            hand = [null, null, null, null, null];
+            activeSlot = null;
+            document.getElementById('picker').classList.remove('active');
+            document.getElementById('results').classList.remove('show');
+            renderHand();
+        }
+
+        // Init
+        renderHand();
+        renderOppBtns();
+    </script>
+</body>
+
+</html>

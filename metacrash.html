@@ -28,7 +28,7 @@
 
   <main class="container fade-up">
     <h1 class="page-title">META CRASH</h1>
-    <p class="page-sub">AI Predictor</p>
+    <p class="page-sub">History Stats</p>
 
     <div class="card">
       
@@ -39,37 +39,98 @@
       </div>
       <div class="predict-panel">
         <div class="predict-eyebrow">Prediction Unit</div>
-        <div class="predict-label">Next Coefficient</div>
+        <div class="predict-label">History Median (not a prediction)</div>
         <div id="predictionValue">--</div>
         <div class="predict-divider"></div>
-        <div class="sig-row"><div class="sig-dot"></div><div class="sig-txt">AI Signal Locked</div></div>
+        <div class="sig-row"><div class="sig-dot"></div><div class="sig-txt">Statistical summary only</div></div>
       </div>
       <div class="engine-tag">META CRASH AI Engine</div>
     </div>
   </main>
   
-  <script type="module">
-    import { get as _get } from "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.min.js";
-    const HISTORY_URL="https://crash-gateway-grm-cr.100hp.app/history";
-    const SESSION_ID="bc2be0c4-d633-495f-8010-7c6af93de37d";
-    const CUSTOMER_ID="077dee8d-c923-4c02-9bee-757573662e69";
-    const historyBar=document.getElementById("historyBar");
-    const predEl=document.getElementById("predictionValue");
-    let lastSeenId=null;
-    const historyData=[];
-    function getCoef(item){const v=_get(item,"coef")??_get(item,"crash")??_get(item,"value")??_get(item,"topCoefficient");return v?Number(v):undefined;}
-    function renderHistory(){historyBar.innerHTML="";historyData.slice(-18).reverse().forEach(c=>{const pill=document.createElement("div");pill.className="history-pill"+(c>=5?" high":c<1.5?" low":"");pill.innerText=c.toFixed(2)+"x";historyBar.appendChild(pill);});}
-    function calculateMovingAverage(data,window){if(data.length<window)return data[data.length-1]||1.5;const s=data.slice(-window);return s.reduce((a,b)=>a+b,0)/s.length;}
-    function calculateEWMA(data,alpha=0.3){if(!data.length)return 1.5;let e=data[0];for(let i=1;i<data.length;i++)e=alpha*data[i]+(1-alpha)*e;return e;}
-    function calculateVolatility(data){if(data.length<2)return 0;const mean=data.reduce((a,b)=>a+b,0)/data.length;const v=data.reduce((s,v)=>s+Math.pow(v-mean,2),0)/data.length;return Math.sqrt(v);}
-    function detectTrend(data,window=10){if(data.length<window)return 0;const r=data.slice(-window);let inc=0;for(let i=1;i<r.length;i++)if(r[i]>r[i-1])inc++;return(inc/(r.length-1))-0.5;}
-    function calculateMomentum(data,period=5){if(data.length<period+1)return 0;const cur=data[data.length-1],past=data[data.length-period-1];return(cur-past)/past;}
-    function findCycles(data){if(data.length<20)return 1.5;const norm=data.map(v=>Math.log(v));const mean=norm.reduce((a,b)=>a+b,0)/norm.length;const centered=norm.map(v=>v-mean);let maxCorr=0,bestLag=1;for(let lag=1;lag<Math.min(10,data.length/2);lag++){let corr=0;for(let i=0;i<centered.length-lag;i++)corr+=centered[i]*centered[i+lag];corr/=(centered.length-lag);if(Math.abs(corr)>Math.abs(maxCorr)){maxCorr=corr;bestLag=lag;}}return data.length>bestLag?data[data.length-bestLag]:data[data.length-1];}
-    function weightedRegression(data,weights){if(data.length<3)return data[data.length-1]||1.5;const n=data.length;let sx=0,sy=0,sxy=0,sx2=0,sw=0;for(let i=0;i<n;i++){const x=i,y=Math.log(data[i]),w=weights[i];sw+=w;sx+=w*x;sy+=w*y;sxy+=w*x*y;sx2+=w*x*x;}const slope=(sw*sxy-sx*sy)/(sw*sx2-sx*sx);const intercept=(sy-slope*sx)/sw;return Math.exp(slope*n+intercept);}
-    function ensemblePrediction(history){if(history.length<10)return 1.2+Math.random()*1.5;const vol=calculateVolatility(history.slice(-20));const alpha=Math.max(0.1,Math.min(0.5,vol/2));const ewmaPred=calculateEWMA(history,alpha);const weights=history.map((_,i)=>Math.exp((i-history.length)/10));const wmaPred=calculateMovingAverage(history.map((v,i)=>v*weights[i]),Math.min(15,history.length))/calculateMovingAverage(weights,Math.min(15,history.length));const trend=detectTrend(history,15);const recentAvg=calculateMovingAverage(history,10);const trendPred=recentAvg*(1+trend*0.2);const momentum=calculateMomentum(history,7);const momentumPred=history[history.length-1]*(1+momentum*0.3);const cyclePred=findCycles(history);const regWeights=history.map((_,i)=>Math.exp((i-history.length+1)/8));const regressionPred=weightedRegression(history,regWeights);const overallMean=history.reduce((a,b)=>a+b,0)/history.length;const lastValue=history[history.length-1];const meanReversionPred=lastValue+(overallMean-lastValue)*0.3;const preds=[{val:ewmaPred,weight:.25},{val:wmaPred,weight:.20},{val:trendPred,weight:.15},{val:momentumPred,weight:.10},{val:cyclePred,weight:.10},{val:regressionPred,weight:.15},{val:meanReversionPred,weight:.05}];let v=preds.reduce((s,p)=>s+p.val*p.weight,0);return Math.max(1.01,Math.min(v,50));}
-    async function fetchHistory(){try{const res=await fetch(HISTORY_URL,{headers:{accept:"application/json","session-id":SESSION_ID,"customer-id":CUSTOMER_ID}});const data=await res.json();if(!Array.isArray(data)||!data.length)return;const latest=data[0];if(latest?.id===lastSeenId)return;lastSeenId=latest.id;const coef=getCoef(latest);if(!coef)return;historyData.push(coef);renderHistory();const next=ensemblePrediction(historyData);predEl.textContent=next.toFixed(2)+"x";predEl.classList.remove("pop");void predEl.offsetWidth;predEl.classList.add("pop");setTimeout(()=>predEl.classList.remove("pop"),500);}catch(e){console.error(e);}}
-    fetchHistory();
-    setInterval(fetchHistory,5000);
+    <script src="js/stats.js"></script>
+  <script src="js/crash-engine.js"></script>
+  <script>
+    (function () {
+      const HISTORY_URL = "https://crash-gateway-grm-cr.100hp.app/history";
+      const SESSION_ID = "bc2be0c4-d633-495f-8010-7c6af93de37d";
+      const CUSTOMER_ID = "077dee8d-c923-4c02-9bee-757573662e69";
+      const MAX_CAP = null;
+      const historyBar = document.getElementById("historyBar");
+      const predEl = document.getElementById("predictionValue");
+      const labelEl = document.querySelector(".predict-label");
+      const sigTxt = document.querySelector(".sig-txt");
+      if (labelEl) labelEl.textContent = "History Median (not a prediction)";
+      if (sigTxt) sigTxt.textContent = "Statistical summary only";
+      let rounds = [];
+      let lastSeenId = null;
+
+      function renderHistory() {
+        historyBar.innerHTML = "";
+        rounds.slice(0, 18).forEach(function (r) {
+          const c = r.coef;
+          const pill = document.createElement("div");
+          pill.className = "history-pill" + (c >= 5 ? " high" : c < 1.5 ? " low" : "");
+          pill.innerText = c.toFixed(2) + "x";
+          historyBar.appendChild(pill);
+        });
+      }
+
+      function showStats() {
+        const coefs = rounds.map(function (r) { return r.coef; });
+        const analysis = CrashEngine.analyzeCrashHistory(coefs, { maxCap: MAX_CAP, minSample: 10, newestFirst: true });
+        if (analysis.status !== "ok") {
+          predEl.textContent = "n/a";
+          if (sigTxt) sigTxt.textContent = analysis.message || "Insufficient data";
+          return;
+        }
+        predEl.textContent = BotStats.formatFixed(analysis.median, 2) + "x";
+        if (sigTxt) {
+          const r2 = analysis.rates.ge_2;
+          const pct = (r2.rate * 100).toFixed(0);
+          const lo = (r2.ci95.low * 100).toFixed(0);
+          const hi = (r2.ci95.high * 100).toFixed(0);
+          sigTxt.textContent = "≥2x rate " + pct + "% (95% CI " + lo + "–" + hi + "%) · n=" + analysis.sampleSize;
+        }
+        predEl.classList.remove("pop");
+        void predEl.offsetWidth;
+        predEl.classList.add("pop");
+        setTimeout(function () { predEl.classList.remove("pop"); }, 500);
+      }
+
+      async function fetchHistory() {
+        try {
+          const res = await fetch(HISTORY_URL, {
+            headers: { accept: "application/json", "session-id": SESSION_ID, "customer-id": CUSTOMER_ID }
+          });
+          const data = await res.json();
+          const norm = CrashEngine.normalizeHistoryResponse(data);
+          if (norm.status !== "ok" || !norm.rounds.length) {
+            if (sigTxt) sigTxt.textContent = "History unavailable";
+            return;
+          }
+          if (!rounds.length) {
+            rounds = norm.rounds;
+            lastSeenId = rounds[0] && rounds[0].id;
+            renderHistory();
+            showStats();
+            return;
+          }
+          const latest = norm.rounds[0];
+          if (latest && latest.id != null && latest.id === lastSeenId) return;
+          rounds = CrashEngine.mergeRounds(rounds, norm.rounds).slice(0, 500);
+          lastSeenId = rounds[0] && rounds[0].id;
+          renderHistory();
+          showStats();
+        } catch (e) {
+          console.error(e);
+          if (sigTxt) sigTxt.textContent = "History unavailable";
+          predEl.textContent = "n/a";
+        }
+      }
+      fetchHistory();
+      setInterval(fetchHistory, 5000);
+    })();
   </script>
 </body>
 </html>

@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090d16" />
+  <title>CHIKE1W</title>
+  <script src="js/access-core.js"></script>
+  <script src="js/access-guard.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --header: #0c1220;
+      --line: rgba(255, 255, 255, 0.08);
+      --blue: #1a73ff;
+      --green: #00a84f;
+      --text: #ffffff;
+      --muted: #8d97ab;
+      --card: #151b2b;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button,
+    input {
+      font-family: inherit;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 56px;
+      padding: calc(8px + env(safe-area-inset-top)) 14px 8px;
+      background: var(--header);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand img {
+      height: 38px;
+      width: auto;
+      max-width: 150px;
+      object-fit: contain;
+      display: block;
+      mix-blend-mode: screen;
+    }
+
+    .code-btn {
+      flex-shrink: 0;
+      border: 0;
+      border-radius: 10px;
+      background: var(--green);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      padding: 9px 12px;
+      cursor: pointer;
+    }
+
+    .code-btn:active {
+      filter: brightness(1.08);
+    }
+
+    /* ── BANNER ── */
+    .hero-wrap {
+      max-width: 100%;
+      padding: 10px 12px 4px;
+      overflow: hidden;
+    }
+
+    .promo-frame {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .promo-main {
+      display: flex;
+      width: 100%;
+      max-width: 100%;
+      aspect-ratio: 768 / 307;
+      border-radius: 16px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      background: #111;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .promo-main::-webkit-scrollbar {
+      display: none;
+    }
+
+    .promo-main a {
+      flex: 0 0 100%;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      height: 100%;
+      overflow: hidden;
+      scroll-snap-align: start;
+    }
+
+    .promo-main img {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      pointer-events: none;
+    }
+
+    .promo-dots {
+      position: absolute;
+      left: 14px;
+      bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .promo-dots i {
+      width: 6px;
+      height: 6px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    .promo-dots i.on {
+      width: 16px;
+      background: #fff;
+    }
+
+    /* ── SEARCH ── */
+    .search-bar-row {
+      padding: 6px 12px 4px;
+    }
+
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 44px;
+      padding: 0 14px;
+      border-radius: 12px;
+      background: #141a28;
+      border: 1px solid var(--line);
+    }
+
+    .search-wrap:focus-within {
+      border-color: rgba(26, 115, 255, 0.7);
+    }
+
+    .search-wrap svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .search-wrap input::placeholder {
+      color: var(--muted);
+    }
+
+    /* ── ROWS ── */
+    .lobby {
+      padding-bottom: calc(88px + env(safe-area-inset-bottom));
+    }
+
+    .game-row {
+      padding-top: 14px;
+    }
+
+    .row-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px 10px;
+    }
+
+    .row-head h2 {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .see-all {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px 0 6px 10px;
+    }
+
+    .scroller {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 12px 2px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .scroller::-webkit-scrollbar {
+      display: none;
+    }
+
+    .game-tile {
+      flex: 0 0 108px;
+      width: 108px;
+      cursor: pointer;
+    }
+
+    .game-tile img {
+      width: 108px;
+      height: 142px;
+      object-fit: cover;
+      border-radius: 12px;
+      display: block;
+      background: var(--card);
+    }
+
+    .game-tile:active img {
+      transform: scale(0.98);
+    }
+
+    .tile-title {
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #d5dbeb;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .game-tile.hidden {
+      display: none;
+    }
+
+    body[data-view="all"] .scroller .game-tile:nth-child(n + 6) {
+      display: none;
+    }
+
+    body[data-view="browse"] .hero-wrap {
+      display: none;
+    }
+
+    body[data-view="browse"] .scroller {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow: visible;
+      gap: 10px 8px;
+    }
+
+    body[data-view="browse"] .game-tile {
+      width: auto;
+      flex: none;
+    }
+
+    body[data-view="browse"] .game-tile img {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 3 / 4;
+    }
+
+    .game-row.hidden {
+      display: none;
+    }
+
+    .no-results {
+      display: none;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 48px 20px;
+    }
+
+    .no-results.show {
+      display: block;
+    }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 200;
+      display: flex;
+      background: #0c111c;
+      border-top: 1px solid var(--line);
+      padding: 4px 6px calc(6px + env(safe-area-inset-bottom));
+    }
+
+    .nav-item {
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .nav-item.active {
+      color: var(--blue);
+    }
+
+    /* ── GAME LOADER ── */
+    .game-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 400;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    .game-loader.show {
+      display: flex;
+    }
+
+    .game-loader .backdrop {
+      position: absolute;
+      inset: -40px;
+      background-size: cover;
+      background-position: center;
+      filter: blur(28px) saturate(1.1);
+      opacity: 0.35;
+    }
+
+    .game-loader .backdrop::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(9, 13, 22, 0.2) 0%, rgba(9, 13, 22, 0.85) 100%);
+    }
+
+    .game-loader .inner {
+      position: relative;
+      width: min(260px, 80vw);
+      text-align: center;
+      animation: loader-in 0.35s ease-out;
+    }
+
+    @keyframes loader-in {
+      from { opacity: 0; transform: translateY(10px) scale(0.97); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .game-loader .cover {
+      width: 150px;
+      aspect-ratio: 3 / 4;
+      margin: 0 auto 16px;
+      border-radius: 16px;
+      object-fit: cover;
+      display: block;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+    }
+
+    .game-loader .name {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .game-loader .bar {
+      margin-top: 18px;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+
+    .game-loader .bar i {
+      display: block;
+      width: 0;
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--blue), #6aa6ff);
+    }
+
+    .game-loader.show .bar i {
+      animation: bar-fill 1.6s cubic-bezier(0.25, 0.6, 0.35, 1) forwards;
+    }
+
+    @keyframes bar-fill {
+      0% { width: 0; }
+      55% { width: 62%; }
+      80% { width: 86%; }
+      100% { width: 100%; }
+    }
+
+    .game-loader .hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    @media (min-width: 800px) {
+      .game-tile {
+        flex-basis: 132px;
+        width: 132px;
+      }
+
+      .game-tile img {
+        width: 132px;
+        height: 174px;
+      }
+
+      body[data-view="browse"] .scroller {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+
+<body data-view="all">
+  <header class="topbar">
+    <a class="brand" href="login.html">
+      <img src="brand-logo.png" alt="CHIKE1W 1win">
+    </a>
+    <button class="code-btn" type="button">CHIKE1W</button>
+  </header>
+
+  <div class="shell">
+    <div class="hero-wrap">
+      <div class="promo-frame">
+        <div class="promo-main" id="promoMain">
+          <a href="promo.html"><img src="banners/vip-club.jpg" alt="VIP Club"></a>
+          <a href="promo.html"><img src="banners/token.jpg" alt="1win Token"></a>
+          <a href="promo.html"><img src="banners/lucky-drive.jpg" alt="Lucky Drive"></a>
+          <a href="promo.html"><img src="banners/bet-bonus.jpg" alt="Multiple Bet Bonus"></a>
+          <a href="promo.html"><img src="banners/early-payout.jpg" alt="Early Payout"></a>
+          <a href="promo.html"><img src="banners/halloween.jpg" alt="Halloween"></a>
+        </div>
+        <div class="promo-dots" id="promoDots"></div>
+      </div>
+    </div>
+
+    <div class="search-bar-row">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="text" id="gameSearch" placeholder="Search" enterkeyhint="search">
+      </div>
+    </div>
+
+    <div class="lobby">
+      <section class="game-row" data-row="crash">
+        <div class="row-head">
+          <h2>Crash games</h2>
+          <button class="see-all" type="button" data-cat="crash">All</button>
+        </div>
+        <div class="scroller">
+          <div class="game-tile" data-cat="crash" data-title="lucky jet" onclick="openGame('luckyjet', this)">
+            <img src="games/lucky-jet.png" alt="">
+            <div class="tile-title">Lucky Jet</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="rocket x" onclick="openGame('rocketx', this)">
+            <img src="games/rocket-x.png" alt="">
+            <div class="tile-title">Rocket X</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="crash" onclick="openGame('crash', this)">
+            <img src="games/crash.png" alt="">
+            <div class="tile-title">Crash</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="rocket queen" onclick="openGame('rocketqueen', this)">
+            <img src="games/rocket-queen.png" alt="">
+            <div class="tile-title">Rocket Queen</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="meta crash" onclick="openGame('metacrash', this)">
+            <img src="games/meta-crash.png" alt="">
+            <div class="tile-title">Meta Crash</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="meta crash btc" onclick="openGame('metacrashbtc', this)">
+            <img src="games/meta-crash-btc.png" alt="">
+            <div class="tile-title">Meta Crash</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="fortune crash" onclick="openGame('fortunecrash', this)">
+            <img src="games/fortune-crash.png" alt="">
+            <div class="tile-title">Fortune Crash</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="astronaut" onclick="openGame('astronaut', this)">
+            <img src="games/astronaut.png" alt="">
+            <div class="tile-title">Astronaut</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="tropicana" onclick="openGame('tropicana', this)">
+            <img src="games/tropicana.png" alt="">
+            <div class="tile-title">Tropicana</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="crime empire" onclick="openGame('crimeempire', this)">
+            <img src="games/crime-empire.png" alt="">
+            <div class="tile-title">Crime Empire</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="aviator" onclick="openGame('aviator', this)">
+            <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/5c9e6454-c9d7-4879-8873-75e1c670b345.avif" alt="">
+            <div class="tile-title">Aviator</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="starx" onclick="openGame('starx', this)">
+            <img src="games/starx.png" alt="">
+            <div class="tile-title">StarX</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="airjet" onclick="openGame('airjet', this)">
+            <img src="games/airjet.png" alt="">
+            <div class="tile-title">AirJet</div>
+          </div>
+          <div class="game-tile" data-cat="crash" data-title="speed n cash" onclick="openGame('speedncash', this)">
+            <img src="games/speed-n-cash.png" alt="">
+            <div class="tile-title">Speed n Cash</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="game-row" data-row="mine">
+        <div class="row-head">
+          <h2>Mines</h2>
+        </div>
+        <div class="scroller">
+          <div class="game-tile" data-cat="mine" data-title="mines" onclick="openGame('mines', this)">
+            <img src="games/mines.png" alt="">
+            <div class="tile-title">Mines</div>
+          </div>
+          <div class="game-tile" data-cat="mine" data-title="mines classic" onclick="openGame('mines2', this)">
+            <img src="games/mines-classic.png" alt="">
+            <div class="tile-title">Mines Classic</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="game-row" data-row="cards">
+        <div class="row-head">
+          <h2>Cards</h2>
+        </div>
+        <div class="scroller">
+          <div class="game-tile" data-cat="cards" data-title="poker" onclick="openGame('poker', this)">
+            <img src="games/poker.png" alt="">
+            <div class="tile-title">Poker</div>
+          </div>
+          <div class="game-tile" data-cat="cards" data-title="blackjack" onclick="openGame('blackjack', this)">
+            <img src="games/blackjack.png" alt="">
+            <div class="tile-title">Blackjack</div>
+          </div>
+          <div class="game-tile" data-cat="cards" data-title="roulette" onclick="openGame('roulette', this)">
+            <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/0ca8cea1-ca1d-413e-91a7-4715861391a3.png" alt="">
+            <div class="tile-title">Roulette</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="game-row" data-row="others">
+        <div class="row-head">
+          <h2>Quick games</h2>
+        </div>
+        <div class="scroller">
+          <div class="game-tile" data-cat="others" data-title="king thimbles" onclick="openGame('thimble', this)">
+            <img src="games/king-thimbles.png" alt="">
+            <div class="tile-title">King Thimbles</div>
+          </div>
+          <div class="game-tile" data-cat="others" data-title="coinflip" onclick="openGame('coinflip', this)">
+            <img src="games/coinflip.png" alt="">
+            <div class="tile-title">Coinflip</div>
+          </div>
+          <div class="game-tile" data-cat="others" data-title="dice" onclick="openGame('dice', this)">
+            <img src="games/dice.png" alt="">
+            <div class="tile-title">Dice</div>
+          </div>
+          <div class="game-tile" data-cat="others" data-title="football" onclick="openGame('football', this)">
+            <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/87fa017c-a631-4e91-91c6-1750406774c7.png" alt="">
+            <div class="tile-title">Football</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="no-results" id="noResults">No games found.</div>
+    </div>
+  </div>
+
+  <div class="game-loader" id="gameLoader" aria-hidden="true">
+    <div class="backdrop" id="loaderBackdrop"></div>
+    <div class="inner">
+      <img class="cover" id="loaderCover" src="" alt="">
+      <div class="name" id="loaderName"></div>
+      <div class="bar"><i></i></div>
+      <div class="hint">Loading</div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="login.html" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="live.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      <span>Live</span>
+    </a>
+    <a href="promo.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      <span>Promo</span>
+    </a>
+    <a href="contact.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Support</span>
+    </a>
+  </nav>
+
+  <script>
+    // Lucky Jet is the only game wired to a live feed. Everything else opens the coming-soon page.
+    const pages = { luckyjet: "luckyjet.html" };
+    const LOAD_MS = 1700;
+    const gameLoader = document.getElementById('gameLoader');
+    let opening = false;
+
+    // Show the game's cover with a short loading bar, then navigate.
+    function openGame(g, tile) {
+      if (opening) return;
+      opening = true;
+      const target = pages[g] || ("comingsoon.html?game=" + encodeURIComponent(g));
+      const img = tile && tile.querySelector('img');
+      const title = tile && tile.querySelector('.tile-title');
+      const src = img ? img.getAttribute('src') : '';
+      document.getElementById('loaderCover').src = src;
+      document.getElementById('loaderBackdrop').style.backgroundImage = src ? 'url("' + src + '")' : 'none';
+      document.getElementById('loaderName').textContent = title ? title.textContent : '';
+      gameLoader.classList.add('show');
+      setTimeout(function () { location.href = target; }, LOAD_MS);
+    }
+
+    // Coming back via the back button restores this page from cache; hide the loader again.
+    window.addEventListener('pageshow', function () {
+      opening = false;
+      gameLoader.classList.remove('show');
+    });
+
+    const searchInput = document.getElementById('gameSearch');
+    const tiles = document.querySelectorAll('.game-tile');
+    const rows = document.querySelectorAll('.game-row');
+    const noResults = document.getElementById('noResults');
+    let activeCat = 'all';
+
+    function applyFilter() {
+      const q = searchInput.value.toLowerCase().trim();
+      let count = 0;
+      tiles.forEach(t => {
+        const catOk = activeCat === 'all' || t.dataset.cat === activeCat;
+        const match = catOk && t.dataset.title.includes(q);
+        t.classList.toggle('hidden', !match);
+        if (match) count++;
+      });
+      rows.forEach(row => {
+        row.classList.toggle('hidden', !row.querySelector('.game-tile:not(.hidden)'));
+      });
+      document.body.dataset.view = (activeCat === 'all' && !q) ? 'all' : 'browse';
+      noResults.classList.toggle('show', count === 0);
+    }
+
+    searchInput.addEventListener('input', applyFilter);
+
+    const promoMain = document.getElementById('promoMain');
+    const promoSlides = promoMain.querySelectorAll('a');
+    const promoDots = document.getElementById('promoDots');
+    let promoIndex = 0;
+    let promoTimer = setInterval(advancePromo, 3500);
+    promoSlides.forEach((_, i) => {
+      const dot = document.createElement('i');
+      if (i === 0) dot.className = 'on';
+      promoDots.appendChild(dot);
+    });
+    function setPromoDot(index) {
+      promoDots.querySelectorAll('i').forEach((dot, i) => dot.classList.toggle('on', i === index));
+    }
+    function advancePromo() {
+      promoIndex = (promoIndex + 1) % promoSlides.length;
+      promoMain.scrollTo({ left: promoIndex * promoMain.clientWidth, behavior: 'smooth' });
+      setPromoDot(promoIndex);
+    }
+    promoMain.addEventListener('pointerdown', () => clearInterval(promoTimer));
+    promoMain.addEventListener('scroll', () => {
+      promoIndex = Math.round(promoMain.scrollLeft / Math.max(promoMain.clientWidth, 1));
+      setPromoDot(promoIndex);
+    }, { passive: true });
+
+    document.querySelectorAll('.see-all').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeCat = activeCat === btn.dataset.cat ? 'all' : btn.dataset.cat;
+        if (activeCat !== 'all') searchInput.value = '';
+        applyFilter();
+        document.querySelectorAll('.see-all').forEach(b => {
+          b.textContent = activeCat === b.dataset.cat ? 'Back' : 'All';
+        });
+      });
+    });
+
+  </script>
+</body>
+
+</html>

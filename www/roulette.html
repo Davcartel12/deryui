@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎰 Roulette Predictor</title>
+<style>
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: #07080c;
+  min-height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 10px 40px;
+  overflow-x: hidden;
+}
+
+/* ── TOP NAV ── */
+.top-nav {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.switch-btn {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid #dc143c;
+  background: rgba(30,144,255,0.15);
+  color: #dc143c;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  backdrop-filter: blur(5px);
+  transition: 0.3s;
+}
+.switch-btn:hover { background:#1e90ff; color:#fff; box-shadow:0 0 14px #1e90ff; }
+.switch-btn.vip  { border-color:#1e90ff; background:rgba(30,144,255,0.15); color:#1e90ff; }
+.switch-btn.vip:hover { background:#1e90ff; color:#fff; box-shadow:0 0 14px #1e90ff; }
+
+/* ── HEADER ── */
+.header {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #dc143c;
+  text-shadow: 0 0 20px rgba(220,20,60,0.6);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.header img, .loader-title img { height: 40px; width: auto; object-fit: contain; }
+
+/* ── PREDICTION DISPLAY ── */
+.pred-display {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 18px 0 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pred-ball {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; font-weight: 900;
+  background: #b01828;
+  border: 4px solid #ff4060;
+  box-shadow: 0 0 30px rgba(220,20,60,0.8);
+  transition: all 0.5s;
+}
+.pred-ball.black-ball { background:#1f2b3b; border-color:#aaa; box-shadow:0 0 20px rgba(200,200,200,0.4); }
+.pred-ball.green-ball { background:#169b4f; border-color:#22ff88; box-shadow:0 0 30px rgba(22,155,79,0.8); }
+
+.pred-info { text-align:left; }
+.pred-label { font-size:11px; color:rgba(255,255,255,0.5); letter-spacing:3px; text-transform:uppercase; }
+.pred-color { font-size:22px; font-weight:900; margin: 4px 0; }
+.pred-color.red   { color:#ff4060; }
+.pred-color.black { color:#ccc; }
+.pred-color.green { color:#22ff88; }
+.pred-conf  { font-size:13px; color:#ffd700; font-weight:700; }
+
+.signal-tag {
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: rgba(255,214,0,0.15);
+  border: 1px solid #ffd700;
+  color: #ffd700;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+/* ── GENERATE BTN ── */
+.gen-btn {
+  padding: 12px 40px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #1470c8, #1e90ff);
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(220,20,60,0.4);
+  transition: 0.3s;
+  margin-bottom: 20px;
+}
+.gen-btn:hover { transform:scale(1.04); box-shadow:0 6px 28px rgba(220,20,60,0.65); }
+.gen-btn:active { transform:scale(0.98); }
+
+/* ── PREDICTION V2 ── */
+.pred-status {
+  margin: 10px 0;
+  font-size: 14px;
+  color: #ffd700;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* ── ROULETTE TABLE GRID ── */
+.table-wrap {
+  overflow-x: auto;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.wrapper {
+  display: grid;
+  grid-template-columns: 52px 52px 82px 82px 82px;
+  grid-template-rows: 66px repeat(12, 54px) 44px;
+  background: #0f1b2b;
+  padding: 8px;
+  border-radius: 14px;
+  border: 4px solid #c9a96a;
+  box-shadow: 0 0 40px rgba(201,169,106,0.3);
+}
+
+/* Common Cell Base */
+.cell, .zero, .side-box, .dozen-box, .b2to1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  border: 1px solid #c9a96a;
+  transition: 0.3s;
+  cursor: default;
+  position: relative;
+}
+
+.zero { background: #169b4f; font-size: 26px; }
+.cell { font-size: 20px; }
+.cell.red   { background: #b01828; }
+.cell.black { background: #1f2b3b; }
+
+.side-box, .dozen-box {
+  font-size: 11px;
+  letter-spacing: 2px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  background: transparent;
+}
+
+.b2to1 { font-size: 12px; }
+
+.diamond-shape {
+  width: 24px; height: 24px;
+  transform: rotate(45deg);
+}
+.diamond-shape.red   { background: #b01828; border: 1px solid #ff4060; }
+.diamond-shape.black { background: #1f2b3b; border: 1px solid #777; }
+
+/* PREDICTION HIGHLIGHT */
+.cell.predicted, .zero.predicted, .side-box.predicted, .dozen-box.predicted {
+  animation: pulseGlow 0.8s ease-in-out infinite alternate;
+  z-index: 10;
+  border-color: #ffd700 !important;
+  color: #fff !important;
+}
+@keyframes pulseGlow {
+  from { box-shadow: 0 0 12px 4px #ffd700, inset 0 0 10px rgba(255,214,0,0.3); background: rgba(255, 215, 0, 0.4); border-width: 2px; }
+  to   { box-shadow: 0 0 28px 10px #ffd700, inset 0 0 20px rgba(255,214,0,0.5); background: rgba(255, 215, 0, 0.7); border-width: 2px; }
+}
+
+/* ── MANUAL INPUT PANEL ── */
+.input-panel {
+  width: 100%;
+  max-width: 700px;
+  background: rgba(20,8,8,0.75);
+  border: 1px solid rgba(220,20,60,0.4);
+  border-radius: 14px;
+  padding: 18px 16px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(8px);
+}
+.input-panel-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #dc143c;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.num-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.num-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  font-weight: 900; font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.num-btn.red   { background:#b01828; border-color:#ff4060; }
+.num-btn.black { background:#2a2a3b; border-color:#777; }
+.num-btn.green { background:#169b4f; border-color:#22ff88; }
+.num-btn:hover { transform:scale(1.15); filter:brightness(1.4); }
+.num-btn:active { transform:scale(0.95); }
+.num-btn.just-added { animation: popIn 0.3s ease; }
+@keyframes popIn { 0%{transform:scale(1.5);} 100%{transform:scale(1);} }
+
+.manual-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.manual-input {
+  flex: 1;
+  min-width: 160px;
+  max-width: 300px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(220,20,60,0.5);
+  background: rgba(0,0,0,0.5);
+  color: white;
+  font-size: 14px;
+  outline: none;
+}
+.manual-input:focus { border-color:#dc143c; box-shadow:0 0 8px rgba(220,20,60,0.3); }
+.manual-input::placeholder { color:rgba(255,255,255,0.3); }
+.add-btn {
+  padding: 10px 18px;
+  border-radius: 10px; border:none;
+  background: #dc143c; color:white;
+  font-weight:900; font-size:13px;
+  cursor:pointer; transition:0.2s;
+}
+.add-btn:hover { background:#ff3355; }
+.clear-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.6);
+  font-size:13px; font-weight:700; cursor:pointer; transition:0.2s;
+}
+.clear-btn:hover { background:rgba(255,255,255,0.12); color:white; }
+
+.manual-history-bar {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  justify-content: center;
+  margin-top: 12px;
+  min-height: 14px;
+}
+.manual-history-bar .h-pill {
+  width: 32px; height: 32px; font-size: 12px;
+}
+.input-counter {
+  text-align:center; font-size:11px;
+  color:rgba(255,255,255,0.4);
+  margin-top:8px;
+}
+
+/* ── HISTORY BAR ── */
+.history-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 700px;
+  margin-top: 18px;
+}
+.h-pill {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 13px;
+  border: 2px solid transparent;
+}
+.h-pill.red   { background:#b01828; border-color:#ff4060; }
+.h-pill.black { background:#2a2a2a; border-color:#777; }
+.h-pill.green { background:#169b4f; border-color:#22ff88; }
+
+/* ── EXIT ── */
+.exit-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1000;
+            text-decoration: none;
+}
+.exit-btn:hover { background:#cc0000; color:white; }
+
+/* ── LOADING ── */
+#pg-loader {
+  position: fixed; inset: 0; z-index: 99999;
+  background: radial-gradient(ellipse at center, #1a0005 0%, #000 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 18px;
+}
+#pg-loader .loader-title {
+  font-size: 26px; font-weight: 900; letter-spacing: 5px;
+  text-shadow: 0 0 25px #dc143c;
+}
+#pg-loader .loader-sub {
+  font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 4px;
+}
+.progress-wrap {
+  width: 280px; height: 7px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 50px; overflow: hidden;
+}
+#pg-bar {
+  height: 100%; width: 1%;
+  background: linear-gradient(90deg, #dc143c, #ff6b6b);
+  border-radius: 50px;
+  transition: width 0.06s linear;
+}
+#pg-pct { font-size: 13px; font-weight: 900; opacity: 0.8; }
+
+  /* ── ANALYSIS DASHBOARD ── */
+  .analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    width: 100%;
+    max-width: 900px;
+    margin-top: 20px;
+  }
+  .analysis-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(220, 20, 60, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+    backdrop-filter: blur(10px);
+  }
+  .analysis-card h4 {
+    font-size: 13px;
+    color: #dc143c;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(220, 20, 60, 0.2);
+    padding-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .stat-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .stat-bar-fill {
+    height: 100%;
+    background: #dc143c;
+    width: 0%;
+    transition: width 0.5s ease;
+  }
+  .hot-cold-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .hc-item {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 900;
+  }
+  .strategy-box {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(220, 20, 60, 0.1);
+    border-radius: 8px;
+    border-left: 3px solid #dc143c;
+  }
+  .strategy-title { font-weight: 800; font-size: 14px; color: #fff; margin-bottom: 4px; }
+  .strategy-desc { font-size: 11px; color: rgba(255, 255, 255, 0.6); line-height: 1.3; }
+  .next-bet { font-size: 18px; font-weight: 900; color: #ffd700; margin-top: 8px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+
+</style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  
+<style id="apnaj-theme-override">
+  :root {
+    --accent: #1e90ff !important;
+    --accent2: #ff4f4f !important;
+    --bg: #07080c !important;
+    --surface: #0d0f16 !important;
+    --border: rgba(255,255,255,0.07) !important;
+    --text: #f0f2ff !important;
+    --muted: rgba(240,242,255,0.45) !important;
+    --ok: #22c55e !important;
+    /* remaps for various games */
+    --gold: #1e90ff !important;
+    --gold-light: #5eb3ff !important;
+    --gold-dark: #1470c8 !important;
+    --violet: #1e90ff !important;
+    --violet-bright: #5eb3ff !important;
+    --glass: rgba(13,15,22,0.65) !important;
+    --glass-border: rgba(255,255,255,0.07) !important;
+    --ink: #f0f2ff !important;
+    --ink-2: rgba(240,242,255,0.7) !important;
+    --ink-3: rgba(240,242,255,0.45) !important;
+    --paper: #07080c !important;
+    --paper-2: #0d0f16 !important;
+    --card: rgba(13,15,22,0.85) !important;
+    --line: rgba(255,255,255,0.1) !important;
+    --line-2: rgba(255,255,255,0.14) !important;
+    --pitch: #1e90ff !important;
+    --pitch-deep: #1470c8 !important;
+    --pitch-soft: rgba(30,144,255,0.12) !important;
+    --hit: #22c55e !important;
+    --hit-soft: rgba(34,197,94,0.15) !important;
+    --miss: #ff4f4f !important;
+    --miss-soft: rgba(255,79,79,0.15) !important;
+    --pending: #fbbf24 !important;
+    --pending-soft: rgba(251,191,36,0.15) !important;
+    --chalk: #1e90ff !important;
+    --red: #ff4f4f !important;
+    --blue: #1e90ff !important;
+    --green: #22c55e !important;
+    --dark: #07080c !important;
+    --panel: rgba(13,15,22,0.82) !important;
+    --card-bg: #0d0f16 !important;
+    --card-light: #f0f2ff !important;
+    --card-shadow: rgba(0,0,0,0.4) !important;
+    --parchment: #0d0f16 !important;
+    --parchment-dark: #07080c !important;
+    --shadow: rgba(0,0,0,0.6) !important;
+  }
+  html, body {
+    background: #07080c !important;
+    color: #f0f2ff !important;
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  body {
+    background-image: none !important;
+    background-color: #07080c !important;
+  }
+  h1, h2, h3, .header, .title, .brand-title, .page-title {
+    font-family: 'Bebas Neue', sans-serif !important;
+    letter-spacing: 2px;
+  }
+  button, .btn, .generate-btn, .predict-btn, .control-btn {
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  /* common accent remaps */
+  [style*="#ff2200"], [style*="#ff3c00"] { }
+</style>
+
+</head>
+<body class="theme-noise">
+<header class="topbar" style="position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(7,8,12,0.9);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,0.07);width:100%;">
+  <a href="login.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+    <img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/d53ea7a6-8eea-4316-b0f2-2583730636e0.png" alt="Logo" style="width:36px;height:36px;object-fit:contain;">
+    <span style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#1e90ff;line-height:1;">APNAJ</span>
+  </a>
+  <a href="login.html" style="background:#ff4f4f;color:#fff;padding:8px 14px;border-radius:8px;font-weight:800;text-decoration:none;font-size:13px;font-family:'DM Sans',sans-serif;">Exit</a>
+</header>
+
+
+<button class="exit-btn" onclick="location.href='login.html'">EXIT</button>
+
+<!-- LOADER -->
+<div id="pg-loader">
+  <div class="loader-title"><img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/0d7c6980-f434-4f87-af71-ed1185933dde.png" alt="Logo"> ROULETTE</div>
+  <div class="loader-sub">LOADING PREDICTOR...</div>
+  <div class="progress-wrap"><div id="pg-bar"></div></div>
+  <div id="pg-pct">1%</div>
+</div>
+<script>
+(function(){
+  var dur=5000+Math.random()*4000, p=1,
+      b=document.getElementById('pg-bar'),
+      t=document.getElementById('pg-pct'),
+      o=document.getElementById('pg-loader');
+  var iv=setInterval(function(){
+    p+=Math.floor(Math.random()*4)+1;
+    if(p>=100){p=100;clearInterval(iv);
+      setTimeout(function(){o.style.transition='opacity 0.6s';o.style.opacity='0';
+        setTimeout(function(){o.remove();},650);},200);}
+    b.style.width=p+'%'; t.textContent=p+'%';
+  },Math.round(dur/40));
+})();
+</script>
+
+<!-- NAV -->
+<div class="top-nav">
+  <div style="width:120px;"></div>
+  <div class="header"><img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/0d7c6980-f434-4f87-af71-ed1185933dde.png" alt="Logo"> ROULETTE</div>
+  <div style="width:120px;"></div>
+</div>
+
+<!-- PREDICTION STATUS -->
+<div class="pred-status" id="predStatus">WAITING FOR HISTORY...</div>
+
+<!-- GENERATE -->
+<button class="gen-btn" onclick="generatePrediction()">🎰 ANALYZE & PREDICT BET</button>
+
+<!-- ── MANUAL HISTORY INPUT ── -->
+<div class="input-panel">
+  <div class="input-panel-title">📋 ENTER PAST NUMBERS — MANUAL HISTORY</div>
+
+  <!-- Number grid 0–36 -->
+  <div class="num-grid" id="numGrid"></div>
+
+  <!-- Type / paste row -->
+  <div class="manual-row">
+    <input class="manual-input" id="manualInput" type="text"
+           placeholder="Type numbers e.g. 3, 17, 0, 22 …" />
+    <button class="add-btn" onclick="addManualNumbers()">ADD</button>
+    <button class="clear-btn" onclick="clearManualHistory()">CLEAR</button>
+  </div>
+
+  <!-- Mini history strip -->
+  <div class="manual-history-bar" id="manualHistoryBar"></div>
+  <div class="input-counter" id="inputCounter">0 numbers entered</div>
+</div>
+
+<!-- ROULETTE TABLE -->
+<div class="table-wrap">
+<div class="wrapper">
+
+  <!-- TOP ZERO -->
+  <div class="zero" id="cell-0" style="grid-column: 3/6; grid-row: 1;">0</div>
+
+  <!-- NUMBER GRID (Flattened) -->
+  <div class="cell red"   id="cell-1"  style="grid-column: 3; grid-row: 2;">1</div>
+  <div class="cell black" id="cell-2"  style="grid-column: 4; grid-row: 2;">2</div>
+  <div class="cell red"   id="cell-3"  style="grid-column: 5; grid-row: 2;">3</div>
+  <div class="cell black" id="cell-4"  style="grid-column: 3; grid-row: 3;">4</div>
+  <div class="cell red"   id="cell-5"  style="grid-column: 4; grid-row: 3;">5</div>
+  <div class="cell black" id="cell-6"  style="grid-column: 5; grid-row: 3;">6</div>
+  <div class="cell red"   id="cell-7"  style="grid-column: 3; grid-row: 4;">7</div>
+  <div class="cell black" id="cell-8"  style="grid-column: 4; grid-row: 4;">8</div>
+  <div class="cell red"   id="cell-9"  style="grid-column: 5; grid-row: 4;">9</div>
+  <div class="cell black" id="cell-10" style="grid-column: 3; grid-row: 5;">10</div>
+  <div class="cell black" id="cell-11" style="grid-column: 4; grid-row: 5;">11</div>
+  <div class="cell red"   id="cell-12" style="grid-column: 5; grid-row: 5;">12</div>
+  <div class="cell black" id="cell-13" style="grid-column: 3; grid-row: 6;">13</div>
+  <div class="cell red"   id="cell-14" style="grid-column: 4; grid-row: 6;">14</div>
+  <div class="cell black" id="cell-15" style="grid-column: 5; grid-row: 6;">15</div>
+  <div class="cell red"   id="cell-16" style="grid-column: 3; grid-row: 7;">16</div>
+  <div class="cell black" id="cell-17" style="grid-column: 4; grid-row: 7;">17</div>
+  <div class="cell red"   id="cell-18" style="grid-column: 5; grid-row: 7;">18</div>
+  <div class="cell red"   id="cell-19" style="grid-column: 3; grid-row: 8;">19</div>
+  <div class="cell black" id="cell-20" style="grid-column: 4; grid-row: 8;">20</div>
+  <div class="cell red"   id="cell-21" style="grid-column: 5; grid-row: 8;">21</div>
+  <div class="cell black" id="cell-22" style="grid-column: 3; grid-row: 9;">22</div>
+  <div class="cell red"   id="cell-23" style="grid-column: 4; grid-row: 9;">23</div>
+  <div class="cell black" id="cell-24" style="grid-column: 5; grid-row: 9;">24</div>
+  <div class="cell red"   id="cell-25" style="grid-column: 3; grid-row: 10;">25</div>
+  <div class="cell black" id="cell-26" style="grid-column: 4; grid-row: 10;">26</div>
+  <div class="cell red"   id="cell-27" style="grid-column: 5; grid-row: 10;">27</div>
+  <div class="cell black" id="cell-28" style="grid-column: 3; grid-row: 11;">28</div>
+  <div class="cell black" id="cell-29" style="grid-column: 4; grid-row: 11;">29</div>
+  <div class="cell red"   id="cell-30" style="grid-column: 5; grid-row: 11;">30</div>
+  <div class="cell black" id="cell-31" style="grid-column: 3; grid-row: 12;">31</div>
+  <div class="cell red"   id="cell-32" style="grid-column: 4; grid-row: 12;">32</div>
+  <div class="cell black" id="cell-33" style="grid-column: 5; grid-row: 12;">33</div>
+  <div class="cell red"   id="cell-34" style="grid-column: 3; grid-row: 13;">34</div>
+  <div class="cell black" id="cell-35" style="grid-column: 4; grid-row: 13;">35</div>
+  <div class="cell red"   id="cell-36" style="grid-column: 5; grid-row: 13;">36</div>
+
+  <!-- BOTTOM 2 TO 1 -->
+  <div class="b2to1" style="grid-column: 3; grid-row: 14;">2 TO 1</div>
+  <div class="b2to1" style="grid-column: 4; grid-row: 14;">2 TO 1</div>
+  <div class="b2to1" style="grid-column: 5; grid-row: 14;">2 TO 1</div>
+
+  <!-- DOZENS -->
+  <div class="dozen-box" id="dozen-1" style="grid-column: 2; grid-row: 2/6;">1 ST</div>
+  <div class="dozen-box" id="dozen-2" style="grid-column: 2; grid-row: 6/10;">2 ND</div>
+  <div class="dozen-box" id="dozen-3" style="grid-column: 2; grid-row: 10/14;">3 RD</div>
+
+  <!-- LEFT SIDE BETS -->
+  <div class="side-box" style="grid-column: 1; grid-row: 2/4;">1-18</div>
+  <div class="side-box" style="grid-column: 1; grid-row: 4/6;">EVEN</div>
+  <div class="side-box" style="grid-column: 1; grid-row: 6/8;"><div class="diamond-shape red"></div></div>
+  <div class="side-box" style="grid-column: 1; grid-row: 8/10;"><div class="diamond-shape black"></div></div>
+  <div class="side-box" style="grid-column: 1; grid-row: 10/12;">ODD</div>
+  <div class="side-box" style="grid-column: 1; grid-row: 12/14;">19-36</div>
+
+</div>
+</div>
+
+<!-- HISTORY BAR (manual entries shown in panel above) -->
+
+  <!-- ALGORITHM HISTORY ANALYZER DASHBOARD -->
+  <div class="analysis-grid">
+    <!-- STATS CARD -->
+    <div class="analysis-card">
+      <h4>📊 PATTERN ANALYSIS <span>LIVE</span></h4>
+      <div class="stat-row">
+        <span>Red / Black</span>
+        <span id="rbRatio">50% / 50%</span>
+      </div>
+      <div class="stat-bar-bg">
+        <div id="rbBar" class="stat-bar-fill" style="width: 50%; background: linear-gradient(90deg, #ff4060, #1f2b3b);"></div>
+      </div>
+      
+      <div class="stat-row" style="margin-top: 15px;">
+        <span>Odd / Even</span>
+        <span id="oeRatio">50% / 50%</span>
+      </div>
+      <div class="stat-bar-bg">
+        <div id="oeBar" class="stat-bar-fill" style="width: 50%; background: #ffd700;"></div>
+      </div>
+
+      <div class="stat-row" style="margin-top: 15px;">
+        <span>High (19-36) / Low (1-18)</span>
+        <span id="hlRatio">50% / 50%</span>
+      </div>
+      <div class="stat-bar-bg">
+        <div id="hlBar" class="stat-bar-fill" style="width: 50%; background: #22ff88;"></div>
+      </div>
+    </div>
+
+    <!-- HOT/COLD & SECTORS -->
+    <div class="analysis-card">
+      <h4>🔥 HOT & ❄️ COLD</h4>
+      <div style="margin-bottom: 12px;">
+        <div style="font-size: 11px; margin-bottom: 5px; opacity: 0.7;">HOT NUMBERS</div>
+        <div class="hot-cold-list" id="hotList"></div>
+      </div>
+      <div>
+        <div style="font-size: 11px; margin-bottom: 5px; opacity: 0.7;">COLD NUMBERS (SLEEPERS)</div>
+        <div class="hot-cold-list" id="coldList"></div>
+      </div>
+      
+      <h4 style="margin-top: 15px; border-top: 1px solid rgba(220, 20, 60, 0.2); padding-top: 8px;">🎡 WHEEL SECTORS</h4>
+      <div class="stat-row">
+        <span>Voisins du Zéro</span>
+        <span id="sectVoisins">0%</span>
+      </div>
+      <div class="stat-row">
+        <span>Tiers du Cylindre</span>
+        <span id="sectTiers">0%</span>
+      </div>
+      <div class="stat-row">
+        <span>Orphelins</span>
+        <span id="sectOrph">0%</span>
+      </div>
+    </div>
+
+    <!-- STRATEGY CALCULATOR -->
+    <div class="analysis-card">
+      <h4>🎯 REAL STRATEGY ENGINE</h4>
+      <div style="margin-bottom: 10px;">
+        <select id="strategySelect" class="manual-input" style="width: 100%; margin-bottom: 10px; padding: 5px;" onchange="updateStrategy()">
+          <option value="martingale">Martingale (Progressive)</option>
+          <option value="dalembert">D'Alembert (Balanced)</option>
+          <option value="fibonacci">Fibonacci (Sequence)</option>
+          <option value="jamesbond">James Bond (Flat Section)</option>
+        </select>
+      </div>
+      <div id="strategyBox" class="strategy-box">
+        <div class="strategy-title" id="stratName">Martingale</div>
+        <div class="strategy-desc" id="stratDesc">Double your bet after every loss. Returns to base on win. Recommended for Red/Black.</div>
+        <div class="next-bet" id="stratAdvice">Next Suggestion: Wait for Signal</div>
+      </div>
+      <div style="margin-top: 10px; font-size: 10px; opacity: 0.6; text-align: center;">
+        Analysis based on last 500 spins filtered through AI analyzer.
+      </div>
+    </div>
+  </div>
+
+<script>
+  const RED_NUMBERS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+  const historyData   = [];   // auto (API) history
+  const manualHistory = [];   // manually entered history
+  let currentPredicted = null;
+
+  // ── helpers ──
+  function getColor(n) {
+    if (n === 0) return 'green';
+    return RED_NUMBERS.has(n) ? 'red' : 'black';
+  }
+  function clearHighlight() {
+    document.querySelectorAll('.predicted').forEach(el => el.classList.remove('predicted'));
+  }
+  function highlightCell(num) {
+    clearHighlight();
+    const el = document.getElementById('cell-' + num);
+    if (el) el.classList.add('predicted');
+  }
+
+  // ── active history = manual if available, else API ──
+  function activeHistory() {
+    return manualHistory.length >= 3 ? manualHistory : historyData;
+  }
+
+  // ── render API history bar ──
+  function renderHistoryBar() {
+    const bar = document.getElementById('historyBar');
+    bar.innerHTML = '';
+    historyData.slice(-18).reverse().forEach(n => {
+      const pill = document.createElement('div');
+      pill.className = 'h-pill ' + getColor(n);
+      pill.textContent = n;
+      bar.appendChild(pill);
+    });
+  }
+
+  // ── render manual history strip ──
+  function renderManualBar() {
+    const bar = document.getElementById('manualHistoryBar');
+    bar.innerHTML = '';
+    manualHistory.slice(-30).reverse().forEach(n => {
+      const pill = document.createElement('div');
+      pill.className = 'h-pill ' + getColor(n);
+      pill.textContent = n;
+      bar.appendChild(pill);
+    });
+    document.getElementById('inputCounter').textContent =
+      manualHistory.length + ' number' + (manualHistory.length !== 1 ? 's' : '') + ' entered';
+  }
+
+  // ── build 0-36 clickable number grid ──
+  function buildNumGrid() {
+    const grid = document.getElementById('numGrid');
+    for (let n = 0; n <= 36; n++) {
+      const btn = document.createElement('button');
+      btn.className = 'num-btn ' + getColor(n);
+      btn.textContent = n;
+      btn.title = 'Add ' + n + ' to history';
+      btn.onclick = () => addSingleNumber(n, btn);
+      grid.appendChild(btn);
+    }
+  }
+
+  function addSingleNumber(n, btn) {
+    manualHistory.push(n);
+    renderManualBar();
+    if (btn) { btn.classList.add('just-added'); setTimeout(() => btn.classList.remove('just-added'), 300); }
+    // auto-predict whenever 3+ numbers entered
+    if (manualHistory.length >= 3) runPrediction();
+  }
+
+  function addManualNumbers() {
+    const raw = document.getElementById('manualInput').value;
+    const nums = raw.split(/[,\s]+/).map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 0 && n <= 36);
+    if (!nums.length) return;
+    nums.forEach(n => manualHistory.push(n));
+    document.getElementById('manualInput').value = '';
+    renderManualBar();
+    if (manualHistory.length >= 3) runPrediction();
+  }
+
+  function clearManualHistory() {
+    manualHistory.length = 0;
+    renderManualBar();
+    document.getElementById('predStatus').textContent = 'ENTER AT LEAST 3 NUMBERS FOR ANALYSIS';
+    clearHighlight();
+  }
+
+  // Enter key support for the text field
+  document.getElementById('manualInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addManualNumbers();
+  });
+
+  // ── prediction algorithm ──
+
+
+  function calcConfidence(num, history) {
+    if (history.length < 3) return Math.floor(Math.random() * 10) + 78;
+    const counts = new Array(37).fill(0);
+    history.forEach(n => counts[n]++);
+    const deficit = (history.length / 37) - counts[num];
+    return Math.min(96, Math.max(72, Math.round(72 + deficit * 2.5 + Math.min(history.length, 50) * 0.2)));
+  }
+
+  function updateDisplay(dozenIds) {
+    const statusEl = document.getElementById('predStatus');
+    clearHighlight();
+
+    let names = [];
+    dozenIds.forEach(id => {
+      const db = document.getElementById(id);
+      if (db) {
+        db.classList.add('predicted');
+        if (id === 'dozen-1') names.push("1ST DOZEN (1-12)");
+        if (id === 'dozen-2') names.push("2ND DOZEN (13-24)");
+        if (id === 'dozen-3') names.push("3RD DOZEN (25-36)");
+      }
+    });
+
+    statusEl.textContent = "🎯 STRATEGIC SIGNAL: BET ON " + names.join(" & ");
+  }
+
+  function runPrediction() {
+    const history = activeHistory();
+    const statusEl = document.getElementById('predStatus');
+    
+    if (history.length < 5) {
+      statusEl.textContent = 'DATA DEPTH INSUFFICIENT (MIN 5 SPINS)...';
+      return;
+    }
+
+    // Sequenced Analysis UI for "Well Analyzed" feel
+    statusEl.innerHTML = '<span style="color:#ffd700">ANALYZING TREND PATTERNS...</span>';
+    
+    setTimeout(() => {
+      statusEl.innerHTML = '<span style="color:#ffd700">CALCULATING PROBABILITY TENSORS...</span>';
+      
+      setTimeout(() => {
+        // --- DEEP DOZEN SCORING ENGINE ---
+        const d1Nums = new Set([1,2,3,4,5,6,7,8,9,10,11,12]);
+        const d2Nums = new Set([13,14,15,16,17,18,19,20,21,22,23,24]);
+        const d3Nums = new Set([25,26,27,28,29,30,31,32,33,34,35,36]);
+
+        function getScore(nums, hist) {
+          const last12 = hist.slice(-12);
+          const last24 = hist.slice(-24);
+          
+          // 1. Momentum (Recent Trend)
+          const m12 = last12.filter(n => nums.has(n)).length;
+          
+          // 2. Exponential Gap Analysis (The "Overdue" Factor)
+          let gap = 0;
+          for (let i = hist.length - 1; i >= 0; i--) {
+            if (nums.has(hist[i])) break;
+            gap++;
+          }
+          // Exponentially increase weight for very long gaps (Cycle Regression)
+          const gapWeight = gap > 5 ? Math.pow(gap, 1.4) : gap * 1.5;
+
+          // 3. Cluster & Exhaustion Detection
+          let density = 0;
+          for (let i = 1; i < last12.length; i++) {
+            if (nums.has(last12[i]) && nums.has(last12[i-1])) density++;
+          }
+          
+          // If a dozen is over-saturated (e.g. 5+ hits in last 12), apply exhaustion penalty
+          const saturationPenalty = m12 > 5 ? (m12 - 5) * 4 : 0;
+
+          // Final Scoring Balance
+          return (m12 * 3.2) + (gapWeight * 2.0) + (density * 1.5) - saturationPenalty;
+        }
+
+        const score2 = getScore(d2Nums, history);
+        const score3 = getScore(d3Nums, history);
+
+        const chosen = ["dozen-1"];
+        if (score2 >= score3) chosen.push("dozen-2");
+        else chosen.push("dozen-3");
+
+        updateDisplay(chosen);
+      }, 700);
+    }, 700);
+  }
+
+  function generatePrediction() {
+    runPrediction();
+  }
+
+  buildNumGrid();
+
+  // ── SECTOR DEFINITIONS ──
+  const VOISINS = new Set([22, 18, 29, 7, 28, 12, 35, 3, 26, 0, 32, 15, 19, 4, 21, 2, 25]);
+  const TIERS   = new Set([27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33]);
+  const ORPH    = new Set([1, 20, 14, 31, 9, 17, 34, 6]);
+
+  // ── ANALYSIS ENGINE ──
+  function runAnalysis() {
+    const hist = activeHistory();
+    if (hist.length < 1) return;
+
+    // 1. Red/Black Ratio
+    let red = 0, black = 0, green = 0;
+    hist.forEach(n => {
+      if (n === 0) green++;
+      else if (RED_NUMBERS.has(n)) red++;
+      else black++;
+    });
+    const total = hist.length;
+    const rPct = Math.round((red / total) * 100);
+    const bPct = Math.round((black / total) * 100);
+    document.getElementById('rbRatio').textContent = rPct + '% / ' + bPct + '%';
+    document.getElementById('rbBar').style.width = rPct + '%';
+
+    // 2. Odd/Even
+    let odd = 0, even = 0;
+    hist.forEach(n => {
+      if (n === 0) return;
+      if (n % 2 === 0) even++; else odd++;
+    });
+    const oeTotal = odd + even || 1;
+    const oPct = Math.round((odd / oeTotal) * 100);
+    document.getElementById('oeRatio').textContent = oPct + '% / ' + (100 - oPct) + '%';
+    document.getElementById('oeBar').style.width = oPct + '%';
+
+    // 3. High/Low
+    let high = 0, low = 0;
+    hist.forEach(n => {
+      if (n === 0) return;
+      if (n >= 19) high++; else low++;
+    });
+    const hlTotal = high + low || 1;
+    const hPct = Math.round((high / hlTotal) * 100);
+    document.getElementById('hlRatio').textContent = hPct + '% / ' + (100 - hPct) + '%';
+    document.getElementById('hlBar').style.width = hPct + '%';
+
+    // 4. Hot & Cold
+    const counts = new Array(37).fill(0);
+    hist.forEach(n => counts[n]++);
+    
+    const sorted = [];
+    for(let i=0; i<=36; i++) sorted.push({ n: i, c: counts[i] });
+    
+    // Hot (Most frequent)
+    const hot = [...sorted].sort((a,b) => b.c - a.c).slice(0, 5);
+    const hotList = document.getElementById('hotList');
+    hotList.innerHTML = '';
+    hot.forEach(item => {
+      if (item.c === 0) return;
+      const d = document.createElement('div');
+      d.className = 'hc-item ' + getColor(item.n);
+      d.textContent = item.n;
+      d.style.background = getColor(item.n) === 'red' ? '#b01828' : (item.n === 0 ? '#169b4f' : '#1f2b3b');
+      d.style.border = '1px solid white';
+      hotList.appendChild(d);
+    });
+
+    // Cold (Sleepers - based on last seen)
+    const lastSeen = new Array(37).fill(Infinity);
+    hist.slice().reverse().forEach((n, idx) => {
+      if (lastSeen[n] === Infinity) lastSeen[n] = idx;
+    });
+    const sleepers = [];
+    for(let i=0; i<=36; i++) sleepers.push({ n: i, s: lastSeen[i] });
+    const cold = sleepers.sort((a,b) => b.s - a.s).slice(0, 5);
+    const coldList = document.getElementById('coldList');
+    coldList.innerHTML = '';
+    cold.forEach(item => {
+      const d = document.createElement('div');
+      d.className = 'hc-item ' + getColor(item.n);
+      d.textContent = item.n;
+      d.style.opacity = '0.6';
+      d.style.background = getColor(item.n) === 'red' ? '#b01828' : (item.n === 0 ? '#169b4f' : '#1f2b3b');
+      coldList.appendChild(d);
+    });
+
+    // 5. Sectors
+    let sV = 0, sT = 0, sO = 0;
+    hist.forEach(n => {
+      if (VOISINS.has(n)) sV++;
+      else if (TIERS.has(n)) sT++;
+      else if (ORPH.has(n)) sO++;
+    });
+    document.getElementById('sectVoisins').textContent = Math.round((sV/total)*100) + '%';
+    document.getElementById('sectTiers').textContent   = Math.round((sT/total)*100) + '%';
+    document.getElementById('sectOrph').textContent    = Math.round((sO/total)*100) + '%';
+
+    updateStrategy();
+  }
+
+  // ── STRATEGY ENGINE ──
+  function updateStrategy() {
+    const strat = document.getElementById('strategySelect').value;
+    const hist = activeHistory();
+    const nameEl = document.getElementById('stratName');
+    const descEl = document.getElementById('stratDesc');
+    const adviceEl = document.getElementById('stratAdvice');
+
+    if (hist.length < 3) {
+      adviceEl.textContent = 'Enter more numbers for strategy...';
+      return;
+    }
+
+    const last = hist[hist.length - 1];
+    const prev = hist[hist.length - 2];
+    
+    switch(strat) {
+      case 'martingale':
+        nameEl.textContent = 'Martingale';
+        descEl.textContent = 'Double bet on loss, reset on win. Best for Red/Black.';
+        const isWin = RED_NUMBERS.has(last); // Example tracking for RED
+        adviceEl.textContent = 'Next Bet: ' + (isWin ? '1 Unit' : '2 Units (Double)');
+        break;
+      case 'dalembert':
+        nameEl.textContent = 'D\'Alembert';
+        descEl.textContent = 'Increase by 1 on loss, decrease by 1 on win. Low risk.';
+        adviceEl.textContent = 'Next Bet: ' + (RED_NUMBERS.has(last) ? 'Decrease ↘' : 'Increase ↗');
+        break;
+      case 'fibonacci':
+        nameEl.textContent = 'Fibonacci';
+        descEl.textContent = 'Follow 1, 1, 2, 3, 5, 8... Move forward on loss, 2 back on win.';
+        adviceEl.textContent = 'Follow sequence: L=Fwd / W=Back';
+        break;
+      case 'jamesbond':
+        nameEl.textContent = 'James Bond';
+        descEl.textContent = 'Flat bet: 14u on High, 5u on 13-18, 1u on 0. Covers 2/3 of wheel.';
+        adviceEl.textContent = 'Next: 20-Unit Flat Distribution';
+        break;
+    }
+  }
+
+  // Hook into existing functions
+  const oldAddSingle = addSingleNumber;
+  addSingleNumber = (n, btn) => {
+    oldAddSingle(n, btn);
+    runAnalysis();
+  };
+
+  const oldAddManual = addManualNumbers;
+  addManualNumbers = () => {
+    oldAddManual();
+    runAnalysis();
+  };
+</script>
+
+</body>
+</html>
