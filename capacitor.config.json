@@ -1,5 +1,11 @@
 {
   "appId": "com.newprohi.app",
   "appName": "APNAJ BOT",
-  "webDir": "www"
+  "webDir": "www",
+  "android": {
+    "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "webContentsDebuggingEnabled": false
+  }
 }
