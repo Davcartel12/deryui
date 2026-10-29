@@ -444,7 +444,7 @@
       const labelEl = document.getElementById("multLabel");
       const hudEl = document.getElementById("hud");
       const WAIT_MS = 5000;
-      const sheets = { coin: null, vfx: null, curve: null };
+      const sheets = { vfx: null, curve: null };
       const effects = [
         [538, 91, 48, 49], [646, 92, 45, 47], [754, 92, 48, 42],
         [537, 148, 49, 49], [592, 149, 48, 49], [645, 149, 47, 48],
@@ -473,7 +473,6 @@
         };
         img.src = src;
       }
-      loadSheet("coin", "metacrash/coin.png");
       loadSheet("vfx", "metacrash/vfx.png");
       loadSheet("curve", "metacrash/curve.png");
 
@@ -555,10 +554,6 @@
           const fw = coinW * 1.35;
           const fh = fw * (fx.h / fx.w);
           ctx.drawImage(sheets.vfx, fx.x, fx.y, fx.w, fx.h, head.x - fw / 2, head.y - fh / 2, fw, fh);
-        }
-        if (sheets.coin) {
-          const frame = Math.floor(now / 90) % 32;
-          ctx.drawImage(sheets.coin, 6, frame * 32 + 2, 28, 28, head.x - coinW * 0.5, head.y - coinH * 0.5, coinW, coinH);
         }
         ctx.restore();
       }
