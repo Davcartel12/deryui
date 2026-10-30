@@ -4,8 +4,10 @@
 <head>
   <script src="js/protect.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1win Blackjack Analyzer</title>
+    <script src="js/access-core.js"></script>
+    <script src="js/access-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+    <title>Blackjack - CHIKE1W</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;600;700&family=Bebas+Neue&family=DM+Sans:wght@400;600;800"
         rel="stylesheet">
@@ -500,24 +502,22 @@
             color: #aaa;
         }
 
-        .exit-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #ff4d4d;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 1000;
+        .back {
+            flex: 0 0 36px;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-decoration: none;
         }
 
-        .exit-btn:hover {
-            background: #cc0000;
-        }
+        .back svg { width: 18px; height: 18px; }
+
+        .exit-btn { display: none !important; }
 
         @keyframes bounce {
             from {
@@ -617,7 +617,7 @@
     <button class="exit-btn" onclick="location.href='login.html'">EXIT</button>
 
     <div class="header">
-        <div class="brand">1WIN × <span>BLACKJACK</span></div>
+        <div class="brand">CHIKE1W × <span>BLACKJACK</span></div>
         <div class="sub">STRATEGY ANALYZER · BASIC STRATEGY ENGINE</div>
     </div>
 
@@ -826,7 +826,7 @@
                 rm.onclick = (e) => { e.stopPropagation(); dealerCard = null; renderDealer(); clearResults(); updateBtn(); };
                 wrap.appendChild(c); wrap.appendChild(rm); row.appendChild(wrap);
                 const fd = document.createElement('div'); fd.className = 'card facedown';
-                fd.innerHTML = `<div class="logo">1win</div>`;
+                fd.innerHTML = `<div class="logo">CHIKE1W</div>`;
                 row.appendChild(fd);
             } else {
                 const empty = document.createElement('div'); empty.className = 'card empty';
