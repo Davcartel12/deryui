@@ -55,9 +55,31 @@ body.theme-noise::before {
   border-bottom: 1px solid var(--border);
 }
 
-.logo-wrap {
+.back {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
   display: flex;
   align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.back svg {
+  width: 18px;
+  height: 18px;
+}
+
+.logo-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
   min-width: 0;
   text-decoration: none;
