@@ -1590,19 +1590,8 @@
   <a href="login.html" style="background:#00a84f;color:#fff;padding:9px 12px;border-radius:10px;font-weight:800;text-decoration:none;font-size:12px;font-family:Inter,sans-serif;letter-spacing:0.2px;">CHIKE1W</a>
 </header>
 
-
-  <div id="pg-loader">
-    <div class="pgl-name">Form<b>Guide</b></div>
-    <div class="pgl-sub">Loading the form book</div>
-    <div class="pgl-track">
-      <div id="pg-bar"></div>
-    </div>
-    <div id="pg-pct">1%</div>
-  </div>
-
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script>(function () { var dur = 3000 + Math.random() * 2000; var p = 1, b = document.getElementById('pg-bar'), t = document.getElementById('pg-pct'), o = document.getElementById('pg-loader'); var iv = setInterval(function () { p += Math.floor(Math.random() * 4) + 1; if (p >= 100) { p = 100; clearInterval(iv); setTimeout(function () { o.style.transition = 'opacity 0.5s'; o.style.opacity = '0'; setTimeout(function () { o.remove(); }, 550); }, 200); } b.style.width = p + '%'; t.textContent = p + '%'; }, Math.round(dur / 40)); })();</script>
 
   <nav class="navbar">
     <a href="login.html" class="nav-brand">

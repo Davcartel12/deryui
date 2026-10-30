@@ -9,15 +9,7 @@
   <link rel="stylesheet" href="theme.css">
 </head>
 <body class="theme-noise">
-  <div id="pg-loader">
-    <div class="loader-title">SPEED N CASH</div>
-    <div class="loader-sub">Loading…</div>
-    <div class="loader-track"><div id="pg-bar"></div></div>
-    <div id="pg-pct">1%</div>
-  </div>
-  <script>
-    (function(){var dur=2000+Math.random()*1500,p=1,b=document.getElementById('pg-bar'),t=document.getElementById('pg-pct'),o=document.getElementById('pg-loader');var iv=setInterval(function(){p+=Math.floor(Math.random()*6)+2;if(p>=100){p=100;clearInterval(iv);setTimeout(function(){o.style.transition='opacity 0.5s';o.style.opacity='0';setTimeout(function(){o.remove();},500);},150);}b.style.width=p+'%';t.textContent=p+'%';},Math.round(dur/35));})();
-  </script>
+  
 
   <header class="topbar">
     <a class="logo-wrap" href="login.html">

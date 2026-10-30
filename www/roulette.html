@@ -517,29 +517,6 @@ body {
 
 <button class="exit-btn" onclick="location.href='login.html'">EXIT</button>
 
-<!-- LOADER -->
-<div id="pg-loader">
-  <div class="loader-title"><img src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/0d7c6980-f434-4f87-af71-ed1185933dde.png" alt="Logo"> ROULETTE</div>
-  <div class="loader-sub">LOADING PREDICTOR...</div>
-  <div class="progress-wrap"><div id="pg-bar"></div></div>
-  <div id="pg-pct">1%</div>
-</div>
-<script>
-(function(){
-  var dur=5000+Math.random()*4000, p=1,
-      b=document.getElementById('pg-bar'),
-      t=document.getElementById('pg-pct'),
-      o=document.getElementById('pg-loader');
-  var iv=setInterval(function(){
-    p+=Math.floor(Math.random()*4)+1;
-    if(p>=100){p=100;clearInterval(iv);
-      setTimeout(function(){o.style.transition='opacity 0.6s';o.style.opacity='0';
-        setTimeout(function(){o.remove();},650);},200);}
-    b.style.width=p+'%'; t.textContent=p+'%';
-  },Math.round(dur/40));
-})();
-</script>
-
 <!-- NAV -->
 <div class="top-nav">
   <div style="width:120px;"></div>

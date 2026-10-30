@@ -429,56 +429,6 @@ body.theme-noise::before {
   text-transform: uppercase;
 }
 
-/* ── LOADER ── */
-#pg-loader {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  background: var(--bg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-}
-
-.loader-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 36px;
-  letter-spacing: 4px;
-  color: var(--accent);
-}
-
-.loader-sub {
-  font-size: 12px;
-  letter-spacing: 2px;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-
-.loader-track {
-  width: 220px;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 99px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-
-#pg-bar {
-  height: 100%;
-  width: 1%;
-  background: linear-gradient(90deg, var(--accent), #00d4ff);
-  transition: width 0.06s linear;
-}
-
-#pg-pct {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-  letter-spacing: 1px;
-}
-
 /* ── HISTORY POPUP ── */
 .history-overlay {
   position: fixed;
