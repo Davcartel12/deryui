@@ -1108,15 +1108,17 @@
     function rand(min, max) { return Math.random() * (max - min) + min; }
     function randomChance() { return Math.floor(Math.random() * 6) + 94; }
 
-    const apiURL = "https://crash-gateway-grm-cr.100hp.app/state";
-    const apiHeaders = { "customer-id": "077dee8d-c923-4c02-9bee-757573662e69", "session-id": "5849f7fa-7e34-4f78-917a-ab063f9d9422", "accept": "application/json" };
+    const apiURL = "https://crash-gateway-grm-cr.gamedev-tech.cc/history";
+    const apiHeaders = { "customer-id": "077dee8d-c923-4c02-9bee-757573662e69", "session-id": "957b434f52f1aa4e241df6ea9e1989dd34c1e9b3beb23afee29dc687c37b15c27f1f0c35277eb02213574377e1d47f668689ffb238196552149152da3e8ca1f245ef8c0eebc6c4aacb98e858b5f0dcb6be92815e31e6801cb712dac1530c2fdf9198ef70cf96949a216eb77db295760c0a3bf873ca1af963c30ead7d595735f6ba00efd09f9b3c06ac11933b988978aa7f1d47ad3d4884b06c85549bcdf1755ebaf34d835c4376081a6918fb.85ca52d6366cb1c98c448b1f1552c762.077dee8d-c923-4c02-9bee-757573662e69", "accept": "application/json" };
     async function fetchGameData() {
       try {
         const res = await fetch(apiURL, { headers: apiHeaders });
         if (!res.ok) throw new Error("API error");
-        return await res.json();
+        const data = await res.json();
+        const raw = Array.isArray(data) ? data : (data && (data.rounds || data.history || data.items || data.data)) || [];
+        return Array.isArray(raw) ? raw : [];
       } catch (e) {
-        return null;
+        return [];
       }
     }
 
@@ -1129,9 +1131,10 @@
         const inWindow = (now >= w1Start && now <= w1End) || (now >= w2Start && now <= w2End);
         if (inWindow) {
           const data = await fetchGameData();
-          if (data && data.history && data.history.length) {
-            const latest = data.history[0];
-            const coeff = parseFloat(latest.coefficient ?? latest.multiplier ?? 0);
+          if (data && data.length) {
+            const latest = data[0];
+            const first = Array.isArray(latest.finalValues) ? latest.finalValues[0] : undefined;
+            const coeff = parseFloat(latest.topCoefficient ?? first ?? latest.coefficient ?? latest.multiplier ?? latest.coef ?? 0);
             if (coeff > 0) {
               clearInterval(verificationInterval); verificationInterval = null;
               const left = parseFloat(predictionData.leftCoeff), right = parseFloat(predictionData.rightCoeff);
