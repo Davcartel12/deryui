@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <script src="js/access-core.js"></script>
     <script src="js/access-guard.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
     <title>Video Poker Analyzer</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800"
@@ -32,15 +32,25 @@
             padding: 0;
         }
 
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        html, body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
         body {
             background: #07080c;
             font-family: 'DM Sans', sans-serif;
             color: var(--text);
-            min-height: 100vh;
+            min-height: 100svh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 16px 8px 40px;
+            align-items: stretch;
+            padding: 0 0 calc(16px + env(safe-area-inset-bottom, 0px));
         }
 
         body::before {
@@ -57,10 +67,25 @@
             z-index: 1;
         }
 
+        .paytable,
+        .card-area,
+        .picker,
+        .controls,
+        .analyze-btn,
+        .results,
+        .reset-btn,
+        .exit-btn-container,
+        .header {
+            width: calc(100% - 24px);
+            max-width: 430px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         /* ── Header ── */
         .header {
             text-align: center;
-            margin-bottom: 18px;
+            margin: 14px auto 14px;
         }
 
         .header .brand {
@@ -95,7 +120,7 @@
 
         .paytable-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: 1fr 1fr;
             gap: 4px 8px;
         }
 
@@ -143,15 +168,18 @@
 
         .cards-row {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             justify-content: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            width: 100%;
         }
 
         /* ── Card (matches 1win style) ── */
         .card {
-            width: 76px;
-            height: 100px;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 76 / 100;
+            min-width: 0;
             border-radius: 10px;
             background: linear-gradient(160deg, #dde0ec 0%, #b8bcd0 100%);
             box-shadow: 0 4px 12px #0008, inset 0 1px 0 #fff4;
@@ -248,6 +276,8 @@
             gap: 0;
             position: relative;
             padding-bottom: 30px;
+            flex: 1;
+            min-width: 0;
         }
 
         /* ── Picker ── */
@@ -303,8 +333,8 @@
 
         .ranks-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 4px;
         }
 
         .rank-btn {
@@ -349,13 +379,14 @@
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .ctrl-label {
             font-size: 11px;
             letter-spacing: 2px;
             color: #555;
-            width: 100px;
+            width: auto;
             flex-shrink: 0;
         }
 
@@ -603,8 +634,9 @@
         }
 
         .exit-btn-container {
+            display: none;
             width: 100%;
-            max-width: 500px;
+            max-width: 430px;
             margin-top: 10px;
         }
 
