@@ -584,6 +584,17 @@
       const home = Math.round((aa / t) * 100);
       return { home, away: 100 - home };
     }
+    // TejTips-style contrast: small rating gaps become clear % splits (e.g. 6/94 form).
+    function softExtreme(a, b, temp = 14) {
+      const home = clamp(Math.round(100 / (1 + Math.exp(-(a - b) / temp))), 3, 97);
+      return { home, away: 100 - home };
+    }
+    function venueAvg(s, side, key) {
+      // side: 'home' | 'away' — per-venue averages when we have enough sample
+      if (side === 'home' && s.homeN >= 3) return key === 'gf' ? s.homeGf / s.homeN : s.homeGa / s.homeN;
+      if (side === 'away' && s.awayN >= 3) return key === 'gf' ? s.awayGf / s.awayN : s.awayGa / s.awayN;
+      return key === 'gf' ? (parseFloat(s.avgGf) || 1.25) : (parseFloat(s.avgGa) || 1.25);
+    }
     function formScore(results) {
       const recent = (results || []).slice(-8);
       if (!recent.length) return 50;
@@ -615,29 +626,33 @@
       const tblH = tableStrength(home.id);
       const tblA = tableStrength(away.id);
 
-      // --- Factor scores (0-100 each side) ---
+      // --- Factor scores (TejTips stack: form / attack / defense / goals / Poisson / H2H) ---
       const formRawH = formScore(sH.results);
       const formRawA = formScore(sA.results);
       const formBlendH = hasSample ? formRawH * 0.85 + tblH * 0.15 : tblH * 0.7 + 50 * 0.3;
       const formBlendA = hasSample ? formRawA * 0.85 + tblA * 0.15 : tblA * 0.7 + 50 * 0.3;
-      const form = pairPct(formBlendH + 4 /* home form bump */, formBlendA); // slight home bump
+      const form = softExtreme(formBlendH + 3, formBlendA, 11);
 
-      const atkH = parseFloat(sH.avgGf) || 1.25;
-      const atkA = parseFloat(sA.avgGf) || 1.25;
-      const attack = pairPct(atkH * (hasSample ? 1 : 0.5) + (tblH / 100) * 0.8, atkA * (hasSample ? 1 : 0.5) + (tblA / 100) * 0.8);
+      // Venue splits like TejTips season HOME/AWAY blocks
+      const homeAtk = venueAvg(sH, 'home', 'gf');
+      const homeDefGa = venueAvg(sH, 'home', 'ga');
+      const awayAtk = venueAvg(sA, 'away', 'gf');
+      const awayDefGa = venueAvg(sA, 'away', 'ga');
+      const atkH = parseFloat(sH.avgGf) || homeAtk;
+      const atkA = parseFloat(sA.avgGf) || awayAtk;
+      const attack = softExtreme(homeAtk * 40 + tblH * 0.25, awayAtk * 40 + tblA * 0.25, 12);
 
-      // Lower goals against = stronger defense
-      const defH = 1 / Math.max(0.35, parseFloat(sH.avgGa) || 1.25);
-      const defA = 1 / Math.max(0.35, parseFloat(sA.avgGa) || 1.25);
-      const defense = pairPct(defH * (hasSample ? 1 : 0.5) + (tblH / 100) * 0.7, defA * (hasSample ? 1 : 0.5) + (tblA / 100) * 0.7);
+      const defH = 1 / Math.max(0.35, homeDefGa);
+      const defA = 1 / Math.max(0.35, awayDefGa);
+      const defense = softExtreme(defH * 55 + tblH * 0.2, defA * 55 + tblA * 0.2, 12);
 
-      // Expected goals (attack vs opponent defense) + home advantage
-      const HOME_ADV = 0.22;
-      const expH = Math.max(0.15, (atkH + (parseFloat(sA.avgGa) || 1.25)) / 2 + HOME_ADV + (tblH - tblA) * 0.004);
-      const expA = Math.max(0.12, (atkA + (parseFloat(sH.avgGa) || 1.25)) / 2 + Math.max(0, (tblA - tblH) * 0.003));
-      const goals = pairPct(expH, expA);
+      // Expected goals: home attack vs away defense (and reverse) + home advantage
+      const HOME_ADV = 0.25;
+      const expH = Math.max(0.15, (homeAtk + awayDefGa) / 2 + HOME_ADV + (tblH - tblA) * 0.005);
+      const expA = Math.max(0.12, (awayAtk + homeDefGa) / 2 + Math.max(0, (tblA - tblH) * 0.0035));
+      const goals = softExtreme(expH * 50, expA * 50, 10);
 
-      // Poisson 1X2
+      // Poisson 1X2 (full time)
       let pHomeWin = 0, pDraw = 0, pAwayWin = 0;
       for (let h = 0; h <= 8; h++) {
         for (let a = 0; a <= 8; a++) {
@@ -647,10 +662,23 @@
           else pAwayWin += prob;
         }
       }
-      // Normalize residual mass
       const pSum = pHomeWin + pDraw + pAwayWin || 1;
       pHomeWin /= pSum; pDraw /= pSum; pAwayWin /= pSum;
-      const poissonPair = pairPct(pHomeWin, pAwayWin);
+      const poissonPair = softExtreme(pHomeWin * 100, pAwayWin * 100, 9);
+
+      // Half-time lean (~45% of goals fall in 1st half — TejTips Half-Time market)
+      const htH = expH * 0.45, htA = expA * 0.45;
+      let pHt1 = 0, pHtX = 0, pHt2 = 0;
+      for (let h = 0; h <= 5; h++) {
+        for (let a = 0; a <= 5; a++) {
+          const prob = poisson(htH, h) * poisson(htA, a);
+          if (h > a) pHt1 += prob;
+          else if (h === a) pHtX += prob;
+          else pHt2 += prob;
+        }
+      }
+      const htSum = pHt1 + pHtX + pHt2 || 1;
+      pHt1 /= htSum; pHtX /= htSum; pHt2 /= htSum;
 
       // H2H
       const meetings = (sH.h2h && sH.h2h[away.id]) ? sH.h2h[away.id] : [];
@@ -661,28 +689,27 @@
         else if (g.winner === away.id) h2hAwayWins++;
       });
       const h2h = meetings.length
-        ? pairPct(h2hHomeWins + h2hDraws * 0.35 + 0.15, h2hAwayWins + h2hDraws * 0.35 + 0.15)
-        : pairPct(tblH + 3, tblA);
+        ? softExtreme(h2hHomeWins * 3 + h2hDraws + 0.4, h2hAwayWins * 3 + h2hDraws + 0.4, 8)
+        : softExtreme(tblH + 2, tblA, 13);
 
-      // Overall blend — all signals before the final tip
+      // Overall blend — same six layers TejTips AI Insights uses
       const overallH = (
-        form.home * 0.20 +
-        attack.home * 0.15 +
-        defense.home * 0.15 +
-        goals.home * 0.10 +
-        poissonPair.home * 0.25 +
+        form.home * 0.18 +
+        attack.home * 0.14 +
+        defense.home * 0.14 +
+        goals.home * 0.12 +
+        poissonPair.home * 0.27 +
         h2h.home * 0.15
       );
-      const overallA = 100 - overallH;
-      const overall = { home: Math.round(overallH), away: Math.round(overallA) };
+      const overall = { home: Math.round(overallH), away: Math.round(100 - overallH) };
       const edge = overall.home - overall.away;
 
-      // Adjust 1X2 with overall edge (agreement across layers)
-      const adj = clamp(edge / 100 * 0.22, -0.18, 0.18);
-      let aHome = clamp(pHomeWin + adj, 0.04, 0.88);
-      let aAway = clamp(pAwayWin - adj, 0.04, 0.88);
-      let aDraw = clamp(pDraw - Math.abs(adj) * 0.35, 0.06, 0.42);
-      if (Math.abs(edge) < 7) aDraw = clamp(aDraw + 0.06, 0.1, 0.4);
+      // Adjust 1X2 with overall edge
+      const adj = clamp(edge / 100 * 0.28, -0.22, 0.22);
+      let aHome = clamp(pHomeWin + adj, 0.04, 0.90);
+      let aAway = clamp(pAwayWin - adj, 0.04, 0.90);
+      let aDraw = clamp(pDraw - Math.abs(adj) * 0.4, 0.05, 0.40);
+      if (Math.abs(edge) < 8) aDraw = clamp(aDraw + 0.05, 0.08, 0.38);
       const aSum = aHome + aDraw + aAway;
       aHome /= aSum; aDraw /= aSum; aAway /= aSum;
 
@@ -698,55 +725,67 @@
       const pBTTS = 1 - pBTTSNo;
       const p1X = Math.min(1, aHome + aDraw); const p2X = Math.min(1, aAway + aDraw); const p12 = Math.min(1, aHome + aAway);
 
-      // Factor agreement (how many layers lean the same way)
-      const leanHome = [form, attack, defense, goals, poissonPair, h2h].filter(f => f.home >= f.away + 4).length;
-      const leanAway = [form, attack, defense, goals, poissonPair, h2h].filter(f => f.away >= f.home + 4).length;
+      const leanHome = [form, attack, defense, goals, poissonPair, h2h].filter(f => f.home >= f.away + 5).length;
+      const leanAway = [form, attack, defense, goals, poissonPair, h2h].filter(f => f.away >= f.home + 5).length;
       const agree = Math.max(leanHome, leanAway);
 
+      // Markets named like TejTips (Full-Time / Over / Under / Half-Time)
       const markets = [
-        { id: 'w1', label: 'W1 (Home)', display: 'W1', prob: aHome, threshold: 0.46 },
-        { id: 'w2', label: 'W2 (Away)', display: 'W2', prob: aAway, threshold: 0.40 },
-        { id: 'draw', label: 'Draw (X)', display: 'Draw', prob: aDraw, threshold: 0.30 },
-        { id: '1x', label: '1X', display: '1X', prob: p1X, threshold: 0.64 },
-        { id: '2x', label: '2X', display: '2X', prob: p2X, threshold: 0.58 },
-        { id: '12', label: '12 (No Draw)', display: '1/2', prob: p12, threshold: 0.70 },
-        { id: 'over15', label: 'Over 1.5', display: 'Over 1.5', prob: pOver15, threshold: 0.68 },
-        { id: 'under15', label: 'Under 1.5', display: 'Under 1.5', prob: pUnder15, threshold: 0.42 },
-        { id: 'over25', label: 'Over 2.5', display: 'Over 2.5', prob: pOver25, threshold: 0.56 },
-        { id: 'under25', label: 'Under 2.5', display: 'Under 2.5', prob: pUnder25, threshold: 0.56 },
-        { id: 'over35', label: 'Over 3.5', display: 'Over 3.5', prob: pOver35, threshold: 0.36 },
-        { id: 'under35', label: 'Under 3.5', display: 'Under 3.5', prob: pUnder35, threshold: 0.62 },
-        { id: 'over05', label: 'Over 0.5', display: 'Over 0.5', prob: pOver05, threshold: 0.82 },
-        { id: 'btts', label: 'GG (BTTS)', display: 'GG', prob: pBTTS, threshold: 0.56 },
-        { id: 'bttsno', label: 'NG (No BTTS)', display: 'NG', prob: pBTTSNo, threshold: 0.56 },
+        { id: 'w1', label: 'Full-Time: 1', display: 'Full-Time: 1', prob: aHome, threshold: 0.50 },
+        { id: 'w2', label: 'Full-Time: 2', display: 'Full-Time: 2', prob: aAway, threshold: 0.44 },
+        { id: 'draw', label: 'Full-Time: X', display: 'Full-Time: X', prob: aDraw, threshold: 0.30 },
+        { id: '1x', label: 'Full-Time: 1X', display: 'Full-Time: 1X', prob: p1X, threshold: 0.66 },
+        { id: '2x', label: 'Full-Time: X2', display: 'Full-Time: X2', prob: p2X, threshold: 0.62 },
+        { id: '12', label: 'Full-Time: 12', display: 'Full-Time: 12', prob: p12, threshold: 0.72 },
+        { id: 'ht1', label: 'Half-Time: 1', display: 'Half-Time: 1', prob: pHt1, threshold: 0.42 },
+        { id: 'htx', label: 'Half-Time: X', display: 'Half-Time: X', prob: pHtX, threshold: 0.36 },
+        { id: 'ht2', label: 'Half-Time: 2', display: 'Half-Time: 2', prob: pHt2, threshold: 0.38 },
+        { id: 'over15', label: 'Over: 1.5', display: 'Over: 1.5', prob: pOver15, threshold: 0.70 },
+        { id: 'under15', label: 'Under: 1.5', display: 'Under: 1.5', prob: pUnder15, threshold: 0.40 },
+        { id: 'over25', label: 'Over: 2.5', display: 'Over: 2.5', prob: pOver25, threshold: 0.55 },
+        { id: 'under25', label: 'Under: 2.5', display: 'Under: 2.5', prob: pUnder25, threshold: 0.55 },
+        { id: 'over35', label: 'Over: 3.5', display: 'Over: 3.5', prob: pOver35, threshold: 0.34 },
+        { id: 'under35', label: 'Under: 3.5', display: 'Under: 3.5', prob: pUnder35, threshold: 0.60 },
+        { id: 'over05', label: 'Over: 0.5', display: 'Over: 0.5', prob: pOver05, threshold: 0.82 },
+        { id: 'btts', label: 'BTTS: Yes', display: 'BTTS: Yes', prob: pBTTS, threshold: 0.56 },
+        { id: 'bttsno', label: 'BTTS: No', display: 'BTTS: No', prob: pBTTSNo, threshold: 0.56 },
       ];
       markets.forEach(m => { m.odds = m.prob > 0.02 ? (1 / m.prob).toFixed(2) : '9.00'; });
 
-      // Final tip: require multi-factor agreement for match-winner picks
+      // TejTips tip tactic: favor Over 1.5 / double chance; straight win only when layers agree hard
       let best = null;
       const byId = id => markets.find(m => m.id === id);
+      const favHome = overall.home >= overall.away;
+      const favPct = Math.max(overall.home, overall.away);
 
-      if (leanHome >= 4 && edge >= 16 && aHome >= 0.48) best = byId('w1');
-      else if (leanAway >= 4 && edge <= -16 && aAway >= 0.44) best = byId('w2');
-      else if (leanHome >= 3 && edge >= 10 && p1X >= 0.68) best = byId('1x');
-      else if (leanAway >= 3 && edge <= -10 && p2X >= 0.64) best = byId('2x');
-      else if (Math.abs(edge) <= 6 && aDraw >= 0.28) best = byId('draw');
-      else if (expH + expA >= 2.85 && pOver25 >= 0.56 && agree >= 2) best = byId('over25');
-      else if (expH + expA <= 2.15 && pUnder25 >= 0.55) best = byId('under25');
-      else if (pBTTS >= 0.58 && Math.min(expH, expA) >= 0.95) best = byId('btts');
-      else if (pOver15 >= 0.72) best = byId('over15');
-      else if (p12 >= 0.74 && Math.abs(edge) >= 8) best = byId('12');
+      if (favPct >= 72 && leanHome >= 4 && aHome >= 0.52) best = byId('w1');
+      else if (favPct >= 72 && leanAway >= 4 && aAway >= 0.48) best = byId('w2');
+      else if (favHome && leanHome >= 3 && edge >= 12 && p1X >= 0.68) best = byId('1x');
+      else if (!favHome && leanAway >= 3 && edge <= -12 && p2X >= 0.64) best = byId('2x');
+      else if (pOver25 >= 0.58 && expH + expA >= 2.9 && agree >= 2) best = byId('over25');
+      else if (pUnder35 >= 0.62 && expH + expA <= 2.35) best = byId('under35');
+      else if (pOver15 >= 0.68) best = byId('over15'); // TejTips most common main tip
+      else if (Math.abs(edge) <= 7 && aDraw >= 0.28) best = byId('draw');
+      else if (favHome && p1X >= 0.70) best = byId('1x');
+      else if (!favHome && p2X >= 0.66) best = byId('2x');
+      else if (pHt1 >= 0.45 && favHome && leanHome >= 3) best = byId('ht1');
+      else if (pHt2 >= 0.42 && !favHome && leanAway >= 3) best = byId('ht2');
       else {
-        const qualified = markets.filter(m => m.prob >= m.threshold);
-        const pool = (qualified.length ? qualified : markets).slice().sort((a, b) => (b.prob - b.threshold) - (a.prob - a.threshold));
-        best = pool[0];
+        const preferred = ['over15', '1x', '2x', 'under35', 'over25', 'w1', 'w2'];
+        for (const id of preferred) {
+          const m = byId(id);
+          if (m && m.prob >= m.threshold) { best = m; break; }
+        }
+        if (!best) {
+          const pool = markets.slice().sort((a, b) => (b.prob - b.threshold) - (a.prob - a.threshold));
+          best = pool[0];
+        }
       }
 
-      // Confidence = market prob × factor agreement × data quality
       const dataQ = hasSample ? 1 : 0.82;
-      const agreeBoost = 0.88 + agree * 0.025;
-      let conf = Math.round(clamp(best.prob * 100 * agreeBoost * dataQ, 42, 94));
-      if (agree >= 5 && Math.abs(edge) >= 20) conf = Math.min(94, conf + 4);
+      const agreeBoost = 0.90 + agree * 0.022;
+      let conf = Math.round(clamp(best.prob * 100 * agreeBoost * dataQ, 48, 93));
+      if (agree >= 5 && favPct >= 75) conf = Math.min(93, conf + 3);
 
       const predGoalsH = Math.round(expH * 10) / 10 >= Math.floor(expH) + 0.6 ? Math.ceil(expH) : Math.floor(expH);
       const predGoalsA = Math.round(expA * 10) / 10 >= Math.floor(expA) + 0.6 ? Math.ceil(expA) : Math.floor(expA);
@@ -783,8 +822,8 @@
           h2hGames: meetings.length,
           hasSample
         },
-        advice: `Winner lean: ${predictedWinner}. Pick ${best.label} (${conf}%). ${agree}/6 layers agree. Form ${form.home}/${form.away} · Attack ${attack.home}/${attack.away} · Defense ${defense.home}/${defense.away} · Poisson ${poissonPair.home}/${poissonPair.away} · H2H ${h2h.home}/${h2h.away}${meetings.length ? ` (${meetings.length} games)` : ''}.`,
-        analysis: `Blended model on form, attack, defense, goals, Poisson and H2H. xG ${expH.toFixed(2)}–${expA.toFixed(2)}. Over 1.5 ${Math.round(pOver15 * 100)}% · Over 2.5 ${Math.round(pOver25 * 100)}% · BTTS ${Math.round(pBTTS * 100)}%.`
+        advice: `Recommendation — ${best.label}. Predicted winner: ${predictedWinner}. ${agree}/6 layers agree (form ${form.home}/${form.away}, attack ${attack.home}/${attack.away}, defense ${defense.home}/${defense.away}, goals ${goals.home}/${goals.away}, Poisson ${poissonPair.home}/${poissonPair.away}, H2H ${h2h.home}/${h2h.away}).`,
+        analysis: `TejTips-style stack with venue splits + Poisson. xG ${expH.toFixed(2)}–${expA.toFixed(2)}. Over 1.5 ${Math.round(pOver15 * 100)}% · Over 2.5 ${Math.round(pOver25 * 100)}% · BTTS ${Math.round(pBTTS * 100)}% · HT lean ${Math.round(Math.max(pHt1, pHt2, pHtX) * 100)}%.`
       };
 
       matchPredictions[match.id] = pred;
@@ -813,6 +852,7 @@
         case 'btts': return sh > 0 && sa > 0; case 'bttsno': return !(sh > 0 && sa > 0);
         case 'w1': return sh > sa; case 'w2': return sa > sh; case 'draw': return sh === sa;
         case '1x': return sh >= sa; case '12': return sh !== sa; case '2x': return sa >= sh;
+        case 'ht1': case 'ht2': case 'htx': return null; // HT result not in FT score alone
         default: return false;
       }
     }
@@ -1111,7 +1151,13 @@
       const hCrest = home.crest ? `<img src="${home.crest}" onerror="this.style.display='none'" alt="">` : '<i class="fas fa-futbol"></i>';
       const aCrest = away.crest ? `<img src="${away.crest}" onerror="this.style.display='none'" alt="">` : '<i class="fas fa-futbol"></i>';
       let predStatus = 'pend', predIcon = '<i class="fas fa-clock"></i>';
-      if (isFinished && sh !== null && sa !== null) { const hit = checkHit(pred.tipId, sh, sa); predStatus = hit ? 'hit' : 'miss'; predIcon = hit ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>'; }
+      if (isFinished && sh !== null && sa !== null) {
+        const hit = checkHit(pred.tipId, sh, sa);
+        if (hit !== null && hit !== undefined) {
+          predStatus = hit ? 'hit' : 'miss';
+          predIcon = hit ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>';
+        }
+      }
       const homeWinner = isFinished && sh !== null && sh > sa; const awayWinner = isFinished && sa !== null && sa > sh;
       const expId = 'exp-' + uid;
       return `
