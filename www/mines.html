@@ -4,6 +4,8 @@
 <head>
   <script src="js/protect.js"></script>
     <meta charset="UTF-8">
+    <script src="js/access-core.js"></script>
+    <script src="js/access-guard.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mines Simulator</title>
     <style>
@@ -309,10 +311,7 @@
 
     </div>
 
-    <script src="js/stats.js"></script>
-<script src="js/rng.js"></script>
-<script src="js/rng-games.js"></script>
-<script>
+    <script>
         const TILE_IMG = 'https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/e6b29cd6-c737-427d-8d03-7f5b388eaa9b.png';
         const TRAP_IMG = 'https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/0d90809d-116e-4cc0-83b6-117a67c2e891.png';
 
@@ -351,21 +350,22 @@
             });
         }
 
-        function shuffle(arr) { return BotRng.cryptoShuffle(arr); }
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
 
         document.getElementById('playBtn').addEventListener('click', () => {
             resetGrid();
             const trapVal = TRAP_OPTIONS[trapIndex];
             const numTraps = TRAP_COUNTS[trapVal];
-            const placed = RngGames.placeMines(25, numTraps, {
-                shuffle: (a) => BotRng.cryptoShuffle(a),
-                int: (a, b) => BotRng.cryptoInt(a, b)
-            });
-            placed.mines.forEach(i => {
+            const indices = shuffle([...Array(25).keys()]).slice(0, numTraps);
+            indices.forEach(i => {
                 tiles[i].style.backgroundImage = "url('" + TRAP_IMG + "')";
             });
-            console.info('Mines simulation:', placed.odds, placed.disclaimer);
-        });
         });
     </script>
 </body>
