@@ -313,6 +313,50 @@
     .xg-tag { background: #1b2234; border-radius: 6px; padding: 4px 6px; font-weight: 700; }
     .analysis-txt { margin-top: 8px; font-size: 11px; color: var(--muted); line-height: 1.45; }
 
+    .winner-banner {
+      background: linear-gradient(135deg, rgba(0, 168, 79, 0.18), rgba(58, 123, 213, 0.12));
+      border: 1px solid rgba(0, 168, 79, 0.35);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .winner-banner .wb-kicker { font-size: 10px; font-weight: 800; letter-spacing: 0.8px; color: var(--muted); text-transform: uppercase; }
+    .winner-banner .wb-name { font-size: 18px; font-weight: 800; margin-top: 4px; }
+    .winner-banner .wb-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .advice-box {
+      background: #1b2234;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 12px;
+    }
+    .advice-box strong { color: var(--green); }
+    .factor-block { margin-top: 12px; }
+    .factor-title {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.7px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .factor-vs { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: end; }
+    .factor-side .fp { font-size: 18px; font-weight: 800; line-height: 1; }
+    .factor-side .fl { font-size: 10px; color: var(--muted); margin-top: 3px; }
+    .factor-side.right { text-align: right; }
+    .factor-mid { font-size: 10px; font-weight: 800; color: var(--muted); padding-bottom: 14px; }
+    .factor-bar {
+      margin-top: 8px;
+      height: 7px;
+      border-radius: 99px;
+      overflow: hidden;
+      background: #1b2234;
+      display: flex;
+    }
+    .factor-bar .fh { background: var(--green); }
+    .factor-bar .fa { background: #3a7bd5; }
+    .factor-note { margin-top: 6px; font-size: 10px; color: var(--muted); }
+
     .widget-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; }
     .widget-head h3 { font-size: 14px; }
     .league-select {
@@ -534,57 +578,188 @@
     function poisson(lambda, k) { if (lambda <= 0) return k === 0 ? 1 : 0; let p = Math.exp(-lambda); for (let i = 1; i <= k; i++)p *= lambda / i; return p; }
     function probExactGoals(lambdaH, lambdaA, n) { let p = 0; for (let h = 0; h <= n; h++)p += poisson(lambdaH, h) * poisson(lambdaA, n - h); return p; }
     function probUnder(lambdaH, lambdaA, threshold) { let p = 0; for (let n = 0; n <= threshold; n++)p += probExactGoals(lambdaH, lambdaA, n); return Math.min(1, p); }
+    function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+    function pairPct(a, b) {
+      const aa = Math.max(0.01, a), bb = Math.max(0.01, b), t = aa + bb;
+      const home = Math.round((aa / t) * 100);
+      return { home, away: 100 - home };
+    }
+    function formScore(results) {
+      const recent = (results || []).slice(-8);
+      if (!recent.length) return 50;
+      let pts = 0;
+      recent.forEach((r, i) => {
+        const w = 0.55 + (i / Math.max(1, recent.length - 1)) * 0.45; // newer games weigh more
+        if (r === 'W') pts += 3 * w;
+        else if (r === 'D') pts += 1 * w;
+      });
+      const max = recent.reduce((s, _, i) => s + 3 * (0.55 + (i / Math.max(1, recent.length - 1)) * 0.45), 0);
+      return clamp((pts / max) * 100, 5, 97);
+    }
+    function tableStrength(teamId) {
+      const pos = leaguePositions[teamId];
+      if (!pos) return 50;
+      // rank 1 ≈ 92, rank 20 ≈ 12
+      return clamp(100 - (pos - 1) * 4.2, 8, 95);
+    }
 
     function computePrediction(match) {
-      if (matchPredictions[match.id] && matchPredictions[match.id].conf <= 100) return matchPredictions[match.id];
+      if (matchPredictions[match.id]) return matchPredictions[match.id];
 
       const home = match.homeTeam || {}; const away = match.awayTeam || {};
-      const sH = teamStats[home.id] || { avgGf: 1.3, avgGa: 1.3, winRate: 33, results: [], h2h: {}, gamesPlayed: 0 };
-      const sA = teamStats[away.id] || { avgGf: 1.3, avgGa: 1.3, winRate: 33, results: [], h2h: {}, gamesPlayed: 0 };
-      const HOME_ADV = 0.15;
-      const expH = Math.max(0.1, (parseFloat(sH.avgGf) + parseFloat(sA.avgGa)) / 2 + HOME_ADV);
-      const expA = Math.max(0.1, (parseFloat(sA.avgGf) + parseFloat(sH.avgGa)) / 2);
+      const sH = teamStats[home.id] || { avgGf: 1.25, avgGa: 1.25, winRate: 33, results: [], h2h: {}, gf: 0, ga: 0, w: 0, d: 0, l: 0 };
+      const sA = teamStats[away.id] || { avgGf: 1.25, avgGa: 1.25, winRate: 33, results: [], h2h: {}, gf: 0, ga: 0, w: 0, d: 0, l: 0 };
+      const hasSample = ((sH.results || []).length >= 3) && ((sA.results || []).length >= 3);
+
+      // League-table prior softens empty-stat matches
+      const tblH = tableStrength(home.id);
+      const tblA = tableStrength(away.id);
+
+      // --- Factor scores (0-100 each side) ---
+      const formRawH = formScore(sH.results);
+      const formRawA = formScore(sA.results);
+      const formBlendH = hasSample ? formRawH * 0.85 + tblH * 0.15 : tblH * 0.7 + 50 * 0.3;
+      const formBlendA = hasSample ? formRawA * 0.85 + tblA * 0.15 : tblA * 0.7 + 50 * 0.3;
+      const form = pairPct(formBlendH + 4 /* home form bump */, formBlendA); // slight home bump
+
+      const atkH = parseFloat(sH.avgGf) || 1.25;
+      const atkA = parseFloat(sA.avgGf) || 1.25;
+      const attack = pairPct(atkH * (hasSample ? 1 : 0.5) + (tblH / 100) * 0.8, atkA * (hasSample ? 1 : 0.5) + (tblA / 100) * 0.8);
+
+      // Lower goals against = stronger defense
+      const defH = 1 / Math.max(0.35, parseFloat(sH.avgGa) || 1.25);
+      const defA = 1 / Math.max(0.35, parseFloat(sA.avgGa) || 1.25);
+      const defense = pairPct(defH * (hasSample ? 1 : 0.5) + (tblH / 100) * 0.7, defA * (hasSample ? 1 : 0.5) + (tblA / 100) * 0.7);
+
+      // Expected goals (attack vs opponent defense) + home advantage
+      const HOME_ADV = 0.22;
+      const expH = Math.max(0.15, (atkH + (parseFloat(sA.avgGa) || 1.25)) / 2 + HOME_ADV + (tblH - tblA) * 0.004);
+      const expA = Math.max(0.12, (atkA + (parseFloat(sH.avgGa) || 1.25)) / 2 + Math.max(0, (tblA - tblH) * 0.003));
+      const goals = pairPct(expH, expA);
+
+      // Poisson 1X2
       let pHomeWin = 0, pDraw = 0, pAwayWin = 0;
-      for (let h = 0; h <= 7; h++) {
-        for (let a = 0; a <= 7; a++) {
+      for (let h = 0; h <= 8; h++) {
+        for (let a = 0; a <= 8; a++) {
           const prob = poisson(expH, h) * poisson(expA, a);
           if (h > a) pHomeWin += prob;
           else if (h === a) pDraw += prob;
           else pAwayWin += prob;
         }
       }
-      const homeW = Math.round(pHomeWin * 100); const drawP = Math.round(pDraw * 100); const awayW = Math.round(pAwayWin * 100);
+      // Normalize residual mass
+      const pSum = pHomeWin + pDraw + pAwayWin || 1;
+      pHomeWin /= pSum; pDraw /= pSum; pAwayWin /= pSum;
+      const poissonPair = pairPct(pHomeWin, pAwayWin);
+
+      // H2H
+      const meetings = (sH.h2h && sH.h2h[away.id]) ? sH.h2h[away.id] : [];
+      let h2hHomeWins = 0, h2hAwayWins = 0, h2hDraws = 0;
+      meetings.forEach(g => {
+        if (!g.winner) h2hDraws++;
+        else if (g.winner === home.id) h2hHomeWins++;
+        else if (g.winner === away.id) h2hAwayWins++;
+      });
+      const h2h = meetings.length
+        ? pairPct(h2hHomeWins + h2hDraws * 0.35 + 0.15, h2hAwayWins + h2hDraws * 0.35 + 0.15)
+        : pairPct(tblH + 3, tblA);
+
+      // Overall blend — all signals before the final tip
+      const overallH = (
+        form.home * 0.20 +
+        attack.home * 0.15 +
+        defense.home * 0.15 +
+        goals.home * 0.10 +
+        poissonPair.home * 0.25 +
+        h2h.home * 0.15
+      );
+      const overallA = 100 - overallH;
+      const overall = { home: Math.round(overallH), away: Math.round(overallA) };
+      const edge = overall.home - overall.away;
+
+      // Adjust 1X2 with overall edge (agreement across layers)
+      const adj = clamp(edge / 100 * 0.22, -0.18, 0.18);
+      let aHome = clamp(pHomeWin + adj, 0.04, 0.88);
+      let aAway = clamp(pAwayWin - adj, 0.04, 0.88);
+      let aDraw = clamp(pDraw - Math.abs(adj) * 0.35, 0.06, 0.42);
+      if (Math.abs(edge) < 7) aDraw = clamp(aDraw + 0.06, 0.1, 0.4);
+      const aSum = aHome + aDraw + aAway;
+      aHome /= aSum; aDraw /= aSum; aAway /= aSum;
+
+      const homeW = Math.round(aHome * 100);
+      const drawP = Math.round(aDraw * 100);
+      const awayW = Math.max(0, 100 - homeW - drawP);
+
       const pOver05 = 1 - probExactGoals(expH, expA, 0);
       const pUnder15 = probUnder(expH, expA, 1); const pOver15 = 1 - pUnder15;
       const pUnder25 = probUnder(expH, expA, 2); const pOver25 = 1 - pUnder25;
       const pUnder35 = probUnder(expH, expA, 3); const pOver35 = 1 - pUnder35;
       const pBTTSNo = poisson(expH, 0) + poisson(expA, 0) - (poisson(expH, 0) * poisson(expA, 0));
       const pBTTS = 1 - pBTTSNo;
-      const p1X = Math.min(1, pHomeWin + pDraw); const p2X = Math.min(1, pAwayWin + pDraw); const p12 = Math.min(1, pHomeWin + pAwayWin);
+      const p1X = Math.min(1, aHome + aDraw); const p2X = Math.min(1, aAway + aDraw); const p12 = Math.min(1, aHome + aAway);
+
+      // Factor agreement (how many layers lean the same way)
+      const leanHome = [form, attack, defense, goals, poissonPair, h2h].filter(f => f.home >= f.away + 4).length;
+      const leanAway = [form, attack, defense, goals, poissonPair, h2h].filter(f => f.away >= f.home + 4).length;
+      const agree = Math.max(leanHome, leanAway);
+
       const markets = [
-        { id: 'over15', label: 'Over 1.5', display: 'Over 1.5', prob: pOver15, threshold: 0.62 },
-        { id: 'under15', label: 'Under 1.5', display: 'Under 1.5', prob: pUnder15, threshold: 0.48 },
-        { id: 'over25', label: 'Over 2.5', display: 'Over 2.5', prob: pOver25, threshold: 0.55 },
-        { id: 'under25', label: 'Under 2.5', display: 'Under 2.5', prob: pUnder25, threshold: 0.58 },
-        { id: 'over35', label: 'Over 3.5', display: 'Over 3.5', prob: pOver35, threshold: 0.38 },
+        { id: 'w1', label: 'W1 (Home)', display: 'W1', prob: aHome, threshold: 0.46 },
+        { id: 'w2', label: 'W2 (Away)', display: 'W2', prob: aAway, threshold: 0.40 },
+        { id: 'draw', label: 'Draw (X)', display: 'Draw', prob: aDraw, threshold: 0.30 },
+        { id: '1x', label: '1X', display: '1X', prob: p1X, threshold: 0.64 },
+        { id: '2x', label: '2X', display: '2X', prob: p2X, threshold: 0.58 },
+        { id: '12', label: '12 (No Draw)', display: '1/2', prob: p12, threshold: 0.70 },
+        { id: 'over15', label: 'Over 1.5', display: 'Over 1.5', prob: pOver15, threshold: 0.68 },
+        { id: 'under15', label: 'Under 1.5', display: 'Under 1.5', prob: pUnder15, threshold: 0.42 },
+        { id: 'over25', label: 'Over 2.5', display: 'Over 2.5', prob: pOver25, threshold: 0.56 },
+        { id: 'under25', label: 'Under 2.5', display: 'Under 2.5', prob: pUnder25, threshold: 0.56 },
+        { id: 'over35', label: 'Over 3.5', display: 'Over 3.5', prob: pOver35, threshold: 0.36 },
         { id: 'under35', label: 'Under 3.5', display: 'Under 3.5', prob: pUnder35, threshold: 0.62 },
-        { id: 'over05', label: 'Over 0.5', display: 'Over 0.5', prob: pOver05, threshold: 0.78 },
-        { id: 'btts', label: 'GG (BTTS)', display: 'GG', prob: pBTTS, threshold: 0.55 },
-        { id: 'bttsno', label: 'NG (No BTTS)', display: 'NG', prob: pBTTSNo, threshold: 0.58 },
-        { id: 'w1', label: 'W1 (Home)', display: 'W1', prob: pHomeWin, threshold: 0.48 },
-        { id: 'w2', label: 'W2 (Away)', display: 'W2', prob: pAwayWin, threshold: 0.38 },
-        { id: 'draw', label: 'Draw (X)', display: 'Draw', prob: pDraw, threshold: 0.28 },
-        { id: '1x', label: '1X', display: '1X', prob: p1X, threshold: 0.62 },
-        { id: '2x', label: '2X', display: '2X', prob: p2X, threshold: 0.55 },
-        { id: '12', label: '12 (No Draw)', display: '1/2', prob: p12, threshold: 0.58 },
+        { id: 'over05', label: 'Over 0.5', display: 'Over 0.5', prob: pOver05, threshold: 0.82 },
+        { id: 'btts', label: 'GG (BTTS)', display: 'GG', prob: pBTTS, threshold: 0.56 },
+        { id: 'bttsno', label: 'NG (No BTTS)', display: 'NG', prob: pBTTSNo, threshold: 0.56 },
       ];
-      markets.forEach(m => m.odds = m.prob > 0 ? (1 / m.prob).toFixed(2) : "0.00");
-      const qualified = markets.filter(m => m.prob >= m.threshold);
-      const pool = qualified.length > 0 ? qualified : markets;
-      pool.sort((a, b) => (b.prob - b.threshold) - (a.prob - a.threshold));
-      const best = pool[0]; const conf = Math.round(best.prob * 100);
-      const predGoalsH = Math.round(expH); const predGoalsA = Math.round(expA);
-      const correctScore = `${predGoalsH}–${predGoalsA}`;
+      markets.forEach(m => { m.odds = m.prob > 0.02 ? (1 / m.prob).toFixed(2) : '9.00'; });
+
+      // Final tip: require multi-factor agreement for match-winner picks
+      let best = null;
+      const byId = id => markets.find(m => m.id === id);
+
+      if (leanHome >= 4 && edge >= 16 && aHome >= 0.48) best = byId('w1');
+      else if (leanAway >= 4 && edge <= -16 && aAway >= 0.44) best = byId('w2');
+      else if (leanHome >= 3 && edge >= 10 && p1X >= 0.68) best = byId('1x');
+      else if (leanAway >= 3 && edge <= -10 && p2X >= 0.64) best = byId('2x');
+      else if (Math.abs(edge) <= 6 && aDraw >= 0.28) best = byId('draw');
+      else if (expH + expA >= 2.85 && pOver25 >= 0.56 && agree >= 2) best = byId('over25');
+      else if (expH + expA <= 2.15 && pUnder25 >= 0.55) best = byId('under25');
+      else if (pBTTS >= 0.58 && Math.min(expH, expA) >= 0.95) best = byId('btts');
+      else if (pOver15 >= 0.72) best = byId('over15');
+      else if (p12 >= 0.74 && Math.abs(edge) >= 8) best = byId('12');
+      else {
+        const qualified = markets.filter(m => m.prob >= m.threshold);
+        const pool = (qualified.length ? qualified : markets).slice().sort((a, b) => (b.prob - b.threshold) - (a.prob - a.threshold));
+        best = pool[0];
+      }
+
+      // Confidence = market prob × factor agreement × data quality
+      const dataQ = hasSample ? 1 : 0.82;
+      const agreeBoost = 0.88 + agree * 0.025;
+      let conf = Math.round(clamp(best.prob * 100 * agreeBoost * dataQ, 42, 94));
+      if (agree >= 5 && Math.abs(edge) >= 20) conf = Math.min(94, conf + 4);
+
+      const predGoalsH = Math.round(expH * 10) / 10 >= Math.floor(expH) + 0.6 ? Math.ceil(expH) : Math.floor(expH);
+      const predGoalsA = Math.round(expA * 10) / 10 >= Math.floor(expA) + 0.6 ? Math.ceil(expA) : Math.floor(expA);
+      const correctScore = `${Math.max(0, predGoalsH)}–${Math.max(0, predGoalsA)}`;
+
+      let predictedWinner = 'Draw';
+      if (overall.home >= overall.away + 4) predictedWinner = home.name || home.shortName || 'Home';
+      else if (overall.away >= overall.home + 4) predictedWinner = away.name || away.shortName || 'Away';
+
+      const tipSide = best.id === 'w1' || best.id === '1x' ? (home.shortName || home.name)
+        : best.id === 'w2' || best.id === '2x' ? (away.shortName || away.name)
+          : best.display;
+
       const pred = {
         homeW, drawP, awayW, correctScore,
         expH: expH.toFixed(2), expA: expA.toFixed(2),
@@ -593,15 +768,40 @@
         over35Prob: Math.round(pOver35 * 100), under35Prob: Math.round(pUnder35 * 100),
         bttsProb: Math.round(pBTTS * 100), bttsNoProb: Math.round(pBTTSNo * 100),
         dc1xProb: Math.round(p1X * 100), dc2xProb: Math.round(p2X * 100), dc12Prob: Math.round(p12 * 100),
-        homeWinProb: Math.round(pHomeWin * 100), awayWinProb: Math.round(pAwayWin * 100), drawProb: Math.round(pDraw * 100),
+        homeWinProb: homeW, awayWinProb: awayW, drawProb: drawP,
         tipId: best.id, tipLabel: best.label, tipDisplay: best.display, conf, tipOdds: best.odds,
         confLabel: conf >= 82 ? 'VIP' : conf >= 70 ? 'STRONG' : 'VALUE',
         allMarkets: markets,
-        analysis: `xG model: ${home.shortName || 'Home'} ${expH.toFixed(2)} – ${expA.toFixed(2)} ${away.shortName || 'Away'}. Based on last-60-day averages (H Gf/Ga: ${sH.avgGf}/${sH.avgGa} | A Gf/Ga: ${sA.avgGf}/${sA.avgGa}). Over 1.5: ${Math.round(pOver15 * 100)}% · Over 2.5: ${Math.round(pOver25 * 100)}% · BTTS: ${Math.round(pBTTS * 100)}% · Under 2.5: ${Math.round(pUnder25 * 100)}%.`
+        predictedWinner,
+        tipSide,
+        factors: {
+          overall, form, attack, defense, goals,
+          poisson: poissonPair,
+          h2h,
+          agree,
+          edge,
+          h2hGames: meetings.length,
+          hasSample
+        },
+        advice: `Winner lean: ${predictedWinner}. Pick ${best.label} (${conf}%). ${agree}/6 layers agree. Form ${form.home}/${form.away} · Attack ${attack.home}/${attack.away} · Defense ${defense.home}/${defense.away} · Poisson ${poissonPair.home}/${poissonPair.away} · H2H ${h2h.home}/${h2h.away}${meetings.length ? ` (${meetings.length} games)` : ''}.`,
+        analysis: `Blended model on form, attack, defense, goals, Poisson and H2H. xG ${expH.toFixed(2)}–${expA.toFixed(2)}. Over 1.5 ${Math.round(pOver15 * 100)}% · Over 2.5 ${Math.round(pOver25 * 100)}% · BTTS ${Math.round(pBTTS * 100)}%.`
       };
 
       matchPredictions[match.id] = pred;
       return pred;
+    }
+
+    function factorBlock(title, homePct, awayPct, homeName, awayName, note) {
+      return `<div class="factor-block">
+        <div class="factor-title">${title}</div>
+        <div class="factor-vs">
+          <div class="factor-side"><div class="fp">${homePct}%</div><div class="fl">${homeName}</div></div>
+          <div class="factor-mid">VS</div>
+          <div class="factor-side right"><div class="fp">${awayPct}%</div><div class="fl">${awayName}</div></div>
+        </div>
+        <div class="factor-bar"><div class="fh" style="width:${homePct}%"></div><div class="fa" style="width:${awayPct}%"></div></div>
+        ${note ? `<div class="factor-note">${note}</div>` : ''}
+      </div>`;
     }
 
     /* -- HIT DETECTION -- */
@@ -788,7 +988,44 @@
     }
 
     async function fetchHistoricalData(comp) {
-      try { const dateTo = todayStr(); const dateFrom = fmtDate(new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)); const data = await apiFetch(`competitions/${comp}/matches`, { dateFrom, dateTo }); let matches = data.matches || []; matches.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate)); const stats = {}; matches.filter(m => m.status === 'FINISHED').forEach(m => { const hId = m.homeTeam.id; const aId = m.awayTeam.id; const hS = m.score.fullTime.home; const aS = m.score.fullTime.away;[hId, aId].forEach(id => { if (!stats[id]) stats[id] = { results: [], gf: 0, ga: 0, w: 0, d: 0, l: 0, h2h: {} }; }); stats[hId].gf += hS; stats[hId].ga += aS; stats[aId].gf += aS; stats[aId].ga += hS; const winner = hS > aS ? hId : (hS < aS ? aId : null); if (!stats[hId].h2h[aId]) stats[hId].h2h[aId] = []; stats[hId].h2h[aId].push({ winner }); if (hS > aS) { stats[hId].results.push('W'); stats[hId].w++; stats[aId].results.push('L'); stats[aId].l++; } else if (hS < aS) { stats[hId].results.push('L'); stats[hId].l++; stats[aId].results.push('W'); stats[aId].w++; } else { stats[hId].results.push('D'); stats[hId].d++; stats[aId].results.push('D'); stats[aId].d++; } }); for (let id in stats) { const s = stats[id]; const count = s.results.length || 1; s.avgGf = (s.gf / count).toFixed(2); s.avgGa = (s.ga / count).toFixed(2); s.winRate = Math.round((s.w / count) * 100); s.results = s.results.slice(-10); } Object.assign(teamStats, stats); Object.assign(teamForm, Object.fromEntries(Object.entries(stats).map(([k, v]) => [k, v.results]))); } catch (e) { console.warn('Historical error (' + comp + '):', e); }
+      try {
+        const dateTo = todayStr();
+        const dateFrom = fmtDate(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000));
+        const data = await apiFetch(`competitions/${comp}/matches`, { dateFrom, dateTo });
+        const matches = (data.matches || []).slice().sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+        const stats = {};
+        const ensure = (id) => {
+          if (!stats[id]) stats[id] = { results: [], gf: 0, ga: 0, w: 0, d: 0, l: 0, h2h: {}, homeGf: 0, homeGa: 0, homeN: 0, awayGf: 0, awayGa: 0, awayN: 0 };
+          return stats[id];
+        };
+        matches.filter(m => m.status === 'FINISHED' && m.score?.fullTime).forEach(m => {
+          const hId = m.homeTeam.id, aId = m.awayTeam.id;
+          const hS = m.score.fullTime.home, aS = m.score.fullTime.away;
+          if (hS == null || aS == null) return;
+          const h = ensure(hId), a = ensure(aId);
+          h.gf += hS; h.ga += aS; a.gf += aS; a.ga += hS;
+          h.homeGf += hS; h.homeGa += aS; h.homeN++;
+          a.awayGf += aS; a.awayGa += hS; a.awayN++;
+          const winner = hS > aS ? hId : (hS < aS ? aId : null);
+          if (!h.h2h[aId]) h.h2h[aId] = [];
+          if (!a.h2h[hId]) a.h2h[hId] = [];
+          h.h2h[aId].push({ winner, hf: hS, af: aS });
+          a.h2h[hId].push({ winner, hf: aS, af: hS });
+          if (hS > aS) { h.results.push('W'); h.w++; a.results.push('L'); a.l++; }
+          else if (hS < aS) { h.results.push('L'); h.l++; a.results.push('W'); a.w++; }
+          else { h.results.push('D'); h.d++; a.results.push('D'); a.d++; }
+        });
+        for (const id in stats) {
+          const s = stats[id];
+          const count = s.results.length || 1;
+          s.avgGf = (s.gf / count).toFixed(2);
+          s.avgGa = (s.ga / count).toFixed(2);
+          s.winRate = Math.round((s.w / count) * 100);
+          s.results = s.results.slice(-10);
+        }
+        Object.assign(teamStats, stats);
+        Object.assign(teamForm, Object.fromEntries(Object.entries(stats).map(([k, v]) => [k, v.results])));
+      } catch (e) { console.warn('Historical error (' + comp + '):', e); }
     }
 
     function renderScorersInto(s) { renderScorers(s, 'scorers-list', 'scorers-card'); renderScorers(s, 'mob-scorers-list', 'mob-scorers-widget'); }
@@ -909,6 +1146,13 @@
     </div>
     <div class="match-expand" id="${expId}">
       <div class="expand-inner">
+        <div class="winner-banner">
+          <div class="wb-kicker">Match prediction</div>
+          <div class="wb-name">${pred.predictedWinner}</div>
+          <div class="wb-sub">Score lean ${pred.correctScore} · xG ${pred.expH} – ${pred.expA} · ${pred.factors.agree}/6 layers agree</div>
+        </div>
+
+        <div class="markets-section-label">Match probabilities</div>
         <div class="prob-section">
           <div class="prob-label-row">
             <span class="ph">${home.shortName || 'Home'} ${pred.homeW}%</span>
@@ -916,11 +1160,22 @@
             <span class="pa">${pred.awayW}% ${away.shortName || 'Away'}</span>
           </div>
           <div class="prob-bar-row">
-            <div class="pb-h" style="flex:${pred.homeW}"></div>
-            <div class="pb-d" style="flex:${pred.drawP}"></div>
-            <div class="pb-a" style="flex:${pred.awayW}"></div>
+            <div class="pb-h" style="flex:${Math.max(1, pred.homeW)}"></div>
+            <div class="pb-d" style="flex:${Math.max(1, pred.drawP)}"></div>
+            <div class="pb-a" style="flex:${Math.max(1, pred.awayW)}"></div>
           </div>
         </div>
+
+        <div class="advice-box"><strong>Advice</strong> — Recommendation: ${pred.tipLabel} · ${pred.conf}% @${pred.tipOdds}</div>
+
+        ${factorBlock('Overall analysis', pred.factors.overall.home, pred.factors.overall.away, home.shortName || 'Home', away.shortName || 'Away', 'Advantage: ' + pred.predictedWinner + ' (' + (pred.factors.edge >= 0 ? '+' : '') + pred.factors.edge + '%)')}
+        ${factorBlock('Form comparison', pred.factors.form.home, pred.factors.form.away, 'Form', 'Form')}
+        ${factorBlock('Attack potential', pred.factors.attack.home, pred.factors.attack.away, 'Attack', 'Attack')}
+        ${factorBlock('Defensive potential', pred.factors.defense.home, pred.factors.defense.away, 'Defense', 'Defense')}
+        ${factorBlock('Goals analysis', pred.factors.goals.home, pred.factors.goals.away, home.shortName || 'Home', away.shortName || 'Away')}
+        ${factorBlock('Statistical analysis (Poisson)', pred.factors.poisson.home, pred.factors.poisson.away, home.shortName || 'Home', away.shortName || 'Away', 'Based on Poisson goal distribution from recent averages')}
+        ${factorBlock('Historical analysis (H2H)', pred.factors.h2h.home, pred.factors.h2h.away, home.shortName || 'Home', away.shortName || 'Away', pred.factors.h2hGames ? (pred.factors.h2hGames + ' recent meetings') : 'No recent H2H — table strength used')}
+
         <div class="markets-section-label">All markets</div>
         <div class="markets-grid">
           ${pred.allMarkets.map(mk => {
@@ -935,12 +1190,6 @@
               ${isBest ? '<span class="market-pick" style="margin-left:4px;"><i class="fas fa-check"></i></span>' : ''}
             </div>`;
       }).join('')}
-        </div>
-        <div class="xg-row">
-          <span class="xg-tag">xG ${pred.expH}</span>
-          <span style="color:var(--ink-3);font-size:.66rem;">vs</span>
-          <span class="xg-tag">xG ${pred.expA}</span>
-          <span style="color:var(--ink-3);font-size:.7rem;margin-left:4px;font-family:'DM Sans', sans-serif;">Predicted ${pred.correctScore}</span>
         </div>
         <div class="analysis-txt"><strong>Model read</strong> ${pred.analysis}</div>
       </div>
