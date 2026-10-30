@@ -1,16 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <script src="js/protect.js"></script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <script src="js/access-core.js"></script>
+  <script src="js/access-guard.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="theme-color" content="#000000">
   <title>Dice - CHIKE1W</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="theme.css">
-</head>
-<body class="theme-noise">
-  
+  <style>
+    html { -webkit-text-size-adjust: 100%; }
 
+    html, body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      margin: 0;
+      background: #000 url("dice/cubes.png") center / 280px repeat;
+      color: #fff;
+      font-family: Inter, sans-serif;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    img { -webkit-user-drag: none; user-select: none; pointer-events: none; }
+
+    .stage {
+      flex: 1;
+      width: 100%;
+      max-width: 430px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+      min-width: 0;
+    }
+
+    .hud {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 8px;
+    }
+
+    .pause {
+      width: 22px;
+      height: auto;
+      opacity: 0.85;
+    }
+
+    .board {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 22px 16px 18px;
+      text-align: center;
+    }
+
+    .roll {
+      font-size: 56px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .roll.over { color: #3ddc84; }
+    .roll.under { color: #ff5b6e; }
+
+    .target-row {
+      margin-top: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #8d97ab;
+      font-weight: 700;
+    }
+
+    .target-row b { color: #fff; font-size: 16px; }
+
+    input[type="range"] {
+      width: 100%;
+      margin-top: 8px;
+      accent-color: #00a84f;
+    }
+
+    .sides {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .side {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #141418;
+      color: #6e7686;
+      border-radius: 999px;
+      padding: 12px 0;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+    }
+
+    .side.on-over {
+      color: #04140a;
+      background: #3ddc84;
+      box-shadow: 0 0 0 2px #fff inset;
+    }
+
+    .side.on-under {
+      color: #fff;
+      background: #ff5b6e;
+      box-shadow: 0 0 0 2px #fff inset;
+    }
+
+    .signal-btn,
+    .reset-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      font-family: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .signal-btn {
+      margin-top: 12px;
+      padding: 15px;
+      background: #00a84f;
+      color: #fff;
+      font-size: 15px;
+      letter-spacing: 0.4px;
+    }
+
+    .signal-btn:disabled {
+      background: #1a1d24;
+      color: #5b6478;
+      cursor: not-allowed;
+    }
+
+    .reset-btn {
+      margin-top: 8px;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #8d97ab;
+      font-size: 13px;
+    }
+
+    .note {
+      margin-top: 10px;
+      min-height: 18px;
+      font-size: 12px;
+      color: #8d97ab;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body class="theme-noise">
   <header class="topbar">
     <a class="back" href="login.html" aria-label="Back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
@@ -21,111 +181,91 @@
     <a class="exit-btn" href="login.html">CHIKE1W</a>
   </header>
 
-  <main class="container fade-up">
-    <h1 class="page-title">DICE</h1>
-    <p class="page-sub">History Stats</p>
-
-    <div class="card">
-      
-      <div class="hist-row">
-        <div class="hist-lbl">History</div>
-        <div class="history-bar" id="historyBar"></div>
-        
-      </div>
-      <div class="predict-panel">
-        <div class="predict-eyebrow">Prediction Unit</div>
-        <div class="predict-label">History Median (not a prediction)</div>
-        <div id="predictionValue">--</div>
-        <div class="predict-divider"></div>
-        <div class="sig-row"><div class="sig-dot"></div><div class="sig-txt">Statistical summary only</div></div>
-      </div>
-      <div class="engine-tag">DICE</div>
+  <div class="stage">
+    <div class="hud">
+      <img class="pause" src="dice/pause.png" alt="" draggable="false">
     </div>
-  </main>
-  
-    <script src="js/stats.js"></script>
-  <script src="js/crash-engine.js"></script>
+    <div class="board">
+      <div class="roll" id="roll">50.00</div>
+      <div class="target-row">
+        <span>0</span>
+        <b id="targetLabel">50.00</b>
+        <span>100</span>
+      </div>
+      <input id="target" type="range" min="1" max="99" value="50" step="1">
+      <div class="sides">
+        <button class="side" id="overBtn" type="button">Over</button>
+        <button class="side" id="underBtn" type="button">Under</button>
+      </div>
+      <button class="signal-btn" id="signalBtn" type="button" onclick="getSignal()">GET SIGNAL</button>
+      <button class="reset-btn" type="button" onclick="resetAll()">Reset</button>
+      <div class="note" id="note">Set a number, then GET SIGNAL for Over or Under.</div>
+    </div>
+  </div>
+
   <script>
-    (function () {
-      const HISTORY_URL = "https://crash-gateway-grm-cr.100hp.app/history";
-      const SESSION_ID = "453d5725-41ad-430f-8920-0c664b4e5dc7";
-      const CUSTOMER_ID = "077dee8d-c923-4c02-9bee-757573662e69";
-      const MAX_CAP = null;
-      const historyBar = document.getElementById("historyBar");
-      const predEl = document.getElementById("predictionValue");
-      const labelEl = document.querySelector(".predict-label");
-      const sigTxt = document.querySelector(".sig-txt");
-      if (labelEl) labelEl.textContent = "History Median (not a prediction)";
-      if (sigTxt) sigTxt.textContent = "Statistical summary only";
-      let rounds = [];
-      let lastSeenId = null;
+    const rollEl = document.getElementById('roll');
+    const target = document.getElementById('target');
+    const targetLabel = document.getElementById('targetLabel');
+    const overBtn = document.getElementById('overBtn');
+    const underBtn = document.getElementById('underBtn');
+    const signalBtn = document.getElementById('signalBtn');
+    const note = document.getElementById('note');
+    let busy = false;
 
-      function renderHistory() {
-        historyBar.innerHTML = "";
-        rounds.slice(0, 18).forEach(function (r) {
-          const c = r.coef;
-          const pill = document.createElement("div");
-          pill.className = "history-pill" + (c >= 5 ? " high" : c < 1.5 ? " low" : "");
-          pill.innerText = c.toFixed(2) + "x";
-          historyBar.appendChild(pill);
-        });
-      }
+    function fmt(n) { return n.toFixed(2); }
 
-      function showStats() {
-        const coefs = rounds.map(function (r) { return r.coef; });
-        const analysis = CrashEngine.analyzeCrashHistory(coefs, { maxCap: MAX_CAP, minSample: 10, newestFirst: true });
-        if (analysis.status !== "ok") {
-          predEl.textContent = "n/a";
-          if (sigTxt) sigTxt.textContent = analysis.message || "Insufficient data";
-          return;
-        }
-        predEl.textContent = BotStats.formatFixed(analysis.median, 2) + "x";
-        if (sigTxt) {
-          const r2 = analysis.rates.ge_2;
-          const pct = (r2.rate * 100).toFixed(0);
-          const lo = (r2.ci95.low * 100).toFixed(0);
-          const hi = (r2.ci95.high * 100).toFixed(0);
-          sigTxt.textContent = "≥2x rate " + pct + "% (95% CI " + lo + "–" + hi + "%) · n=" + analysis.sampleSize;
-        }
-        predEl.classList.remove("pop");
-        void predEl.offsetWidth;
-        predEl.classList.add("pop");
-        setTimeout(function () { predEl.classList.remove("pop"); }, 500);
-      }
+    function cryptoRoll() {
+      const buf = new Uint32Array(1);
+      crypto.getRandomValues(buf);
+      return (buf[0] / 4294967296) * 100;
+    }
 
-      async function fetchHistory() {
-        try {
-          const res = await fetch(HISTORY_URL, {
-            headers: { accept: "application/json", "session-id": SESSION_ID, "customer-id": CUSTOMER_ID }
-          });
-          const data = await res.json();
-          const norm = CrashEngine.normalizeHistoryResponse(data);
-          if (norm.status !== "ok" || !norm.rounds.length) {
-            if (sigTxt) sigTxt.textContent = "History unavailable";
-            return;
-          }
-          if (!rounds.length) {
-            rounds = norm.rounds;
-            lastSeenId = rounds[0] && rounds[0].id;
-            renderHistory();
-            showStats();
-            return;
-          }
-          const latest = norm.rounds[0];
-          if (latest && latest.id != null && latest.id === lastSeenId) return;
-          rounds = CrashEngine.mergeRounds(rounds, norm.rounds).slice(0, 500);
-          lastSeenId = rounds[0] && rounds[0].id;
-          renderHistory();
-          showStats();
-        } catch (e) {
-          console.error(e);
-          if (sigTxt) sigTxt.textContent = "History unavailable";
-          predEl.textContent = "n/a";
+    target.addEventListener('input', function () {
+      targetLabel.textContent = fmt(Number(target.value));
+    });
+
+    function getSignal() {
+      if (busy) return;
+      busy = true;
+      signalBtn.disabled = true;
+      signalBtn.textContent = 'ROLLING...';
+      overBtn.classList.remove('on-over');
+      underBtn.classList.remove('on-under');
+      rollEl.classList.remove('over', 'under');
+      note.textContent = '';
+      const line = Number(target.value);
+      const final = cryptoRoll();
+      let ticks = 0;
+      const t = setInterval(function () {
+        rollEl.textContent = fmt(cryptoRoll());
+        ticks++;
+        if (ticks >= 14) {
+          clearInterval(t);
+          rollEl.textContent = fmt(final);
+          const isOver = final > line;
+          rollEl.classList.add(isOver ? 'over' : 'under');
+          overBtn.classList.toggle('on-over', isOver);
+          underBtn.classList.toggle('on-under', !isOver);
+          note.textContent = (isOver ? 'OVER' : 'UNDER') + ' ' + fmt(line);
+          signalBtn.textContent = 'GET SIGNAL';
+          signalBtn.disabled = false;
+          busy = false;
         }
-      }
-      fetchHistory();
-      setInterval(fetchHistory, 5000);
-    })();
+      }, 55);
+    }
+
+    function resetAll() {
+      if (busy) return;
+      target.value = 50;
+      targetLabel.textContent = '50.00';
+      rollEl.textContent = '50.00';
+      rollEl.classList.remove('over', 'under');
+      overBtn.classList.remove('on-over');
+      underBtn.classList.remove('on-under');
+      note.textContent = 'Set a number, then GET SIGNAL for Over or Under.';
+    }
   </script>
 </body>
+
 </html>
