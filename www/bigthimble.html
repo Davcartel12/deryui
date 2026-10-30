@@ -4,8 +4,10 @@
 <head>
   <script src="js/protect.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>King Thimbles</title>
+    <script src="js/access-core.js"></script>
+    <script src="js/access-guard.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+    <title>King Thimbles - CHIKE1W</title>
     <style>
         * {
             box-sizing: border-box;
@@ -119,19 +121,7 @@
             transform: none;
         }
 
-        .exit-btn {
-            margin-top: clamp(16px, 5vw, 32px);
-            padding: clamp(10px, 2.5vw, 14px) clamp(28px, 8vw, 42px);
-            border-radius: 12px;
-            background: transparent;
-            border: 2px solid #1e90ff;
-            color: #1e90ff;
-            font-size: clamp(13px, 3.5vw, 17px);
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.3s;
-            letter-spacing: 1px;
-        }
+        .exit-btn { display: none !important; }
 
         .exit-btn:active {
             background: #1e90ff;
@@ -304,11 +294,13 @@
         <button class="exit-btn" onclick="location.href='login.html'">EXIT</button>
     </div>
 
-    <script src="js/stats.js"></script>
-<script src="js/rng.js"></script>
-<script src="js/rng-games.js"></script>
 <script>
         const BALL_SRC = "https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/c012728f-b770-46ff-a811-cf55f1220c99.png";
+        function cryptoInt(a, b) {
+            const buf = new Uint32Array(1);
+            crypto.getRandomValues(buf);
+            return a + (buf[0] % (b - a));
+        }
         const container = document.getElementById("cups");
         const btn1 = document.getElementById("btn1");
         const btn2 = document.getElementById("btn2");
@@ -364,9 +356,9 @@
         async function runShuffles(count) {
             for (let i = 0; i < count; i++) {
                 const cups = getCups();
-                const ai = BotRng.cryptoInt(0, 3);
+                const ai = cryptoInt(0, 3);
                 let bi;
-                do { bi = BotRng.cryptoInt(0, 3); } while (bi === ai);
+                do { bi = cryptoInt(0, 3); } while (bi === ai);
                 await swapCups(cups[ai], cups[bi]);
                 await new Promise(r => setTimeout(r, 80));
             }
@@ -380,14 +372,10 @@
             let ballCupIndices;
             if (mode === 'two') {
                 // Two-ball mode: still uniform over cup choices; show odds 2/3 for picking a ball cup
-                const setup = RngGames.thimbleSetup(3, { int: (a, b) => BotRng.cryptoInt(a, b) });
-                const emptyIndex = setup.ballIndex;
+                const emptyIndex = cryptoInt(0, 3);
                 ballCupIndices = [0, 1, 2].filter(i => i !== emptyIndex);
-                console.info('Thimble sim (2-ball): P(pick ball cup)=2/3', setup.disclaimer);
             } else {
-                const setup = RngGames.thimbleSetup(3, { int: (a, b) => BotRng.cryptoInt(a, b) });
-                ballCupIndices = [setup.ballIndex];
-                console.info('Thimble sim: P(correct)=', setup.pCorrectGuess, setup.disclaimer);
+                ballCupIndices = [cryptoInt(0, 3)];
             }
 
             const ballCupEls = ballCupIndices.map(i => {
