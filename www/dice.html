@@ -22,7 +22,7 @@
 
     body {
       margin: 0;
-      background: #000 url("dice/cubes.png") center / 280px repeat;
+      background: #000 url("dice/cubes.png") center / 220px repeat;
       color: #fff;
       font-family: Inter, sans-serif;
       min-height: 100svh;
@@ -45,62 +45,102 @@
       min-width: 0;
     }
 
-    .hud {
+    .board {
       width: 100%;
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 8px;
+      background: rgba(5, 5, 8, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 18px 16px 16px;
+      position: relative;
     }
 
     .pause {
-      width: 22px;
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 18px;
       height: auto;
-      opacity: 0.85;
-    }
-
-    .board {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.55);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 18px;
-      padding: 22px 16px 18px;
-      text-align: center;
+      opacity: 0.8;
     }
 
     .roll {
-      font-size: 56px;
+      text-align: center;
+      font-size: 58px;
       font-weight: 800;
       letter-spacing: -1px;
       line-height: 1;
+      margin: 8px 0 22px;
     }
 
     .roll.over { color: #3ddc84; }
     .roll.under { color: #ff5b6e; }
 
-    .target-row {
-      margin-top: 18px;
+    .scale {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      font-size: 12px;
+      font-size: 11px;
+      font-weight: 800;
       color: #8d97ab;
-      font-weight: 700;
+      margin-bottom: 8px;
     }
 
-    .target-row b { color: #fff; font-size: 16px; }
+    .track {
+      position: relative;
+      height: 14px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #ff5b6e 0 50%, #3ddc84 50% 100%);
+      overflow: visible;
+    }
 
-    input[type="range"] {
-      width: 100%;
-      margin-top: 8px;
-      accent-color: #00a84f;
+    .track-dim {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: rgba(0, 0, 0, 0.45);
+    }
+
+    .fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 50%;
+      border-radius: inherit;
+      background: transparent;
+      box-shadow: 14px 0 0 0 #fff;
+      pointer-events: none;
+    }
+
+    .thumb {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 22px;
+      height: 22px;
+      margin-left: -11px;
+      margin-top: -11px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+      z-index: 2;
+    }
+
+    .mid {
+      position: absolute;
+      left: 50%;
+      top: -5px;
+      bottom: -5px;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.7);
+      transform: translateX(-50%);
+      pointer-events: none;
     }
 
     .sides {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      width: 100%;
-      margin-top: 16px;
+      margin-top: 18px;
     }
 
     .side {
@@ -137,7 +177,7 @@
     }
 
     .signal-btn {
-      margin-top: 12px;
+      margin-top: 14px;
       padding: 15px;
       background: #00a84f;
       color: #fff;
@@ -162,6 +202,7 @@
 
     .note {
       margin-top: 10px;
+      text-align: center;
       min-height: 18px;
       font-size: 12px;
       color: #8d97ab;
@@ -182,36 +223,36 @@
   </header>
 
   <div class="stage">
-    <div class="hud">
-      <img class="pause" src="dice/pause.png" alt="" draggable="false">
-    </div>
     <div class="board">
+      <img class="pause" src="dice/pause.png" alt="" draggable="false">
       <div class="roll" id="roll">50.00</div>
-      <div class="target-row">
-        <span>0</span>
-        <b id="targetLabel">50.00</b>
-        <span>100</span>
+      <div class="scale"><span>0</span><span>50</span><span>100</span></div>
+      <div class="track" id="track">
+        <div class="track-dim"></div>
+        <div class="mid"></div>
+        <div class="fill" id="fill"></div>
+        <div class="thumb" id="thumb"></div>
       </div>
-      <input id="target" type="range" min="1" max="99" value="50" step="1">
       <div class="sides">
         <button class="side" id="overBtn" type="button">Over</button>
         <button class="side" id="underBtn" type="button">Under</button>
       </div>
       <button class="signal-btn" id="signalBtn" type="button" onclick="getSignal()">GET SIGNAL</button>
       <button class="reset-btn" type="button" onclick="resetAll()">Reset</button>
-      <div class="note" id="note">Set a number, then GET SIGNAL for Over or Under.</div>
+      <div class="note" id="note">GET SIGNAL moves the bar to the predicted number.</div>
     </div>
   </div>
 
   <script>
     const rollEl = document.getElementById('roll');
-    const target = document.getElementById('target');
-    const targetLabel = document.getElementById('targetLabel');
+    const fill = document.getElementById('fill');
+    const thumb = document.getElementById('thumb');
     const overBtn = document.getElementById('overBtn');
     const underBtn = document.getElementById('underBtn');
     const signalBtn = document.getElementById('signalBtn');
     const note = document.getElementById('note');
     let busy = false;
+    let current = 50;
 
     function fmt(n) { return n.toFixed(2); }
 
@@ -221,9 +262,13 @@
       return (buf[0] / 4294967296) * 100;
     }
 
-    target.addEventListener('input', function () {
-      targetLabel.textContent = fmt(Number(target.value));
-    });
+    function setBar(n) {
+      current = Math.max(0, Math.min(100, n));
+      const pct = current;
+      fill.style.width = pct + '%';
+      thumb.style.left = pct + '%';
+      rollEl.textContent = fmt(current);
+    }
 
     function getSignal() {
       if (busy) return;
@@ -234,37 +279,49 @@
       underBtn.classList.remove('on-under');
       rollEl.classList.remove('over', 'under');
       note.textContent = '';
-      const line = Number(target.value);
       const final = cryptoRoll();
-      let ticks = 0;
-      const t = setInterval(function () {
-        rollEl.textContent = fmt(cryptoRoll());
-        ticks++;
-        if (ticks >= 14) {
-          clearInterval(t);
-          rollEl.textContent = fmt(final);
-          const isOver = final > line;
-          rollEl.classList.add(isOver ? 'over' : 'under');
-          overBtn.classList.toggle('on-over', isOver);
-          underBtn.classList.toggle('on-under', !isOver);
-          note.textContent = (isOver ? 'OVER' : 'UNDER') + ' ' + fmt(line);
-          signalBtn.textContent = 'GET SIGNAL';
-          signalBtn.disabled = false;
-          busy = false;
+      const t0 = performance.now();
+      const dur = 1100;
+      let settleFrom = null;
+
+      function frame(now) {
+        const p = Math.min(1, (now - t0) / dur);
+        if (p < 0.72) {
+          setBar(cryptoRoll());
+          requestAnimationFrame(frame);
+          return;
         }
-      }, 55);
+        if (settleFrom == null) settleFrom = current;
+        const e = (p - 0.72) / 0.28;
+        const ease = 1 - Math.pow(1 - e, 3);
+        setBar(settleFrom + (final - settleFrom) * ease);
+        if (p < 1) {
+          requestAnimationFrame(frame);
+          return;
+        }
+        setBar(final);
+        const isOver = final >= 50;
+        rollEl.classList.add(isOver ? 'over' : 'under');
+        overBtn.classList.toggle('on-over', isOver);
+        underBtn.classList.toggle('on-under', !isOver);
+        note.textContent = (isOver ? 'OVER' : 'UNDER') + '  ' + fmt(final);
+        signalBtn.textContent = 'GET SIGNAL';
+        signalBtn.disabled = false;
+        busy = false;
+      }
+      requestAnimationFrame(frame);
     }
 
     function resetAll() {
       if (busy) return;
-      target.value = 50;
-      targetLabel.textContent = '50.00';
-      rollEl.textContent = '50.00';
+      setBar(50);
       rollEl.classList.remove('over', 'under');
       overBtn.classList.remove('on-over');
       underBtn.classList.remove('on-under');
-      note.textContent = 'Set a number, then GET SIGNAL for Over or Under.';
+      note.textContent = 'GET SIGNAL moves the bar to the predicted number.';
     }
+
+    setBar(50);
   </script>
 </body>
 
