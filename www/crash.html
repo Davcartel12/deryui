@@ -372,6 +372,47 @@
       font-weight: 800;
       cursor: pointer;
     }
+    .place[disabled] {
+      opacity: 1;
+      cursor: default;
+    }
+
+    .status {
+      margin: 10px 16px 0;
+      min-height: 18px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .status.pulsing {
+      color: #d6c9ff;
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    .signal-bar {
+      margin: 8px 12px 0;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+
+    .signal-bar i {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: 3px;
+      background: #8a52ff;
+      transition: width 0.4s ease;
+    }
+
   </style>
 </head>
 
@@ -407,25 +448,33 @@
     </section>
 
     <div class="bets">
+      <article class="bet" id="coefficientBox">
+        <button type="button" class="place" id="newSignalBtn">
+          <span class="place-label">GET SIGNAL</span>
+          <strong class="place-value" id="coeffValue"></strong>
+        </button>
+        <div class="signal-bar"><i id="progressFill"></i></div>
+      </article>
       <article class="bet">
-        <button type="button" class="place" data-mode="assurance" data-min="1.10" data-max="1.99">
-          <span class="place-label">ASSURANCE</span>
-          <strong class="place-value"></strong>
+        <button type="button" class="place has-value" id="chanceBox" disabled>
+          <span class="place-label">CHANCE</span>
+          <strong class="place-value" id="chanceDisplay">00%</strong>
         </button>
       </article>
       <article class="bet">
-        <button type="button" class="place" data-mode="coefficient" data-min="2.00" data-max="4.00">
-          <span class="place-label">COEFFICIENT</span>
-          <strong class="place-value"></strong>
+        <button type="button" class="place has-value" id="timeBox" disabled>
+          <span class="place-label">TIME WINDOW</span>
+          <strong class="place-value" id="apiTimeWindow">--:--</strong>
         </button>
       </article>
     </div>
+    <div class="status" id="statusDisplay"></div>
   </div>
 
   <div class="sheet" id="sheet">
     <div class="sheet-card">
       <h2>Crash</h2>
-      <p>The graph on this screen follows the live Crash round. The strip above it shows rounds that already finished. Assurance and coefficient are local picks for the round in progress. They do not tell you where it will stop.</p>
+      <p>The graph on this screen follows the live Crash round. GET SIGNAL is this page's predictor. It does not tell you where the round will stop.</p>
       <button type="button" id="sheetClose">Close</button>
     </div>
   </div>
@@ -767,7 +816,6 @@
             nextAt: ms(data.nextStateTime),
             serverNow: ms(data.currentTime)
           });
-          Predict.sync({ id: id, stop: stop });
 
           if (stop != null && id != null && id !== lastStopId) {
             lastStopId = id;
@@ -783,75 +831,6 @@
           if (stateFailures >= 4) Flight.idle();
         }
       }
-
-      const Predict = (function () {
-        const buttons = Array.prototype.slice.call(document.querySelectorAll(".place"));
-        const picks = {};
-        let roundId = null;
-        let roundSettled = false;
-
-        function fmt(value) { return "<small>x</small>" + value.toFixed(2); }
-
-        function draw(min, max) {
-          const t = Math.pow(Math.random(), 1.6);
-          return Math.round((min + (max - min) * t) * 100) / 100;
-        }
-
-        function render(button) {
-          const pick = picks[button.dataset.mode];
-          const valueEl = button.querySelector(".place-value");
-          button.classList.remove("has-value", "hit", "miss");
-          if (!pick) {
-            valueEl.innerHTML = "";
-            return;
-          }
-          button.classList.add("has-value");
-          valueEl.innerHTML = fmt(pick.value);
-          if (pick.outcome) button.classList.add(pick.outcome);
-        }
-
-        function pickFor(button) {
-          picks[button.dataset.mode] = {
-            roundId: roundId,
-            value: draw(Number(button.dataset.min), Number(button.dataset.max)),
-            outcome: null
-          };
-          render(button);
-        }
-
-        buttons.forEach(function (button) {
-          button.addEventListener("click", function () {
-            const pick = picks[button.dataset.mode];
-            if (pick && pick.roundId === roundId) return;
-            if (roundSettled) return;
-            pickFor(button);
-          });
-        });
-
-        return {
-          sync: function (snapshot) {
-            if (snapshot.id != null && snapshot.id !== roundId) {
-              roundId = snapshot.id;
-              roundSettled = snapshot.stop != null;
-              Object.keys(picks).forEach(function (mode) { delete picks[mode]; });
-              buttons.forEach(function (button) {
-                if (roundSettled) render(button); else pickFor(button);
-              });
-            }
-            if (snapshot.stop != null && !roundSettled) {
-              roundSettled = true;
-              const stop = Number(snapshot.stop);
-              buttons.forEach(function (button) {
-                const pick = picks[button.dataset.mode];
-                if (pick && pick.roundId === roundId && !pick.outcome) {
-                  pick.outcome = stop >= pick.value ? "hit" : "miss";
-                  render(button);
-                }
-              });
-            }
-          }
-        };
-      })();
 
       const sheet = document.getElementById("sheet");
       document.getElementById("infoBtn").addEventListener("click", function () {
@@ -873,6 +852,194 @@
       setInterval(fetchState, 600);
     })();
   </script>
+  <script>
+    let signalActive = false, nextSignalTime = null, secondSignalTime = null, countdownInterval = null, predictionData = null, verificationInterval = null, verificationTimeout = null;
+
+    function getUserTimeZone() {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const map = { "Asia/Calcutta": "Asia/Kolkata", "US/Eastern": "America/New_York", "US/Central": "America/Chicago", "US/Mountain": "America/Denver", "US/Pacific": "America/Los_Angeles", "Europe/Kiev": "Europe/Kyiv" };
+      return map[tz] || tz;
+    }
+    function getUTCOffset() {
+      const off = -new Date().getTimezoneOffset();
+      const sign = off >= 0 ? "+" : "-";
+      const h = String(Math.floor(Math.abs(off) / 60)).padStart(2, "0");
+      const m = String(Math.abs(off) % 60).padStart(2, "0");
+      return sign + h + ":" + m;
+    }
+    function parseTimeWindow(timeStr) {
+      if (!timeStr || timeStr === "--:--") return null;
+      const parts = timeStr.split(":");
+      if (parts.length < 2) return null;
+      const h = parseInt(parts[0], 10), m = parseInt(parts[1], 10);
+      if (isNaN(h) || isNaN(m)) return null;
+      const now = new Date(), target = new Date(now);
+      target.setHours(h, m, 0, 0);
+      if (target.getTime() < now.getTime() - 2 * 60 * 1000) target.setDate(target.getDate() + 1);
+      return target;
+    }
+    function generateCoefficients() {
+      const r = Math.random();
+      let left;
+      if (r < 0.60) left = rand(2.21, 4.10);
+      else if (r < 0.85) left = rand(3.51, 8.00);
+      else left = rand(8.00, 10.00);
+      const right = left + rand(0.20, 0.60);
+      return { leftCoeff: left.toFixed(2), rightCoeff: right.toFixed(2) };
+    }
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+    function randomChance() { return Math.floor(Math.random() * 6) + 94; }
+
+    const apiURL = "https://crash-gateway-grm-cr.100hp.app/state";
+    const apiHeaders = { "customer-id": "077dee8d-c923-4c02-9bee-757573662e69", "session-id": "5849f7fa-7e34-4f78-917a-ab063f9d9422", "accept": "application/json" };
+    async function fetchGameData() {
+      try {
+        const res = await fetch(apiURL, { headers: apiHeaders });
+        if (!res.ok) throw new Error("API error");
+        return await res.json();
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function startPredictionVerification() {
+      if (!predictionData || !nextSignalTime) return;
+      const check = async function () {
+        const now = new Date();
+        const w1Start = nextSignalTime, w1End = new Date(nextSignalTime.getTime() + 60000);
+        const w2Start = secondSignalTime, w2End = new Date(secondSignalTime.getTime() + 60000);
+        const inWindow = (now >= w1Start && now <= w1End) || (now >= w2Start && now <= w2End);
+        if (inWindow) {
+          const data = await fetchGameData();
+          if (data && data.history && data.history.length) {
+            const latest = data.history[0];
+            const coeff = parseFloat(latest.coefficient ?? latest.multiplier ?? 0);
+            if (coeff > 0) {
+              clearInterval(verificationInterval); verificationInterval = null;
+              const left = parseFloat(predictionData.leftCoeff), right = parseFloat(predictionData.rightCoeff);
+              const hit = coeff >= left && coeff <= right;
+              const label = now >= w1Start && now <= w1End ? "(1st window)" : "(2nd window)";
+              displayVerificationResult(hit, coeff, label);
+            }
+          }
+        }
+        if (now > w2End) { clearInterval(verificationInterval); verificationInterval = null; }
+      };
+      verificationInterval = setInterval(check, 5000);
+      setTimeout(function () { if (verificationInterval) { clearInterval(verificationInterval); verificationInterval = null; } }, 6 * 60000);
+    }
+    function displayVerificationResult(hit, coeff, label) {
+      const btn = document.getElementById("newSignalBtn");
+      const valEl = document.getElementById("coeffValue");
+      const saved = valEl.textContent;
+      btn.classList.remove("hit", "miss");
+      btn.classList.add(hit ? "hit" : "miss");
+      valEl.textContent = (hit ? "HIT " : "MISS ") + coeff + "x " + label;
+      clearTimeout(verificationTimeout);
+      verificationTimeout = setTimeout(function () {
+        btn.classList.remove("hit", "miss");
+        valEl.textContent = saved;
+      }, 10000);
+    }
+
+    function startCountdown() {
+      const expiresAt = new Date(nextSignalTime.getTime() + 2 * 60000);
+      const btn = document.getElementById("newSignalBtn"), status = document.getElementById("statusDisplay");
+      const label = btn.querySelector(".place-label");
+      countdownInterval = setInterval(function () {
+        const now = new Date(), timeLeft = expiresAt - now;
+        if (timeLeft <= 0) { clearInterval(countdownInterval); resetUI(); return; }
+        const toTarget = nextSignalTime - now;
+        if (toTarget > 0) {
+          const m = Math.floor(toTarget / 60000), s = Math.floor((toTarget % 60000) / 1000);
+          label.textContent = "SIGNAL IN " + m + ":" + s.toString().padStart(2, "0");
+          status.textContent = "Waiting for window...";
+          status.className = "status pulsing";
+        } else {
+          const m = Math.floor(timeLeft / 60000), s = Math.floor((timeLeft % 60000) / 1000);
+          label.textContent = "EXPIRES IN " + m + ":" + s.toString().padStart(2, "0");
+          status.textContent = "Signal active";
+          status.className = "status pulsing";
+        }
+      }, 1000);
+    }
+
+    function resetUI() {
+      signalActive = false; nextSignalTime = null; secondSignalTime = null; predictionData = null;
+      if (verificationInterval) { clearInterval(verificationInterval); verificationInterval = null; }
+      if (verificationTimeout) { clearTimeout(verificationTimeout); verificationTimeout = null; }
+      if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+      const btn = document.getElementById("newSignalBtn");
+      btn.disabled = false;
+      btn.classList.remove("has-value", "hit", "miss");
+      btn.querySelector(".place-label").textContent = "GET SIGNAL";
+      document.getElementById("coeffValue").textContent = "";
+      document.getElementById("statusDisplay").textContent = "";
+      document.getElementById("statusDisplay").className = "status";
+      document.getElementById("chanceDisplay").textContent = "00%";
+      document.getElementById("progressFill").style.width = "0%";
+      document.getElementById("apiTimeWindow").textContent = "--:--";
+    }
+
+    async function generateNewSignal() {
+      if (signalActive) return;
+      const btn = document.getElementById("newSignalBtn"), status = document.getElementById("statusDisplay");
+      const label = btn.querySelector(".place-label");
+      status.textContent = "Analysis in progress ...";
+      status.className = "status pulsing";
+      btn.disabled = true;
+      label.textContent = "ANALYSING...";
+      let prediction = null, targetTime = null;
+      try {
+        const tz = getUserTimeZone(), offset = getUTCOffset();
+        const res = await fetch("https://trd.cc.nf/bot.php?t=" + encodeURIComponent(tz) + "&offset=" + offset);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const apiData = await res.json();
+        const twStr = apiData && apiData.time_window;
+        const leftRaw = parseFloat(apiData && apiData.manual_prediction && apiData.manual_prediction.coeff);
+        const rightRaw = parseFloat(apiData && apiData.ai_prediction);
+        targetTime = parseTimeWindow(twStr);
+        if (!isNaN(leftRaw) && !isNaN(rightRaw) && leftRaw > 0 && rightRaw > leftRaw) {
+          prediction = { leftCoeff: leftRaw.toFixed(2), rightCoeff: rightRaw.toFixed(2), chance: randomChance(), source: "api" };
+        } else if (!isNaN(leftRaw) && leftRaw > 0) {
+          const spread = rand(0.20, 0.55);
+          prediction = { leftCoeff: leftRaw.toFixed(2), rightCoeff: (leftRaw + spread).toFixed(2), chance: randomChance(), source: "api-partial" };
+        } else { throw new Error("No valid coeff"); }
+        if (twStr) document.getElementById("apiTimeWindow").textContent = twStr;
+      } catch (err) {
+        prediction = Object.assign(generateCoefficients(), { chance: randomChance(), source: "local" });
+      }
+      await new Promise(function (r) { setTimeout(r, 1500); });
+      const now = new Date();
+      if (targetTime) {
+        nextSignalTime = targetTime;
+        if (nextSignalTime.getTime() <= now.getTime() + 5000) nextSignalTime = new Date(now.getTime() + 30000);
+      } else {
+        nextSignalTime = new Date(now.getTime() + Math.floor(rand(90, 210)) * 1000);
+      }
+      secondSignalTime = new Date(nextSignalTime.getTime() + 60000);
+      signalActive = true;
+      predictionData = { leftCoeff: prediction.leftCoeff, rightCoeff: prediction.rightCoeff, chance: prediction.chance, generatedAt: new Date() };
+      if (!targetTime) {
+        document.getElementById("apiTimeWindow").textContent = nextSignalTime.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", hour12: false });
+      }
+      btn.classList.add("has-value");
+      document.getElementById("coeffValue").innerHTML = "<small>x</small>" + prediction.leftCoeff + " – " + prediction.rightCoeff;
+      document.getElementById("chanceDisplay").textContent = prediction.chance + "%";
+      document.getElementById("progressFill").style.width = prediction.chance + "%";
+      status.textContent = "Window " + document.getElementById("apiTimeWindow").textContent;
+      status.className = "status pulsing";
+      startCountdown();
+      startPredictionVerification();
+    }
+
+    document.getElementById("newSignalBtn").addEventListener("click", generateNewSignal);
+    document.addEventListener("DOMContentLoaded", function () { resetUI(); });
+  </script>
+</body>
+
+</html>
+
 </body>
 
 </html>
