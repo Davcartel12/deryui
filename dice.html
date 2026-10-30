@@ -107,7 +107,6 @@
       width: 50%;
       border-radius: inherit;
       background: transparent;
-      box-shadow: 14px 0 0 0 #fff;
       pointer-events: none;
     }
 
@@ -115,14 +114,13 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 22px;
+      width: 16px;
       height: 22px;
-      margin-left: -11px;
+      margin-left: -8px;
       margin-top: -11px;
-      border-radius: 50%;
-      background: #fff;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+      object-fit: contain;
       z-index: 2;
+      pointer-events: none;
     }
 
     .mid {
@@ -231,7 +229,7 @@
         <div class="track-dim"></div>
         <div class="mid"></div>
         <div class="fill" id="fill"></div>
-        <div class="thumb" id="thumb"></div>
+        <img class="thumb" id="thumb" src="dice/thumb.png" alt="" draggable="false">
       </div>
       <div class="sides">
         <button class="side" id="overBtn" type="button">Over</button>
