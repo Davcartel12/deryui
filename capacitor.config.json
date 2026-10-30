@@ -2,6 +2,11 @@
   "appId": "com.newprohi.app",
   "appName": "APNAJ BOT",
   "webDir": "www",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  },
   "android": {
     "webContentsDebuggingEnabled": false
   },

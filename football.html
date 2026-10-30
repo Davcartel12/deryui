@@ -486,22 +486,16 @@
     <button class="mnav-btn" id="mnav-scorers" type="button" onclick="mobileTab('scorers',this)">Scorers</button>
   </nav>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
-    /* -- FIREBASE DB INIT -- */
-    firebase.initializeApp({
-      apiKey: "AIzaSyCWOqTsV4Nhd6axIPyTWWI-PFo2HOd_KV0",
-      authDomain: "chike1w.firebaseapp.com",
-      projectId: "chike1w"
-    });
-    const db = firebase.firestore();
-
     /* -- CONFIG -- */
-    const PROXY_BASE = '/.netlify/functions/football';
-    // Trimmed to the 5 leagues the free football-data.org tier reliably serves.
+    const PROXY_BASES = [
+      'https://trd.cc.nf/football.php',
+      '/.netlify/functions/football'
+    ];
+    // Leagues shown on the card (free football-data.org tier).
     const ALL_COMPS = ['PL', 'PD', 'BL1', 'SA', 'FL1'];
-    // Throttle: free tier = 10 requests/min. Stagger calls so the first load never 429s.
+    const ALL_COMP_SET = new Set(ALL_COMPS);
+    // Throttle: free tier = 10 requests/min.
     const REQ_GAP_MS = 6500;
     let allMatches = [];
     let currentDay = null;
@@ -510,6 +504,7 @@
     let leaguePositions = {};
     let dayGroups = {};
     let matchPredictions = {};
+    const memCache = {};
 
     /* -- THROTTLE HELPERS -- */
     const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -527,7 +522,8 @@
     /* -- HELPERS -- */
     function fmtDate(d) { return d.toISOString().split('T')[0]; }
     function todayStr() { return fmtDate(new Date()); }
-    function weekEnd() { const d = new Date(); d.setDate(d.getDate() + 2); return fmtDate(d); }
+    // football-data.org treats dateTo as exclusive, so +3 covers through today+2.
+    function weekEnd() { const d = new Date(); d.setDate(d.getDate() + 3); return fmtDate(d); }
     function rangeStart() { const d = new Date(); d.setDate(d.getDate() - 2); return fmtDate(d); }
     function dayKeyForOffset(offset) { const d = new Date(); d.setDate(d.getDate() + offset); return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase(); }
     function matchDayKey(utcDate) { const d = new Date(utcDate); return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase(); }
@@ -604,11 +600,7 @@
         analysis: `xG model: ${home.shortName || 'Home'} ${expH.toFixed(2)} – ${expA.toFixed(2)} ${away.shortName || 'Away'}. Based on last-60-day averages (H Gf/Ga: ${sH.avgGf}/${sH.avgGa} | A Gf/Ga: ${sA.avgGf}/${sA.avgGa}). Over 1.5: ${Math.round(pOver15 * 100)}% · Over 2.5: ${Math.round(pOver25 * 100)}% · BTTS: ${Math.round(pBTTS * 100)}% · Under 2.5: ${Math.round(pUnder25 * 100)}%.`
       };
 
-      try {
-        db.collection('predictions').doc(String(match.id)).set(pred).catch(() => { });
-        matchPredictions[match.id] = pred;
-      } catch (e) { }
-
+      matchPredictions[match.id] = pred;
       return pred;
     }
 
@@ -679,55 +671,98 @@
     function closeCoupon(e) { if (e.target === document.getElementById('coupon-overlay')) document.getElementById('coupon-overlay').classList.remove('open'); }
     function closeCouponBtn() { document.getElementById('coupon-overlay').classList.remove('open'); }
 
-    /* -- API -- */
+    /* -- API (football-data.org v4) -- */
     const API_TOKEN = 'e510c1e3f20148c2a77afcc9ddbe7bf6';
     const API_BASE = 'https://api.football-data.org/v4';
+
+    function isNativeApp() {
+      try { return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); }
+      catch (e) { return false; }
+    }
+
+    async function parseJsonResponse(res) {
+      if (!res.ok) {
+        let msg = 'HTTP ' + res.status;
+        try { const e = await res.json(); if (e && e.message) msg = e.message; } catch (err) { }
+        throw new Error(msg);
+      }
+      return res.json();
+    }
+
+    function fetchWithTimeout(url, opts, ms) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), ms);
+      return fetch(url, Object.assign({}, opts || {}, { signal: ctrl.signal }))
+        .finally(() => clearTimeout(t));
+    }
+
+    async function nativeHttpGet(url, headers) {
+      const Cap = window.Capacitor;
+      const Http = Cap && Cap.Plugins && Cap.Plugins.CapacitorHttp;
+      if (!Http) return null;
+      const res = await Http.request({ method: 'GET', url: url, headers: headers, connectTimeout: 8000, readTimeout: 10000, responseType: 'json' });
+      if (res.status < 200 || res.status >= 300) {
+        const data = res.data;
+        const msg = (data && data.message) || ('HTTP ' + res.status);
+        throw new Error(msg);
+      }
+      return typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+    }
+
     async function apiFetch(apiPath, extra = {}) {
       const qs = new URLSearchParams({ path: apiPath, ...extra }).toString();
       const cacheKey = (apiPath + '_' + qs).replace(/[^a-zA-Z0-9_]/g, '_');
-      const cacheRef = db.collection('api_cache').doc(cacheKey);
-
-      try {
-        const doc = await cacheRef.get();
-        if (doc.exists) {
-          const data = doc.data();
-          if (Date.now() - data.timestamp < 5 * 60 * 1000) {
-            console.log('Served from Firebase cache:', cacheKey);
-            return JSON.parse(data.payload);
-          }
-        }
-      } catch (e) { console.warn('Cache read error', e); }
+      const cached = memCache[cacheKey];
+      if (cached && Date.now() - cached.ts < 5 * 60 * 1000) return cached.data;
 
       const extraQs = new URLSearchParams(extra).toString();
-      const directUrl = `${API_BASE}/${apiPath}${extraQs ? '?' + extraQs : ''}`;
+      const directUrl = API_BASE + '/' + apiPath + (extraQs ? '?' + extraQs : '');
       const headers = { 'X-Auth-Token': API_TOKEN };
 
-      let json;
-      try {
-        const res = await fetch(directUrl, { headers: headers });
-        if (!res.ok) { const e = await res.json().catch(() => { }); throw new Error(e?.message || ('HTTP ' + res.status)); }
-        json = await res.json();
-      } catch (e) {
+      let json = null;
+      let lastErr = null;
+
+      // 1) Capacitor native HTTP bypasses CORS (CapacitorHttp enabled in capacitor.config.json)
+      if (isNativeApp()) {
         try {
-          const res = await fetch(`${PROXY_BASE}?${qs}`);
-          if (res.status === 404) throw new Error('proxy_not_found');
-          if (!res.ok) { const err = await res.json().catch(() => { }); throw new Error(err?.message || ('HTTP ' + res.status)); }
-          json = await res.json();
-        } catch (e2) {
-          const proxied = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
-          const res2 = await fetch(proxied, { headers: headers });
-          if (!res2.ok) { const err = await res2.json().catch(() => { }); throw new Error(err?.message || ('HTTP ' + res2.status)); }
-          json = await res2.json();
+          json = await nativeHttpGet(directUrl, headers);
+        } catch (e) {
+          lastErr = e;
+          try {
+            json = await parseJsonResponse(await fetchWithTimeout(directUrl, { headers: headers }, 8000));
+          } catch (e2) { lastErr = e2; }
         }
       }
 
-      if (json) {
-        try {
-          cacheRef.set({ timestamp: Date.now(), payload: JSON.stringify(json) }).catch(e => console.warn('Cache write failed', e));
-        } catch (e) { }
+      // 2) Hosted proxies (short timeout so we fall through fast)
+      if (!json) {
+        for (const base of PROXY_BASES) {
+          try {
+            const res = await fetchWithTimeout(base + '?' + qs, {}, 3000);
+            if (res.status === 404) continue;
+            json = await parseJsonResponse(res);
+            break;
+          } catch (e) { lastErr = e; }
+        }
       }
 
+      // 3) Direct call last (may work after CapacitorHttp patches window.fetch)
+      if (!json) {
+        try {
+          json = await parseJsonResponse(await fetchWithTimeout(directUrl, { headers: headers }, 6000));
+        } catch (e) { lastErr = e; }
+      }
+
+      if (!json) throw lastErr || new Error('Could not reach football-data.org');
+
+      memCache[cacheKey] = { ts: Date.now(), data: json };
       return json;
+    }
+
+    async function loadStaticCache() {
+      const res = await fetch('football-cache.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('No local football cache');
+      return res.json();
     }
 
     /* -- SIDEBAR -- */
@@ -759,10 +794,24 @@
     function renderScorersInto(s) { renderScorers(s, 'scorers-list', 'scorers-card'); renderScorers(s, 'mob-scorers-list', 'mob-scorers-widget'); }
     function renderStandingsInto(table, max) { renderStandings(table, 'standings-body', 'standings-card', max); renderStandings(table, 'mob-standings-body', 'mob-standings-widget', max); }
 
-    async function loadSidebar(comp = 'PL') {
+    async function loadSidebar(compOrFlag = 'PL') {
+      // onchange passes a league code; loadMatches may pass true to use the static snapshot.
+      const fromCache = compOrFlag === true;
+      const comp = fromCache ? 'PL' : (compOrFlag || 'PL');
       document.querySelectorAll('.league-select').forEach(el => el.value = comp);
       const spinner = '<div style="padding:20px;text-align:center;color:var(--ink-3);font-size:0.85rem"><i class="fas fa-circle-notch fa-spin"></i> Loading…</div>';
       ['scorers-list', 'mob-scorers-list', 'standings-body', 'mob-standings-body'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = spinner; });
+
+      if (fromCache && window.__footballCacheSnap) {
+        const snap = window.__footballCacheSnap;
+        renderScorersInto(snap.scorers?.scorers || []);
+        const table = snap.standings?.standings?.find(s => s.type === 'TOTAL')?.table || [];
+        leaguePositions = {};
+        table.forEach(r => { leaguePositions[r.team.id] = r.position; });
+        renderStandingsInto(table, table.length);
+        return;
+      }
+
       try { const d = await apiFetch(`competitions/${comp}/scorers`, { limit: 8 }); renderScorersInto(d.scorers || []); } catch (e) { renderScorersInto([]); }
       await sleep(REQ_GAP_MS);
       try { const d = await apiFetch(`competitions/${comp}/standings`); const table = d.standings?.find(s => s.type === 'TOTAL')?.table || []; leaguePositions = {}; table.forEach(r => { leaguePositions[r.team.id] = r.position; }); renderStandingsInto(table, table.length); } catch (e) { renderStandingsInto([], 0); }
@@ -900,48 +949,27 @@
 
     function toggleExp(id) { event.stopPropagation(); document.getElementById(id).classList.toggle('open'); }
 
-    /* -- LOAD ALL LEAGUES (throttled) -- */
+    /* -- LOAD FIXTURES FROM football-data.org -- */
     async function loadMatches() {
       const from = document.getElementById('date-from').value; const to = document.getElementById('date-to').value;
       setLoading(true); document.getElementById('error-banner').style.display = 'none'; document.getElementById('matches-list').innerHTML = ''; document.getElementById('empty-state').style.display = 'none'; document.getElementById('day-tabs-wrap').style.display = 'none'; document.getElementById('scorers-card').style.display = 'none'; document.getElementById('standings-card').style.display = 'none'; document.getElementById('mob-scorers-widget').style.display = 'none'; document.getElementById('mob-standings-widget').style.display = 'none';
       const params = {}; if (from) params.dateFrom = from; if (to) params.dateTo = to;
       try {
-        // 1) Fixtures: one call per league, spaced out so we never trip the rate limit.
-        const matchResults = await runSequential(
-          ALL_COMPS.map(c => () => apiFetch(`competitions/${c}/matches`, params))
-        );
-        let fetchedMatches = matchResults.filter(r => r.status === 'fulfilled' && r.value?.matches).flatMap(r => r.value.matches);
-
-        // Persist fetched matches so they accumulate over time.
-        fetchedMatches.forEach(m => {
-          db.collection('matches').doc(String(m.id)).set(m, { merge: true }).catch(() => { });
-        });
-
-        // Pull previously stored matches in this date range.
+        let data;
+        let usedCache = false;
         try {
-          let q = db.collection('matches');
-          if (from) q = q.where('utcDate', '>=', from + 'T00:00:00Z');
-          if (to) q = q.where('utcDate', '<=', to + 'T23:59:59Z');
-          const snap = await q.get();
-          const storedMatches = snap.docs.map(d => d.data());
-          const merged = {};
-          storedMatches.forEach(m => merged[m.id] = m);
-          fetchedMatches.forEach(m => merged[m.id] = m);
-          allMatches = Object.values(merged);
-        } catch (e) {
-          console.warn('Failed to load stored matches', e);
-          allMatches = fetchedMatches;
+          // Live football-data.org (native HTTP / proxy / direct)
+          data = await apiFetch('matches', params);
+        } catch (liveErr) {
+          console.warn('Live API failed, using football-cache.json', liveErr);
+          const snap = await loadStaticCache();
+          data = snap.matches || snap;
+          usedCache = true;
+          window.__footballCacheSnap = snap;
         }
 
+        allMatches = (data.matches || []).filter(m => ALL_COMP_SET.has(m.competition?.code));
         allMatches.sort((a, b) => sortKey(a.utcDate) - sortKey(b.utcDate));
-
-        // Load any frozen predictions.
-        if (allMatches.length > 0) {
-          try {
-            const predDocs = await Promise.all(allMatches.map(m => db.collection('predictions').doc(String(m.id)).get().catch(() => null)));
-            predDocs.forEach(doc => { if (doc && doc.exists) matchPredictions[doc.id] = doc.data(); });
-          } catch (e) { console.warn('Failed to load static predictions', e); }
-        }
 
         setLoading(false);
         if (!allMatches.length) { document.getElementById('empty-state').style.display = 'block'; }
@@ -952,15 +980,19 @@
           setTimeout(() => { const at = document.querySelector('.day-tab.active'); if (at) at.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }, 100);
         }
 
-        // 2) Historical form data — runs in the background, spaced out, after fixtures render.
-        runSequential(ALL_COMPS.map(c => () => fetchHistoricalData(c))).then(() => {
-          // Recompute predictions now that real form data exists (skips already-frozen ones).
-          if (currentDay && dayGroups[currentDay]) renderDay(dayGroups[currentDay]);
-        });
-
-        // 3) Sidebar — also background, throttled inside loadSidebar.
-        loadSidebar();
-      } catch (err) { setLoading(false); const b = document.getElementById('error-banner'); b.style.display = 'flex'; document.getElementById('error-msg').textContent = err.message || 'Could not load the card. Try again.'; }
+        if (!usedCache) {
+          runSequential(ALL_COMPS.map(c => () => fetchHistoricalData(c))).then(() => {
+            matchPredictions = {};
+            if (currentDay && dayGroups[currentDay]) renderDay(dayGroups[currentDay]);
+          });
+        }
+        loadSidebar(usedCache);
+      } catch (err) {
+        setLoading(false);
+        const b = document.getElementById('error-banner');
+        b.style.display = 'flex';
+        document.getElementById('error-msg').textContent = err.message || 'Could not load the card. Try again.';
+      }
     }
 
     function setLoading(on) { document.getElementById('loader').style.display = on ? 'flex' : 'none'; document.getElementById('load-btn').disabled = on; }
