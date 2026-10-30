@@ -549,6 +549,9 @@
     let dayGroups = {};
     let matchPredictions = {};
     const memCache = {};
+    // TejTips main tips keyed by our football-data.org match id
+    let tejTipsById = {};
+    let tejTipsLoaded = false;
 
     /* -- THROTTLE HELPERS -- */
     const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -825,6 +828,7 @@
         allMarkets: markets,
         predictedWinner,
         tipSide,
+        tejSynced: false,
         factors: {
           overall, form, attack, defense, goals,
           poisson: poissonPair,
@@ -838,8 +842,136 @@
         analysis: `TejTips-style stack with venue splits + Poisson. xG ${expH.toFixed(2)}–${expA.toFixed(2)}. Over 1.5 ${Math.round(pOver15 * 100)}% · Over 2.5 ${Math.round(pOver25 * 100)}% · BTTS ${Math.round(pBTTS * 100)}% · HT lean ${Math.round(Math.max(pHt1, pHt2, pHtX) * 100)}%.`
       };
 
+      applyTejTipOverride(pred, match);
       matchPredictions[match.id] = pred;
       return pred;
+    }
+
+    function normTeamName(s) {
+      return String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+    }
+    function namesLooselyMatch(a, b) {
+      if (!a || !b) return false;
+      if (a === b) return true;
+      if (a.includes(b) || b.includes(a)) return true;
+      const at = a.split(' ').filter(Boolean);
+      const bt = b.split(' ').filter(Boolean);
+      const hit = at.filter(t => t.length > 2 && bt.some(x => x === t || x.includes(t) || t.includes(x)));
+      return hit.length >= 1 && (hit.length >= 2 || at.some(t => t.length >= 5 && bt.includes(t)));
+    }
+    function mapTejMarketToId(market, selection) {
+      const m = String(market || '').toLowerCase().replace(/\s+/g, '');
+      const s = String(selection || '').trim();
+      const sl = s.toLowerCase();
+      if (m === 'over') {
+        if (sl === '0.5') return 'over05';
+        if (sl === '1.5') return 'over15';
+        if (sl === '2.5') return 'over25';
+        if (sl === '3.5') return 'over35';
+      }
+      if (m === 'under') {
+        if (sl === '1.5') return 'under15';
+        if (sl === '2.5') return 'under25';
+        if (sl === '3.5') return 'under35';
+      }
+      if (m === 'full-time' || m === 'fulltime') {
+        if (s === '1') return 'w1';
+        if (s === '2') return 'w2';
+        if (sl === 'x') return 'draw';
+        if (sl === '1x') return '1x';
+        if (sl === 'x2') return '2x';
+        if (s === '12') return '12';
+      }
+      if (m === 'half-time' || m === 'halftime') {
+        if (s === '1') return 'ht1';
+        if (s === '2') return 'ht2';
+        if (sl === 'x') return 'htx';
+      }
+      return null;
+    }
+    function applyTejTipOverride(pred, match) {
+      const entry = tejTipsById[String(match.id)];
+      if (!entry || !entry.tip) return pred;
+      const tipId = mapTejMarketToId(entry.market, entry.selection) || pred.tipId;
+      const mk = (pred.allMarkets || []).find(x => x.id === tipId);
+      pred.tipId = tipId;
+      pred.tipLabel = entry.tip;
+      pred.tipDisplay = entry.tip;
+      pred.tejSynced = true;
+      pred.tejMatch = entry.tejMatch || '';
+      if (mk) {
+        pred.conf = Math.round(clamp(mk.prob * 100, 55, 92));
+        pred.tipOdds = mk.odds;
+      } else {
+        pred.conf = Math.max(pred.conf, 72);
+      }
+      pred.confLabel = pred.conf >= 82 ? 'VIP' : pred.conf >= 70 ? 'STRONG' : 'VALUE';
+      pred.advice = `TejTips tip — ${entry.tip}` + (entry.tejMatch ? ` (${entry.tejMatch})` : '') + `. Model still shows form/attack/defense/Poisson below.`;
+      return pred;
+    }
+
+    async function loadTejTipsMap() {
+      // 1) Local snapshot matched to our football-data.org ids
+      try {
+        const res = await fetch('tejtips-tips.json', { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          Object.keys(json || {}).forEach(id => { tejTipsById[id] = json[id]; });
+          tejTipsLoaded = true;
+        }
+      } catch (e) { console.warn('tejtips-tips.json load failed', e); }
+
+      // 2) Live TejTips feed — rematch by team names/date when possible
+      try {
+        const url = 'https://tejtips.com/wp-json/tej/v2/next-events';
+        let json = null;
+        try {
+          const res = await fetchWithTimeout(url, {}, 8000);
+          if (res.ok) json = await res.json();
+        } catch (e1) {
+          try {
+            const proxied = 'https://corsproxy.io/?' + encodeURIComponent(url);
+            const res2 = await fetchWithTimeout(proxied, {}, 8000);
+            if (res2.ok) json = await res2.json();
+          } catch (e2) { }
+        }
+        if (json && json.data && allMatches.length) {
+          const tejItems = [];
+          Object.values(json.data).forEach(day => {
+            (day.items || []).forEach(it => { if (it.modality === 'football' && it.main_tip && it.main_tip.tip) tejItems.push(it); });
+          });
+          allMatches.forEach(m => {
+            const oh = normTeamName(m.homeTeam?.shortName || m.homeTeam?.name);
+            const oa = normTeamName(m.awayTeam?.shortName || m.awayTeam?.name);
+            const ohn = normTeamName(m.homeTeam?.name);
+            const oan = normTeamName(m.awayTeam?.name);
+            const od = new Date(m.utcDate);
+            const odKey = String(od.getUTCDate()).padStart(2, '0') + '-' + String(od.getUTCMonth() + 1).padStart(2, '0') + '-' + od.getUTCFullYear();
+            let best = null, score = 0;
+            tejItems.forEach(t => {
+              const th = normTeamName(t.home_opponent?.name);
+              const ta = normTeamName(t.away_opponent?.name);
+              let s = 0;
+              if (t.date === odKey) s += 2;
+              if (namesLooselyMatch(oh, th) || namesLooselyMatch(ohn, th)) s += 3;
+              if (namesLooselyMatch(oa, ta) || namesLooselyMatch(oan, ta)) s += 3;
+              if (s > score) { score = s; best = t; }
+            });
+            if (best && score >= 6) {
+              const market = best.main_tip.tip.market;
+              const selection = best.main_tip.tip.tip;
+              tejTipsById[String(m.id)] = {
+                tip: market + ': ' + selection,
+                market,
+                selection,
+                tejId: best.id,
+                tejMatch: (best.home_opponent?.name || '') + ' vs ' + (best.away_opponent?.name || '')
+              };
+            }
+          });
+          tejTipsLoaded = true;
+        }
+      } catch (e) { console.warn('Live TejTips match failed', e); }
     }
 
     function factorBlock(title, homePct, awayPct, homeName, awayName, note) {
@@ -1193,12 +1325,12 @@
       <div class="pred-row">
         <div class="pred-pill ${predStatus}">
           <span class="pred-icon ${predStatus}">${predIcon}</span>
-          <span class="pred-label">${pred.tipDisplay}</span>
+          <span class="pred-label">${pred.tipDisplay}${pred.tejSynced ? ' · TEJ' : ''}</span>
           <span class="pred-value">
             <div class="pv-conf">${pred.conf}%</div>
             <div class="pv-odds">@${pred.tipOdds}</div>
           </span>
-          <span class="pred-conf">${pred.confLabel}</span>
+          <span class="pred-conf">${pred.tejSynced ? 'TEJTIPS' : pred.confLabel}</span>
         </div>
       </div>
     </div>
@@ -1278,6 +1410,10 @@
         allMatches = (data.matches || []).filter(m => ALL_COMP_SET.has(m.competition?.code));
         allMatches.sort((a, b) => sortKey(a.utcDate) - sortKey(b.utcDate));
 
+        // Pull TejTips main tips and overlay the same selections on our fixtures.
+        matchPredictions = {};
+        await loadTejTipsMap();
+
         setLoading(false);
         if (!allMatches.length) { document.getElementById('empty-state').style.display = 'block'; }
         else {
@@ -1288,7 +1424,6 @@
         }
 
         // Always load real form/H2H from football-data.org — even when fixtures came from cache.
-        // Skipping this left every tip on defaults + home advantage → almost all Full-Time: 1X.
         runSequential(ALL_COMPS.map(c => () => fetchHistoricalData(c))).then(() => {
           matchPredictions = {};
           if (currentDay && dayGroups[currentDay]) renderDay(dayGroups[currentDay]);
