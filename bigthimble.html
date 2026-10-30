@@ -29,42 +29,54 @@
             display: flex;
             flex-direction: column;
             background: #07080c;
+            height: 100svh;
             min-height: 100svh;
-            overflow-x: hidden;
-            overflow-y: auto;
+            overflow: hidden;
         }
 
         .screen {
             width: 100%;
-            max-width: 430px;
-            margin: 0 auto;
             flex: 1;
+            min-height: 0;
             display: flex;
-            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            padding: 12px 14px calc(18px + env(safe-area-inset-bottom, 0px));
-            min-width: 0;
             position: relative;
             z-index: 1;
-            background: url("https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/ecae2b74-9e36-47a0-b79d-521aaaaa5e0e.png") center / cover no-repeat;
+            overflow: hidden;
+        }
+
+        .stage-bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            object-position: center;
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-drag: none;
         }
 
         .game {
-            width: 100%;
+            position: relative;
+            z-index: 1;
+            width: min(78%, 340px);
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             min-width: 0;
         }
 
         .cups {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: flex-end;
-            gap: 8px;
+            gap: 6px;
             width: 100%;
-            margin-top: 8px;
+            margin: 0;
             position: relative;
             overflow: visible;
         }
@@ -107,11 +119,11 @@
         }
 
         .buttons {
-            margin-top: 18px;
+            margin-top: 14px;
             display: flex;
             justify-content: center;
             gap: 10px;
-            width: 100%;
+            width: 92%;
         }
 
         .mode-btn {
@@ -233,6 +245,7 @@
 </header>
 
     <div class="screen">
+    <img class="stage-bg" src="https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/ecae2b74-9e36-47a0-b79d-521aaaaa5e0e.png" alt="" draggable="false">
     <div class="game">
         <div class="cups" id="cups">
             <div class="cup">
