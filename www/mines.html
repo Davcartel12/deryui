@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <script src="js/access-core.js"></script>
     <script src="js/access-guard.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
     <title>Mines Simulator</title>
     <style>
         * {
@@ -15,33 +15,53 @@
             box-sizing: border-box;
         }
 
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        html, body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
         body {
             background-color: #07080c;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: stretch;
+            min-height: 100svh;
             font-family: 'DM Sans', sans-serif;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .topbar {
+            padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px !important;
         }
 
         .screen {
-            width: 390px;
+            width: 100%;
+            max-width: 430px;
+            margin: 0 auto;
             background-color: #07080c;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px 20px 40px;
-            gap: 24px;
+            padding: 12px 14px calc(16px + env(safe-area-inset-bottom, 0px));
+            gap: 14px;
             position: relative;
             z-index: 1;
+            min-width: 0;
         }
 
         /* Grid container */
         .grid-wrapper {
+            width: 100%;
             background: linear-gradient(145deg, #0d0f16, #0a0c14);
-            border-radius: 24px;
-            padding: 16px;
+            border-radius: 18px;
+            padding: 10px;
             box-shadow:
                 inset 0 2px 4px rgba(255, 255, 255, 0.05),
                 0 8px 32px rgba(0, 0, 0, 0.6),
@@ -52,13 +72,16 @@
         .grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
+            gap: 6px;
+            width: 100%;
         }
 
         .tile {
-            width: 60px;
-            height: 60px;
-            border-radius: 14px;
+            width: auto;
+            height: auto;
+            aspect-ratio: 1 / 1;
+            min-width: 0;
+            border-radius: 10px;
             background-image: url('https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/e6b29cd6-c737-427d-8d03-7f5b388eaa9b.png');
             background-size: cover;
             background-position: center;
@@ -80,8 +103,8 @@
         /* Bottom control panel */
         .control-panel {
             background: linear-gradient(160deg, #0d0f16, #0a0c14);
-            border-radius: 20px;
-            padding: 22px 24px 26px;
+            border-radius: 18px;
+            padding: 14px 14px 16px;
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -96,7 +119,7 @@
         .trap-selector {
             display: flex;
             align-items: center;
-            gap: 36px;
+            gap: 28px;
         }
 
         .arrow-btn {
@@ -136,7 +159,7 @@
 
         .play-btn {
             width: 100%;
-            padding: 18px;
+            padding: 15px;
             border-radius: 14px;
             border: none;
             background: linear-gradient(135deg, #1e90ff 0%, #1470c8 100%);
@@ -162,6 +185,7 @@
         }
 
         .exit-btn {
+            display: none;
             margin-top: 10px;
             padding: 12px 40px;
             border-radius: 12px;
