@@ -7,21 +7,22 @@
   <script src="js/access-core.js"></script>
   <script src="js/access-guard.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-  <meta name="theme-color" content="#090d16">
+  <meta name="theme-color" content="#000000">
   <title>Blackjack - CHIKE1W</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #050506;
+      --bg: #000;
       --header: #0c1220;
       --line: rgba(255, 255, 255, 0.08);
       --green: #00a84f;
-      --gold: #f0b429;
+      --gold: #d7b15a;
       --text: #ffffff;
       --muted: #8d97ab;
-      --red: #e03030;
-      --panel: #151b2b;
-      --blue: #3a7bd5;
+      --red: #d23b3b;
+      --hit: #1ea0d8;
+      --double: #c9a227;
+      --split: #7a6ae6;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,15 +33,16 @@
       width: 100%;
       max-width: 100%;
       overflow-x: hidden;
+      background: #000;
     }
 
     body {
-      background: var(--bg);
       color: var(--text);
       font-family: Inter, sans-serif;
       min-height: 100svh;
-      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     }
+
+    img { -webkit-user-drag: none; user-select: none; pointer-events: none; }
 
     .topbar {
       position: sticky;
@@ -71,11 +73,7 @@
 
     .back svg { width: 18px; height: 18px; }
 
-    .brand {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-    }
+    .brand { flex: 1; display: flex; justify-content: center; }
 
     .brand img {
       height: 38px;
@@ -84,6 +82,7 @@
       object-fit: contain;
       display: block;
       mix-blend-mode: screen;
+      pointer-events: auto;
     }
 
     .code-btn {
@@ -97,189 +96,250 @@
       font-size: 12px;
     }
 
-    .wrap {
-      width: calc(100% - 24px);
-      max-width: 430px;
-      margin: 0 auto;
-    }
-
-    .game-title {
-      text-align: center;
-      padding: 14px 0 10px;
-    }
-
-    .game-title h1 {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: 0.4px;
-    }
-
-    .game-title p {
-      margin-top: 4px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .rules {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 4px;
-      margin-bottom: 12px;
-    }
-
-    .pt {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 7px 6px;
-      text-align: center;
-    }
-
-    .pt span {
-      display: block;
-      font-size: 10px;
-      color: var(--muted);
-      line-height: 1.2;
-    }
-
-    .pt b {
-      display: block;
-      margin-top: 3px;
-      font-size: 13px;
-      color: var(--gold);
-    }
-
-    .felt {
+    .stage {
       position: relative;
-      min-height: 280px;
-      padding: 22% 14% 16%;
-      background: #050506 url("blackjack/table.webp") center / contain no-repeat;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-    }
-
-    .zone {
-      margin-bottom: 14px;
-    }
-
-    .zone:last-child { margin-bottom: 0; }
-
-    .felt-label {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.4px;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.55);
-      margin-bottom: 8px;
-    }
-
-    .score {
-      letter-spacing: 0;
-      font-size: 11px;
-      color: #fff;
-    }
-
-    .score.bust { color: var(--red); }
-    .score.bj { color: var(--gold); }
-
-    .cards-row {
-      display: flex;
-      gap: 6px;
       width: 100%;
-      align-items: stretch;
+      max-width: 520px;
+      margin: 0 auto;
+      aspect-ratio: 1.55 / 1;
+      min-height: 280px;
+    }
+
+    .table-art {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .dealer-seat,
+    .player-seat {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 78%;
+    }
+
+    .dealer-seat { top: 11%; }
+    .player-seat { bottom: 10%; }
+
+    .seat-name {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 2.4px;
+      text-transform: uppercase;
+      color: rgba(210, 218, 230, 0.55);
+      margin-bottom: 6px;
+    }
+
+    .hand {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
     }
 
     .card-wrap {
-      flex: 1;
-      min-width: 0;
-      max-width: 78px;
+      width: 58px;
+      margin-left: -22px;
     }
 
-    .card-wrap.add-wrap { max-width: 42px; }
+    .card-wrap:first-child { margin-left: 0; }
+
+    .card-wrap.add-wrap {
+      width: 28px;
+      margin-left: 4px;
+    }
 
     .card {
       width: 100%;
-      aspect-ratio: 76 / 104;
-      border-radius: 8px;
-      background: linear-gradient(180deg, #f6f7fb 0%, #d7dbe8 100%);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+      aspect-ratio: 63 / 88;
+      border-radius: 7px;
+      background: linear-gradient(180deg, #f7f8fc 0%, #e4e7f0 100%);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.55);
       position: relative;
       overflow: hidden;
-      padding: 6px 5px;
+      padding: 5px 5px 0;
       display: flex;
       flex-direction: column;
-      border: 2px solid transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
       cursor: pointer;
       user-select: none;
     }
 
     .card.empty {
-      background: rgba(0, 0, 0, 0.28);
-      border: 2px dashed rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1.5px dashed rgba(255, 255, 255, 0.22);
       box-shadow: none;
       align-items: center;
       justify-content: center;
-      color: rgba(255, 255, 255, 0.35);
-      font-size: 22px;
+      color: rgba(255, 255, 255, 0.28);
+      font-size: 20px;
       font-weight: 700;
     }
 
     .card.facedown {
-      background: #1a1a1e url("blackjack/card-back.webp") center / cover no-repeat;
-      border: 1px solid #2a2a30;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
-      cursor: default;
+      background: #1c1c20 url("blackjack/card-back.webp") center / cover no-repeat;
+      border: 0;
       padding: 0;
+      cursor: default;
     }
 
-    .card.selected { border-color: var(--gold); }
+    .card.selected { outline: 2px solid var(--gold); outline-offset: 1px; }
 
     .rank-top {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
       line-height: 1;
       color: #16161f;
     }
 
     .suit-top {
-      font-size: 13px;
-      line-height: 1.1;
+      font-size: 12px;
+      line-height: 1;
       color: #16161f;
     }
 
     .watermark {
       position: absolute;
-      right: 4px;
-      bottom: 2px;
-      font-size: 28px;
-      opacity: 0.22;
+      right: 3px;
+      bottom: 1px;
+      font-size: 26px;
+      opacity: 0.2;
     }
 
     .card.red-card .rank-top,
     .card.red-card .suit-top,
-    .card.red-card .watermark { color: var(--red); }
+    .card.red-card .watermark { color: #c1272d; }
 
     .add-btn {
       width: 100%;
-      height: 100%;
-      min-height: 48px;
-      border: 2px dashed rgba(255, 255, 255, 0.18);
-      border-radius: 8px;
-      background: rgba(0, 0, 0, 0.18);
-      color: rgba(255, 255, 255, 0.45);
+      height: 42px;
+      border: 0;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.4);
       font-size: 22px;
-      font-weight: 700;
       cursor: pointer;
+    }
+
+    .score-pill {
+      position: absolute;
+      right: -36px;
+      top: 50%;
+      transform: translateY(-50%);
+      min-width: 28px;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: rgba(8, 8, 10, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .score-pill.bust { color: #ff6b6b; }
+    .score-pill.bj { color: var(--gold); }
+    .score-pill:empty { display: none; }
+
+    .felt-copy {
+      position: absolute;
+      left: 50%;
+      top: 46%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: rgba(186, 196, 210, 0.38);
+      pointer-events: none;
+      line-height: 1.55;
+    }
+
+    .felt-copy b {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.6px;
+    }
+
+    .felt-copy span {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 1.2px;
+    }
+
+    .dock {
+      width: calc(100% - 24px);
+      max-width: 430px;
+      margin: 8px auto 0;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .moves {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .move {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #141418;
+      color: #6e7686;
+      border-radius: 999px;
+      padding: 11px 0;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+    }
+
+    .move.on {
+      color: #fff;
+      box-shadow: 0 0 0 2px #fff inset;
+    }
+
+    .move.hit.on { background: var(--hit); }
+    .move.stand.on { background: var(--red); }
+    .move.double.on { background: var(--double); color: #16161f; }
+    .move.split.on { background: var(--split); }
+
+    .signal-btn,
+    .reset-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      font-family: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .signal-btn {
+      padding: 15px;
+      background: var(--green);
+      color: #fff;
+      font-size: 15px;
+      letter-spacing: 0.4px;
+      margin-bottom: 8px;
+    }
+
+    .signal-btn:disabled {
+      background: #1a1d24;
+      color: #5b6478;
+      cursor: not-allowed;
+    }
+
+    .reset-btn {
+      padding: 12px;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
     }
 
     .picker {
       display: none;
-      margin-top: 12px;
-      background: var(--panel);
+      margin-top: 10px;
+      background: #12151c;
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 12px;
@@ -295,11 +355,7 @@
       margin-bottom: 10px;
     }
 
-    .suit-tabs {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
+    .suit-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
 
     .suit-tab {
       flex: 1;
@@ -334,177 +390,23 @@
 
     .rank-btn.red { color: var(--red); }
 
-    .actions {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .signal-btn,
-    .reset-btn {
-      width: 100%;
-      border: 0;
-      border-radius: 12px;
-      font-family: inherit;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .signal-btn {
-      padding: 15px;
-      background: var(--green);
-      color: #fff;
-      font-size: 15px;
-      letter-spacing: 0.4px;
-    }
-
-    .signal-btn:disabled {
-      background: #1d2638;
-      color: #5b6478;
-      cursor: not-allowed;
-    }
-
-    .reset-btn {
-      padding: 12px;
-      background: transparent;
-      border: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .results {
+    .note {
       display: none;
-      margin-top: 12px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 14px;
-    }
-
-    .results.show { display: block; }
-
-    .move-row {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 6px;
-    }
-
-    .move {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 10px 4px;
+      margin-top: 10px;
       text-align: center;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.4px;
-      color: #5b6478;
-      background: #1b2234;
-    }
-
-    .move.on {
-      color: #fff;
-      border-color: #fff;
-      transform: scale(1.04);
-    }
-
-    .move.hit.on { background: var(--blue); }
-    .move.stand.on { background: var(--green); }
-    .move.double.on { background: #c47a12; }
-    .move.split.on { background: #6b4ec9; }
-
-    .why {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--line);
-      text-align: center;
-    }
-
-    .why span {
-      display: block;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      color: var(--muted);
-    }
-
-    .why b {
-      display: block;
-      margin-top: 4px;
-      font-size: 20px;
-      font-weight: 800;
-    }
-
-    .why p {
-      margin-top: 6px;
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
       line-height: 1.45;
     }
 
-    .insure {
-      margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--line);
-      text-align: center;
-    }
+    .note.show { display: block; }
 
-    .insure span {
-      display: block;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      color: var(--muted);
-    }
+    .note b { color: #fff; }
 
-    .insure-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    .insure-opt {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 10px 6px;
-      font-size: 13px;
-      font-weight: 800;
-      color: #5b6478;
-      background: #1b2234;
-    }
-
-    .insure-opt.on-no {
-      background: var(--red);
-      color: #fff;
-      border-color: #fff;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
-      margin-top: 12px;
-    }
-
-    .stat {
-      background: #1b2234;
-      border-radius: 10px;
-      padding: 8px 6px;
-      text-align: center;
-    }
-
-    .stat b {
-      display: block;
-      font-size: 16px;
-    }
-
-    .stat span {
-      display: block;
-      margin-top: 2px;
-      font-size: 9px;
-      letter-spacing: 0.6px;
-      color: var(--muted);
+    @media (max-width: 380px) {
+      .card-wrap { width: 50px; margin-left: -18px; }
+      .score-pill { right: -30px; font-size: 11px; }
+      .felt-copy b { font-size: 11px; }
     }
   </style>
 </head>
@@ -520,47 +422,43 @@
     <a class="code-btn" href="login.html">CHIKE1W</a>
   </header>
 
-  <div class="wrap">
-    <div class="game-title">
-      <h1>Blackjack</h1>
-      <p>You vs dealer · tap cards, then GET SIGNAL</p>
+  <div class="stage">
+    <img class="table-art" src="blackjack/table.webp" alt="" draggable="false">
+
+    <div class="dealer-seat">
+      <div class="seat-name">Dealer</div>
+      <div class="hand" id="dealerRow"></div>
+      <div class="score-pill" id="dealerScore"></div>
     </div>
 
-    <div class="rules">
-      <div class="pt"><span>Blackjack</span><b>3:2</b></div>
-      <div class="pt"><span>Dealer</span><b>Stand 17</b></div>
-      <div class="pt"><span>Insurance</span><b>2:1</b></div>
+    <div class="felt-copy">
+      <b>BLACKJACK 3:2</b>
+      <span>INSURANCE 2:1</span>
+      <span>DEALER STANDS ON 17</span>
     </div>
 
-    <div class="felt">
-      <div class="zone">
-        <div class="felt-label">
-          <span>Dealer</span>
-          <span class="score" id="dealerScore"></span>
-        </div>
-        <div class="cards-row" id="dealerRow"></div>
-      </div>
-      <div class="zone">
-        <div class="felt-label">
-          <span>Your hand</span>
-          <span class="score" id="playerScore"></span>
-        </div>
-        <div class="cards-row" id="playerRow"></div>
-      </div>
+    <div class="player-seat">
+      <div class="seat-name">You</div>
+      <div class="hand" id="playerRow"></div>
+      <div class="score-pill" id="playerScore"></div>
     </div>
+  </div>
 
+  <div class="dock">
+    <div class="moves" id="moves">
+      <button class="move hit" type="button">Hit</button>
+      <button class="move stand" type="button">Stand</button>
+      <button class="move double" type="button">Double</button>
+      <button class="move split" type="button">Split</button>
+    </div>
+    <button class="signal-btn" id="analyzeBtn" type="button" onclick="analyze()" disabled>GET SIGNAL</button>
+    <button class="reset-btn" type="button" onclick="resetAll()">Reset</button>
     <div class="picker" id="picker">
       <div class="picker-title" id="pickerTitle">Select a card</div>
       <div class="suit-tabs" id="suitTabs"></div>
       <div class="ranks-grid" id="ranksGrid"></div>
     </div>
-
-    <div class="actions">
-      <button class="signal-btn" id="analyzeBtn" type="button" onclick="analyze()" disabled>GET SIGNAL</button>
-      <button class="reset-btn" type="button" onclick="resetAll()">Reset</button>
-    </div>
-
-    <div class="results" id="results"></div>
+    <div class="note" id="results"></div>
   </div>
 
   <script>
@@ -568,7 +466,6 @@
     const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
     const isRed = s => s === '♥' || s === '♦';
     const cardVal = r => (r === 'A' ? 11 : (r === 'J' || r === 'Q' || r === 'K' ? 10 : parseInt(r, 10)));
-    const DEALER_BUST = { 2: 35, 3: 37, 4: 40, 5: 42, 6: 42, 7: 26, 8: 24, 9: 23, 10: 23, 11: 12 };
 
     let dealerCard = null;
     let playerCards = [null, null];
@@ -612,80 +509,43 @@
       const count = player.length;
       const canDouble = count === 2 && pv >= 9;
 
-      if (isBlackjack(player)) return { action: 'BLACKJACK', color: 'var(--gold)', reason: 'Natural 21. Blackjack pays 3:2. Do not take even money.' };
-      if (isBust(player)) return { action: 'BUST', color: 'var(--red)', reason: 'Your hand is ' + pv + ' — over 21.' };
+      if (isBlackjack(player)) return { action: 'BLACKJACK', reason: 'Natural 21. Pays 3:2. Decline even money.' };
+      if (isBust(player)) return { action: 'BUST', reason: 'Your hand is ' + pv + '.' };
 
       if (pair && count === 2) {
         const r = cardVal(player[0].rank);
-        if (r === 11) return { action: 'SPLIT', color: '#6b4ec9', reason: 'Always split Aces.' };
-        if (r === 8) return { action: 'SPLIT', color: '#6b4ec9', reason: 'Always split 8s. 16 is the weakest hard total.' };
-        if (r === 10) return standReason(pv, dv);
-        if (r === 5) return doubleOrHit(pv, dv, canDouble, '5,5 is a hard 10. Never split fives.');
-        if (r === 9) return (dv >= 2 && dv <= 9 && dv !== 7) ? { action: 'SPLIT', color: '#6b4ec9', reason: 'Split 9s vs dealer ' + dealer.rank + '.' } : standReason(pv, dv);
-        if (r === 7) return (dv >= 2 && dv <= 7) ? { action: 'SPLIT', color: '#6b4ec9', reason: 'Split 7s vs dealer ' + dealer.rank + '.' } : hitReason(pv, dv);
-        if (r === 6) return (dv >= 2 && dv <= 6) ? { action: 'SPLIT', color: '#6b4ec9', reason: 'Split 6s vs dealer ' + dealer.rank + '.' } : hitReason(pv, dv);
-        if (r === 4) return (dv >= 5 && dv <= 6) ? { action: 'SPLIT', color: '#6b4ec9', reason: 'Split 4s only vs dealer 5 or 6.' } : hitReason(pv, dv);
-        if (r === 3 || r === 2) return (dv >= 2 && dv <= 7) ? { action: 'SPLIT', color: '#6b4ec9', reason: 'Split this pair vs dealer ' + dealer.rank + '.' } : hitReason(pv, dv);
+        if (r === 11) return { action: 'SPLIT', reason: 'Always split Aces.' };
+        if (r === 8) return { action: 'SPLIT', reason: 'Always split 8s.' };
+        if (r === 10) return { action: 'STAND', reason: 'Never split tens. Stand on 20.' };
+        if (r === 5) return canDouble && dv <= 9 ? { action: 'DOUBLE', reason: '5,5 is a hard 10. Double vs 2-9.' } : { action: 'HIT', reason: '5,5 is a hard 10. Hit.' };
+        if (r === 9) return (dv >= 2 && dv <= 9 && dv !== 7) ? { action: 'SPLIT', reason: 'Split 9s vs ' + dealer.rank + '.' } : { action: 'STAND', reason: 'Stand with 9s vs ' + dealer.rank + '.' };
+        if (r === 7) return (dv >= 2 && dv <= 7) ? { action: 'SPLIT', reason: 'Split 7s vs ' + dealer.rank + '.' } : { action: 'HIT', reason: 'Hit 7s vs ' + dealer.rank + '.' };
+        if (r === 6) return (dv >= 2 && dv <= 6) ? { action: 'SPLIT', reason: 'Split 6s vs ' + dealer.rank + '.' } : { action: 'HIT', reason: 'Hit 6s vs ' + dealer.rank + '.' };
+        if (r === 4) return (dv >= 5 && dv <= 6) ? { action: 'SPLIT', reason: 'Split 4s vs 5 or 6.' } : { action: 'HIT', reason: 'Hit 4s vs ' + dealer.rank + '.' };
+        if (r === 3 || r === 2) return (dv >= 2 && dv <= 7) ? { action: 'SPLIT', reason: 'Split this pair vs ' + dealer.rank + '.' } : { action: 'HIT', reason: 'Hit this pair vs ' + dealer.rank + '.' };
       }
 
       if (soft) {
-        if (pv >= 19) return standReason(pv, dv);
+        if (pv >= 19) return { action: 'STAND', reason: 'Stand on soft ' + pv + '.' };
         if (pv === 18) {
-          if (dv >= 2 && dv <= 6) return canDouble ? doubleSoft(pv, dealer.rank) : standReason(pv, dv);
-          if (dv === 7 || dv === 8) return standReason(pv, dv);
-          return hitReason(pv, dv);
+          if (dv >= 2 && dv <= 6) return canDouble ? { action: 'DOUBLE', reason: 'Soft 18 vs ' + dealer.rank + ' — double.' } : { action: 'STAND', reason: 'Stand on soft 18.' };
+          if (dv === 7 || dv === 8) return { action: 'STAND', reason: 'Stand on soft 18 vs ' + dealer.rank + '.' };
+          return { action: 'HIT', reason: 'Hit soft 18 vs ' + dealer.rank + '.' };
         }
-        if (pv === 17) return (dv >= 3 && dv <= 6 && canDouble) ? doubleSoft(pv, dealer.rank) : hitReason(pv, dv);
-        if (pv === 16 || pv === 15) return (dv >= 4 && dv <= 6 && canDouble) ? doubleSoft(pv, dealer.rank) : hitReason(pv, dv);
-        if (pv === 14 || pv === 13) return (dv >= 5 && dv <= 6 && canDouble) ? doubleSoft(pv, dealer.rank) : hitReason(pv, dv);
-        return hitReason(pv, dv);
+        if (pv === 17) return (dv >= 3 && dv <= 6 && canDouble) ? { action: 'DOUBLE', reason: 'Double soft 17 vs ' + dealer.rank + '.' } : { action: 'HIT', reason: 'Hit soft 17.' };
+        if (pv === 16 || pv === 15) return (dv >= 4 && dv <= 6 && canDouble) ? { action: 'DOUBLE', reason: 'Double soft ' + pv + ' vs ' + dealer.rank + '.' } : { action: 'HIT', reason: 'Hit soft ' + pv + '.' };
+        if (pv === 14 || pv === 13) return (dv >= 5 && dv <= 6 && canDouble) ? { action: 'DOUBLE', reason: 'Double soft ' + pv + ' vs ' + dealer.rank + '.' } : { action: 'HIT', reason: 'Hit soft ' + pv + '.' };
+        return { action: 'HIT', reason: 'Hit soft ' + pv + '.' };
       }
 
-      if (pv >= 17) return standReason(pv, dv);
-      if (pv === 16) return dv >= 7 ? hitReason(pv, dv) : standReason(pv, dv);
-      if (pv === 15) return dv >= 7 ? hitReason(pv, dv) : standReason(pv, dv);
-      if (pv === 13 || pv === 14) return (dv >= 2 && dv <= 6) ? standReason(pv, dv) : hitReason(pv, dv);
-      if (pv === 12) return (dv >= 4 && dv <= 6) ? standReason(pv, dv) : hitReason(pv, dv);
-      if (pv === 11) return canDouble ? { action: 'DOUBLE', color: '#c47a12', reason: 'Hard 11 vs anything — double.' } : hitReason(pv, dv);
-      if (pv === 10) return (dv <= 9 && canDouble) ? { action: 'DOUBLE', color: '#c47a12', reason: 'Hard 10 vs ' + dealer.rank + ' — double.' } : hitReason(pv, dv);
-      if (pv === 9) return (dv >= 3 && dv <= 6 && canDouble) ? { action: 'DOUBLE', color: '#c47a12', reason: 'Hard 9 vs ' + dealer.rank + ' — double.' } : hitReason(pv, dv);
-      return hitReason(pv, dv);
-    }
-
-    function standReason(pv, dv) {
-      return { action: 'STAND', color: 'var(--green)', reason: 'Stand on ' + pv + ' vs dealer ' + dv + '.' };
-    }
-    function hitReason(pv, dv) {
-      return { action: 'HIT', color: 'var(--blue)', reason: 'Hit on ' + pv + ' vs dealer ' + dv + '.' };
-    }
-    function doubleSoft(pv, dealerRank) {
-      return { action: 'DOUBLE', color: '#c47a12', reason: 'Soft ' + pv + ' vs ' + dealerRank + ' — double.' };
-    }
-    function doubleOrHit(pv, dv, canDouble, msg) {
-      if (canDouble && dv >= 2 && dv <= 9) return { action: 'DOUBLE', color: '#c47a12', reason: msg };
-      return hitReason(pv, dv);
-    }
-
-    function bustIfHit(player) {
-      const used = {};
-      for (let i = 0; i < player.length; i++) used[player[i].rank] = (used[player[i].rank] || 0) + 1;
-      let n = 0, busts = 0;
-      for (let r = 0; r < RANKS.length; r++) {
-        const remaining = 24 - (used[RANKS[r]] || 0);
-        if (remaining <= 0) continue;
-        n += remaining;
-        if (handValue(player.concat([{ rank: RANKS[r], suit: '♠' }])) > 21) busts += remaining;
-      }
-      return n ? (busts / n * 100).toFixed(0) : '0';
-    }
-
-    function scoreLabel(cards, dealerUp) {
-      if (!cards.length) return '';
-      const v = handValue(cards);
-      if (isBlackjack(cards)) return { text: 'Blackjack', cls: 'bj' };
-      if (v > 21) return { text: 'Bust ' + v, cls: 'bust' };
-      if (isSoftHand(cards)) return { text: 'Soft ' + v, cls: '' };
-      return { text: String(v), cls: '' };
+      if (pv >= 17) return { action: 'STAND', reason: 'Stand on ' + pv + '.' };
+      if (pv === 16 || pv === 15) return dv >= 7 ? { action: 'HIT', reason: 'Hit hard ' + pv + ' vs ' + dealer.rank + '.' } : { action: 'STAND', reason: 'Stand on ' + pv + ' vs ' + dealer.rank + '.' };
+      if (pv === 13 || pv === 14) return (dv >= 2 && dv <= 6) ? { action: 'STAND', reason: 'Stand on ' + pv + ' vs ' + dealer.rank + '.' } : { action: 'HIT', reason: 'Hit ' + pv + ' vs ' + dealer.rank + '.' };
+      if (pv === 12) return (dv >= 4 && dv <= 6) ? { action: 'STAND', reason: 'Stand on 12 vs ' + dealer.rank + '.' } : { action: 'HIT', reason: 'Hit 12 vs ' + dealer.rank + '.' };
+      if (pv === 11) return canDouble ? { action: 'DOUBLE', reason: 'Double 11.' } : { action: 'HIT', reason: 'Hit 11.' };
+      if (pv === 10) return (dv <= 9 && canDouble) ? { action: 'DOUBLE', reason: 'Double 10 vs ' + dealer.rank + '.' } : { action: 'HIT', reason: 'Hit 10 vs ' + dealer.rank + '.' };
+      if (pv === 9) return (dv >= 3 && dv <= 6 && canDouble) ? { action: 'DOUBLE', reason: 'Double 9 vs ' + dealer.rank + '.' } : { action: 'HIT', reason: 'Hit 9 vs ' + dealer.rank + '.' };
+      return { action: 'HIT', reason: 'Hit ' + pv + '.' };
     }
 
     function makeFace(card, selected, onclick) {
@@ -711,12 +571,11 @@
       hole.className = 'card-wrap';
       const fd = document.createElement('div');
       fd.className = 'card facedown';
-      fd.setAttribute('aria-label', 'Hole card');
       hole.appendChild(fd);
       row.appendChild(hole);
       const ds = document.getElementById('dealerScore');
-      ds.textContent = dealerCard ? ('Shows ' + dealerCard.rank) : '';
-      ds.className = 'score';
+      ds.textContent = dealerCard ? String(cardVal(dealerCard.rank) === 11 ? 11 : cardVal(dealerCard.rank)) : '';
+      ds.className = 'score-pill';
     }
 
     function renderPlayer() {
@@ -740,10 +599,15 @@
         row.appendChild(addWrap);
       }
       const known = filled(playerCards);
-      const sl = scoreLabel(known);
       const ps = document.getElementById('playerScore');
-      ps.textContent = sl.text || '';
-      ps.className = 'score ' + (sl.cls || '');
+      if (!known.length) {
+        ps.textContent = '';
+        ps.className = 'score-pill';
+      } else {
+        const v = handValue(known);
+        ps.textContent = isBlackjack(known) ? 'BJ' : String(v);
+        ps.className = 'score-pill' + (v > 21 ? ' bust' : (isBlackjack(known) ? ' bj' : ''));
+      }
       document.getElementById('analyzeBtn').disabled = !dealerCard || known.length < 2;
     }
 
@@ -753,6 +617,7 @@
       document.getElementById('picker').classList.add('active');
       document.getElementById('pickerTitle').textContent = slot === 'dealer' ? 'Dealer upcard' : 'Your card';
       document.getElementById('results').classList.remove('show');
+      clearMoves();
       renderSuitTabs();
       renderRanks();
       renderDealer();
@@ -791,6 +656,11 @@
       });
     }
 
+    function clearMoves() {
+      const btns = document.querySelectorAll('.move');
+      for (let i = 0; i < btns.length; i++) btns[i].classList.remove('on');
+    }
+
     function analyze() {
       const player = filled(playerCards);
       if (!dealerCard || player.length < 2) return;
@@ -799,50 +669,14 @@
       btn.textContent = 'CHECKING...';
       setTimeout(function () {
         const strat = basicStrategy(player, dealerCard);
-        const key = strat.action === 'DOUBLE' ? 'DOUBLE' : strat.action;
-        const moves = [
-          { id: 'HIT', label: 'HIT' },
-          { id: 'STAND', label: 'STAND' },
-          { id: 'DOUBLE', label: 'DOUBLE' },
-          { id: 'SPLIT', label: 'SPLIT' }
-        ];
-        const pv = handValue(player);
-        const dv = cardVal(dealerCard.rank);
-        const showMoves = key === 'HIT' || key === 'STAND' || key === 'DOUBLE' || key === 'SPLIT';
-        let html = '';
-        if (dealerCard.rank === 'A') {
-          html +=
-            '<div class="insure">' +
-              '<span>DEALER ACE — INSURANCE</span>' +
-              '<div class="insure-row">' +
-                '<div class="insure-opt on-no">NO</div>' +
-                '<div class="insure-opt">YES</div>' +
-              '</div>' +
-              '<p class="why" style="border:0;padding:8px 0 0;margin:0;">Decline insurance and even money. Both carry a high house edge.</p>' +
-            '</div>';
-        }
-        if (showMoves) {
-          html += '<div class="move-row">' + moves.map(function (m) {
-            const on = m.id === key;
-            return '<div class="move ' + m.id.toLowerCase() + (on ? ' on' : '') + '">' + m.label + '</div>';
-          }).join('') + '</div>';
-        }
-        html +=
-          '<div class="why">' +
-            '<span>PLAY</span>' +
-            '<b style="color:' + strat.color + '">' + strat.action + '</b>' +
-            '<p>' + strat.reason + '</p>' +
-          '</div>';
-        if (showMoves) {
-          html +=
-            '<div class="stats">' +
-              '<div class="stat"><b>' + (isBust(player) ? '100' : bustIfHit(player)) + '%</b><span>BUST IF HIT</span></div>' +
-              '<div class="stat"><b>' + (DEALER_BUST[dv] || 23) + '%</b><span>DEALER BUST</span></div>' +
-              '<div class="stat"><b>' + pv + '</b><span>YOUR TOTAL</span></div>' +
-            '</div>';
-        }
+        clearMoves();
+        const map = { HIT: 'hit', STAND: 'stand', DOUBLE: 'double', SPLIT: 'split' };
+        const cls = map[strat.action];
+        if (cls) document.querySelector('.move.' + cls).classList.add('on');
         const el = document.getElementById('results');
-        el.innerHTML = html;
+        let extra = '';
+        if (dealerCard.rank === 'A') extra = ' Insurance: NO.';
+        el.innerHTML = '<b>' + strat.action + '</b> — ' + strat.reason + extra;
         el.classList.add('show');
         btn.textContent = 'GET SIGNAL';
         btn.disabled = false;
@@ -855,6 +689,7 @@
       activeSlot = null;
       document.getElementById('picker').classList.remove('active');
       document.getElementById('results').classList.remove('show');
+      clearMoves();
       renderDealer();
       renderPlayer();
     }
