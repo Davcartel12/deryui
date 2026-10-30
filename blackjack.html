@@ -124,17 +124,8 @@
       width: 78%;
     }
 
-    .dealer-seat { top: 11%; }
+    .dealer-seat { top: 16%; }
     .player-seat { bottom: 10%; }
-
-    .seat-name {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 2.4px;
-      text-transform: uppercase;
-      color: rgba(210, 218, 230, 0.55);
-      margin-bottom: 6px;
-    }
 
     .hand {
       display: flex;
@@ -243,30 +234,6 @@
     .score-pill.bust { color: #ff6b6b; }
     .score-pill.bj { color: var(--gold); }
     .score-pill:empty { display: none; }
-
-    .felt-copy {
-      position: absolute;
-      left: 50%;
-      top: 46%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      color: rgba(186, 196, 210, 0.38);
-      pointer-events: none;
-      line-height: 1.55;
-    }
-
-    .felt-copy b {
-      display: block;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 1.6px;
-    }
-
-    .felt-copy span {
-      display: block;
-      font-size: 10px;
-      letter-spacing: 1.2px;
-    }
 
     .dock {
       width: calc(100% - 24px);
@@ -406,7 +373,6 @@
     @media (max-width: 380px) {
       .card-wrap { width: 50px; margin-left: -18px; }
       .score-pill { right: -30px; font-size: 11px; }
-      .felt-copy b { font-size: 11px; }
     }
   </style>
 </head>
@@ -426,19 +392,11 @@
     <img class="table-art" src="blackjack/table.webp" alt="" draggable="false">
 
     <div class="dealer-seat">
-      <div class="seat-name">Dealer</div>
       <div class="hand" id="dealerRow"></div>
       <div class="score-pill" id="dealerScore"></div>
     </div>
 
-    <div class="felt-copy">
-      <b>BLACKJACK 3:2</b>
-      <span>INSURANCE 2:1</span>
-      <span>DEALER STANDS ON 17</span>
-    </div>
-
     <div class="player-seat">
-      <div class="seat-name">You</div>
       <div class="hand" id="playerRow"></div>
       <div class="score-pill" id="playerScore"></div>
     </div>
