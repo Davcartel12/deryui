@@ -14,86 +14,103 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        html,
-        body {
+        html { -webkit-text-size-adjust: 100%; }
+
+        html, body {
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: 'DM Sans', sans-serif;
+            max-width: 100%;
+            overflow-x: hidden;
+            font-family: Inter, 'DM Sans', sans-serif;
         }
 
         body {
             display: flex;
+            flex-direction: column;
+            background: #07080c;
+            min-height: 100svh;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .screen {
+            width: 100%;
+            max-width: 430px;
+            margin: 0 auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
-            align-items: center;
-            background: url("https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/ecae2b74-9e36-47a0-b79d-521aaaaa5e0e.png");
-            background-size: cover;
-            background-position: center;
-            min-height: 100dvh;
+            padding: 12px 14px calc(18px + env(safe-area-inset-bottom, 0px));
+            min-width: 0;
+            position: relative;
+            z-index: 1;
+            background: url("https://i.supaimg.com/4f891786-3561-4996-9953-16a96d033ae3/ecae2b74-9e36-47a0-b79d-521aaaaa5e0e.png") center / cover no-repeat;
         }
 
         .game {
-            width: 92vw;
-            max-width: 480px;
+            width: 100%;
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0;
+            min-width: 0;
         }
 
         .cups {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
+            gap: 8px;
             width: 100%;
-            margin-top: clamp(60px, 14vw, 120px);
+            margin-top: 8px;
             position: relative;
+            overflow: visible;
         }
 
         .cup {
-            width: 30%;
+            flex: 1;
+            min-width: 0;
             position: relative;
             transition: 0.6s;
         }
 
         .cup img.cup-img {
             width: 100%;
+            height: auto;
             z-index: 2;
             position: relative;
             display: block;
+            pointer-events: none;
         }
 
         .hidden-item {
             position: absolute;
-            bottom: -20px;
+            bottom: 6%;
             left: 50%;
             transform: translateX(-50%);
-            width: clamp(28px, 10vw, 44px);
+            width: 32%;
+            max-width: 40px;
             opacity: 0;
             transition: 0.5s;
             z-index: 1;
+            pointer-events: none;
         }
 
-        .show .hidden-item {
-            opacity: 1;
-        }
+        .show .hidden-item { opacity: 1; }
 
-        .lift {
-            transform: translateY(-50px);
-        }
+        .lift { transform: translateY(-22%); }
 
         .lift .hidden-item {
-            transform: translateX(-50%) translateY(50px);
+            transform: translateX(-50%) translateY(70%);
         }
 
         .buttons {
-            margin-top: clamp(24px, 7vw, 48px);
+            margin-top: 18px;
             display: flex;
             justify-content: center;
-            gap: clamp(12px, 4vw, 24px);
+            gap: 10px;
             width: 100%;
         }
 
@@ -103,17 +120,18 @@
             padding: 0;
             cursor: pointer;
             transition: transform 0.15s, opacity 0.15s;
-            flex: 0 0 auto;
+            flex: 1;
+            min-width: 0;
         }
 
         .mode-btn img {
-            width: clamp(110px, 30vw, 160px);
+            width: 100%;
+            height: auto;
             display: block;
+            pointer-events: none;
         }
 
-        .mode-btn:active {
-            transform: scale(0.95);
-        }
+        .mode-btn:active { transform: scale(0.95); }
 
         .mode-btn:disabled {
             opacity: 0.45;
@@ -121,57 +139,12 @@
             transform: none;
         }
 
-        .exit-btn { display: none !important; }
+        .game .exit-btn { display: none !important; }
 
-        .exit-btn:active {
-            background: #1e90ff;
-            color: #000;
-            transform: scale(0.97);
-        }
-
-        @media (hover: hover) {
-            .mode-btn:hover {
-                transform: scale(1.05);
-            }
-
-            .exit-btn:hover {
-                background: #1e90ff;
-                color: #000;
-                transform: scale(1.08);
-            }
-        }
-
-        /* Landscape phones */
-        @media (max-height: 500px) and (orientation: landscape) {
-            .cups {
-                margin-top: 30px;
-            }
-
-            .cup {
-                width: 26%;
-            }
-
-            .lift {
-                transform: translateY(-38px);
-            }
-
-            .lift .hidden-item {
-                transform: translateX(-50%) translateY(38px);
-            }
-
-            .buttons {
-                margin-top: 14px;
-            }
-
-            .mode-btn img {
-                width: clamp(80px, 20vw, 120px);
-            }
-
-            .exit-btn {
-                margin-top: 10px;
-                padding: 8px 24px;
-                font-size: 13px;
-            }
+        @media (max-height: 560px) {
+            .cups { margin-top: 0; }
+            .buttons { margin-top: 10px; }
+            .lift { transform: translateY(-16%); }
         }
     </style>
 
@@ -249,19 +222,17 @@
 </head>
 
 <body class="theme-noise">
-<header class="topbar" style="position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(7,8,12,0.9);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,0.07);width:100%;">
+<header class="topbar">
     <a class="back" href="login.html" aria-label="Back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
     </a>
-  <a href="login.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
-    <img src="brand-logo.png" alt="CHIKE1W" style="height:38px;width:auto;max-width:150px;object-fit:contain;display:block;mix-blend-mode:screen;">
+  <a class="logo-wrap" href="login.html">
+    <img src="brand-logo.png" alt="CHIKE1W">
   </a>
-  <a href="login.html" style="background:#00a84f;color:#fff;padding:9px 12px;border-radius:10px;font-weight:800;text-decoration:none;font-size:12px;font-family:Inter,sans-serif;letter-spacing:0.2px;">CHIKE1W</a>
+  <a class="exit-btn" href="login.html">CHIKE1W</a>
 </header>
 
-    <!-- Loading screen -->
-    
-
+    <div class="screen">
     <div class="game">
         <div class="cups" id="cups">
             <div class="cup">
@@ -292,6 +263,7 @@
             </button>
         </div>
         <button class="exit-btn" onclick="location.href='login.html'">EXIT</button>
+    </div>
     </div>
 
 <script>
