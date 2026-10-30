@@ -839,7 +839,7 @@
           hasSample
         },
         advice: `Recommendation — ${best.label}. Predicted winner: ${predictedWinner}. ${agree}/6 layers agree (form ${form.home}/${form.away}, attack ${attack.home}/${attack.away}, defense ${defense.home}/${defense.away}, goals ${goals.home}/${goals.away}, Poisson ${poissonPair.home}/${poissonPair.away}, H2H ${h2h.home}/${h2h.away}).`,
-        analysis: `TejTips-style stack with venue splits + Poisson. xG ${expH.toFixed(2)}–${expA.toFixed(2)}. Over 1.5 ${Math.round(pOver15 * 100)}% · Over 2.5 ${Math.round(pOver25 * 100)}% · BTTS ${Math.round(pBTTS * 100)}% · HT lean ${Math.round(Math.max(pHt1, pHt2, pHtX) * 100)}%.`
+        analysis: `Model stack with venue splits + Poisson. xG ${expH.toFixed(2)}–${expA.toFixed(2)}. Over 1.5 ${Math.round(pOver15 * 100)}% · Over 2.5 ${Math.round(pOver25 * 100)}% · BTTS ${Math.round(pBTTS * 100)}% · HT lean ${Math.round(Math.max(pHt1, pHt2, pHtX) * 100)}%.`
       };
 
       applyTejTipOverride(pred, match);
@@ -906,7 +906,7 @@
         pred.conf = Math.max(pred.conf, 72);
       }
       pred.confLabel = pred.conf >= 82 ? 'VIP' : pred.conf >= 70 ? 'STRONG' : 'VALUE';
-      pred.advice = `TejTips tip — ${entry.tip}` + (entry.tejMatch ? ` (${entry.tejMatch})` : '') + `. Model still shows form/attack/defense/Poisson below.`;
+      pred.advice = `Recommendation — ${entry.tip}. Form, attack, defense, Poisson and H2H are shown below.`;
       return pred;
     }
 
@@ -1325,12 +1325,8 @@
       <div class="pred-row">
         <div class="pred-pill ${predStatus}">
           <span class="pred-icon ${predStatus}">${predIcon}</span>
-          <span class="pred-label">${pred.tipDisplay}${pred.tejSynced ? ' · TEJ' : ''}</span>
-          <span class="pred-value">
-            <div class="pv-conf">${pred.conf}%</div>
-            <div class="pv-odds">@${pred.tipOdds}</div>
-          </span>
-          <span class="pred-conf">${pred.tejSynced ? 'TEJTIPS' : pred.confLabel}</span>
+          <span class="pred-label">${pred.tipDisplay}</span>
+          <span class="pred-conf">${pred.confLabel}</span>
         </div>
       </div>
     </div>
@@ -1356,7 +1352,7 @@
           </div>
         </div>
 
-        <div class="advice-box"><strong>Advice</strong> — Recommendation: ${pred.tipLabel} · ${pred.conf}% @${pred.tipOdds}</div>
+        <div class="advice-box"><strong>Advice</strong> — Recommendation: ${pred.tipLabel}</div>
 
         ${factorBlock('Overall analysis', pred.factors.overall.home, pred.factors.overall.away, home.shortName || 'Home', away.shortName || 'Away', 'Advantage: ' + pred.predictedWinner + ' (' + (pred.factors.edge >= 0 ? '+' : '') + pred.factors.edge + '%)')}
         ${factorBlock('Form comparison', pred.factors.form.home, pred.factors.form.away, 'Form', 'Form')}
