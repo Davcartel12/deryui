@@ -544,6 +544,51 @@
       margin-top: 8px;
       font-size: 11px
     }
+
+    .bot-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 14px 0
+    }
+
+    .bot-stat {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center
+    }
+
+    .bot-stat b {
+      display: block;
+      font-size: 22px
+    }
+
+    .bot-stat span {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px
+    }
+
+    .bot-recent {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-family: monospace
+    }
+
+    .bot-games {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 12px
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin: -8px 0 14px
+    }
   </style>
   <script src="js/access-core.js"></script>
 </head>
@@ -573,6 +618,58 @@
   </div>
 
   <div id="adminPanel">
+    <div class="section-title">Telegram Bot</div>
+    <div class="rules-note" id="botRulesNote">
+      Firestore is refusing access to the <b>botConfig</b> collection. In the Firebase console open
+      Firestore &rarr; Rules and add this block inside <b>match /databases/{database}/documents</b>, then publish:
+      <code>match /botConfig/{doc} {
+  allow read, write: if true;
+}</code>
+    </div>
+    <div class="form-card">
+      <div class="code-head">
+        <h3 style="margin:0">Today</h3>
+        <span class="status unused" id="botOnline">Checking…</span>
+      </div>
+      <div class="bot-stats">
+        <div class="bot-stat"><b id="botSignals">0</b><span>SIGNALS</span></div>
+        <div class="bot-stat"><b id="botValid" style="color:var(--green)">0</b><span>VALIDES</span></div>
+        <div class="bot-stat"><b id="botFailed" style="color:var(--red)">0</b><span>FAILED</span></div>
+      </div>
+      <div class="code-meta" id="botState">Waiting for the bot…</div>
+      <div class="bot-recent" id="botRecent"></div>
+    </div>
+    <div class="form-card">
+      <h3>Bot settings</h3>
+      <label class="check"><input type="checkbox" id="bEnabled" checked> Bot is posting signals</label>
+      <div class="row2">
+        <div class="field"><label>Active from</label><input type="time" id="bStart" value="00:00"></div>
+        <div class="field"><label>Active until</label><input type="time" id="bEnd" value="23:59"></div>
+      </div>
+      <div class="hint">Cameroon time. Outside these hours the bot stays quiet.</div>
+      <div class="row2">
+        <div class="field"><label>Stop after valides</label><input type="number" id="bMaxValides" min="0" step="1" value="0"></div>
+        <div class="field"><label>Max signals per day</label><input type="number" id="bMaxSignals" min="0" step="1" value="0"></div>
+      </div>
+      <div class="hint">0 means no limit. When a limit is reached the bot posts "SESSION CLOSED" and waits for the next day.</div>
+      <div class="row2">
+        <div class="field"><label>Signal time from (min)</label><input type="number" id="bLeadMin" min="1" step="1" value="2"></div>
+        <div class="field"><label>Signal time to (min)</label><input type="number" id="bLeadMax" min="1" step="1" value="4"></div>
+      </div>
+      <div class="hint">How many minutes after posting the signal time is. 2 to 4 means a signal posted at 21:50 shows a time between 21:52 and 21:54.</div>
+      <div class="field"><label>Start checking (min before signal time)</label><input type="number" id="bCheckBefore" min="0" max="10" step="1" value="1"></div>
+      <div class="row2">
+        <div class="field"><label>Wait between signals from (sec)</label><input type="number" id="bGapMin" min="0" step="1" value="10"></div>
+        <div class="field"><label>to (sec)</label><input type="number" id="bGapMax" min="0" step="1" value="30"></div>
+      </div>
+      <div class="field"><label>Signal title</label><input type="text" id="bBrand" value="CHIKE1W"></div>
+      <div class="field">
+        <label>Games</label>
+        <div class="bot-games" id="bGames"></div>
+      </div>
+      <button class="btn" id="bSaveBtn" onclick="saveBotSettings()">Save Bot Settings</button>
+    </div>
+
     <div class="section-title">Access Codes</div>
     <div class="rules-note" id="rulesNote">
       Firestore is refusing access to the <b>accessCodes</b> collection. In the Firebase console open
@@ -672,6 +769,7 @@
         document.getElementById("adminPanel").style.display = "block";
         startListening();
         startCodeListening();
+        startBotListening();
       } else {
         document.getElementById("loginErr").style.display = "block";
       }
@@ -957,6 +1055,91 @@
       // Keep the "time left" labels fresh.
       setInterval(() => { if (codeDocs.length) renderCodes(codeDocs); }, 60000);
     }
+
+    // ── Telegram bot ──────────────────────────────────────────────
+    const BOT_GAMES = ["Lucky Jet", "Rocket X", "Crash", "Rocket Queen", "Meta Crash"];
+    const botSettingsRef = doc(db, "botConfig", "settings");
+    const botStatusRef = doc(db, "botConfig", "status");
+    let botStatus = null;
+
+    function showBotRulesNoteIfDenied(e) {
+      if (/permission|insufficient/i.test(String(e && (e.code || e.message)))) {
+        document.getElementById("botRulesNote").style.display = "block";
+      }
+    }
+
+    function fillBotForm(s) {
+      const set = (id, v) => { if (v != null) document.getElementById(id).value = v; };
+      document.getElementById("bEnabled").checked = s.enabled !== false;
+      set("bStart", s.startTime); set("bEnd", s.endTime);
+      set("bMaxValides", s.maxValides); set("bMaxSignals", s.maxSignals);
+      set("bLeadMin", s.leadMin); set("bLeadMax", s.leadMax);
+      set("bCheckBefore", s.checkBefore);
+      set("bGapMin", s.gapMin); set("bGapMax", s.gapMax);
+      set("bBrand", s.brand);
+      const games = Array.isArray(s.games) ? s.games : BOT_GAMES;
+      document.getElementById("bGames").innerHTML = BOT_GAMES.map((g, i) =>
+        `<label class="check"><input type="checkbox" id="bGame${i}" value="${esc(g)}"${games.includes(g) ? " checked" : ""}> ${esc(g)}</label>`).join("");
+    }
+
+    function renderBotStatus() {
+      const s = botStatus;
+      const online = document.getElementById("botOnline");
+      const beat = s && s.heartbeat ? A.toMillis(s.heartbeat) : null;
+      const isOnline = beat != null && Date.now() - beat < 3 * 60000;
+      online.textContent = isOnline ? "Online" : "Offline";
+      online.className = "status " + (isOnline ? "active" : "revoked");
+      const sameDay = s && beat != null && new Date(beat).toDateString() === new Date().toDateString();
+      document.getElementById("botSignals").textContent = sameDay ? (s.signals || 0) : 0;
+      document.getElementById("botValid").textContent = sameDay ? (s.valid || 0) : 0;
+      document.getElementById("botFailed").textContent = sameDay ? (s.failed || 0) : 0;
+      document.getElementById("botState").innerHTML = s
+        ? (isOnline ? esc(s.state || "") : "The bot is not running. Start it on the PC with <b>npm run bot</b>.")
+        : "The bot has not reported yet.";
+      document.getElementById("botRecent").innerHTML = sameDay && Array.isArray(s.recent)
+        ? s.recent.map(esc).join("<br>") : "";
+    }
+
+    async function startBotListening() {
+      fillBotForm({});
+      try {
+        const snap = await getDoc(botSettingsRef);
+        if (snap.exists()) fillBotForm(snap.data());
+      } catch (e) { showBotRulesNoteIfDenied(e); }
+      onSnapshot(botStatusRef, snap => { botStatus = snap.exists() ? snap.data() : null; renderBotStatus(); },
+        e => showBotRulesNoteIfDenied(e));
+      setInterval(renderBotStatus, 30000);
+    }
+
+    async function saveBotSettings() {
+      const n = (id) => Math.max(0, Math.round(Number(document.getElementById(id).value) || 0));
+      const s = {
+        enabled: document.getElementById("bEnabled").checked,
+        startTime: document.getElementById("bStart").value || "00:00",
+        endTime: document.getElementById("bEnd").value || "23:59",
+        maxValides: n("bMaxValides"),
+        maxSignals: n("bMaxSignals"),
+        leadMin: n("bLeadMin"),
+        leadMax: n("bLeadMax"),
+        checkBefore: Math.min(10, n("bCheckBefore")),
+        gapMin: n("bGapMin"),
+        gapMax: n("bGapMax"),
+        brand: document.getElementById("bBrand").value.trim() || "CHIKE1W",
+        games: BOT_GAMES.filter((g, i) => document.getElementById("bGame" + i).checked)
+      };
+      if (!s.games.length) { toast("Pick at least one game", false); return; }
+      if (s.leadMin < s.checkBefore + 1) { toast("Signal time must be at least " + (s.checkBefore + 1) + " min ahead", false); return; }
+      if (s.leadMax < s.leadMin) { toast("Signal time 'to' must be at least 'from'", false); return; }
+      if (s.gapMax < s.gapMin) { toast("Wait 'to' must be at least 'from'", false); return; }
+      const btn = document.getElementById("bSaveBtn");
+      btn.textContent = "Saving…"; btn.disabled = true;
+      try {
+        await setDoc(botSettingsRef, Object.assign(s, { updatedAt: serverTimestamp() }));
+        toast("Bot settings saved. The bot applies them before its next signal.");
+      } catch (e) { toast("Error: " + e.message, false); showBotRulesNoteIfDenied(e); }
+      btn.textContent = "Save Bot Settings"; btn.disabled = false;
+    }
+    window.saveBotSettings = saveBotSettings;
 
     function startListening() {
       const q = query(voucherCol, orderBy("createdAt", "desc"));
