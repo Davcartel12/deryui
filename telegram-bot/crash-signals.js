@@ -223,6 +223,15 @@ function blockedReason() {
   return limitReason();
 }
 
+let lastCfgCheck = 0;
+async function switchedOff() {
+  if (Date.now() - lastCfgCheck >= 10000) {
+    lastCfgCheck = Date.now();
+    await loadConfig();
+  }
+  return !cfg.enabled;
+}
+
 function remember(line) {
   today.recent.unshift(clock(new Date()) + "  " + line);
   today.recent = today.recent.slice(0, 10);
@@ -341,7 +350,15 @@ async function runSignal(game) {
   botState = "Waiting for " + at + " window - " + game.name + " " + fmt(assurance) + "x / " + fmt(coefficient) + "x";
   await writeStatus();
 
-  while (Date.now() < windowStart) await sleep(Math.min(5000, windowStart - Date.now()));
+  const cancel = async () => {
+    remember("CANCELLED - " + game.name + " " + at);
+    await post("<b>SIGNAL CANCELLED</b>\n" + game.name + " - " + at);
+  };
+
+  while (Date.now() < windowStart) {
+    if (await switchedOff()) return cancel();
+    await sleep(Math.min(5000, windowStart - Date.now()));
+  }
   botState = "Checking " + game.name + " rounds until " + at + ":59";
   await writeStatus();
 
@@ -349,6 +366,7 @@ async function runSignal(game) {
   try { (await history(game)).forEach((r) => seen.add(r.id)); } catch (e) { /* first poll below fills it */ }
 
   while (Date.now() < windowEnd) {
+    if (await switchedOff()) return cancel();
     await sleep(1500);
     let rounds;
     try { rounds = await history(game); } catch (e) { continue; }
@@ -404,7 +422,7 @@ async function main() {
       }
       botState = block;
       await writeStatus();
-      await sleep(30000);
+      await sleep(10000);
       continue;
     }
     lastBlock = "";

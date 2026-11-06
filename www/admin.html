@@ -638,10 +638,11 @@
       </div>
       <div class="code-meta" id="botState">Waiting for the bot…</div>
       <div class="bot-recent" id="botRecent"></div>
+      <button class="btn danger" id="botPowerBtn" style="margin-top:14px" onclick="toggleBotPower()">Turn Predictions OFF</button>
     </div>
     <div class="form-card">
       <h3>Bot settings</h3>
-      <label class="check"><input type="checkbox" id="bEnabled" checked> Bot is posting signals</label>
+      <input type="checkbox" id="bEnabled" checked hidden>
       <div class="row2">
         <div class="field"><label>Active from</label><input type="time" id="bStart" value="00:00"></div>
         <div class="field"><label>Active until</label><input type="time" id="bEnd" value="23:59"></div>
@@ -1100,12 +1101,35 @@
         ? s.recent.map(esc).join("<br>") : "";
     }
 
+    let botEnabled = true;
+    function renderBotPower() {
+      const btn = document.getElementById("botPowerBtn");
+      btn.textContent = botEnabled ? "Turn Predictions OFF" : "Turn Predictions ON";
+      btn.className = botEnabled ? "btn danger" : "btn";
+      document.getElementById("bEnabled").checked = botEnabled;
+    }
+
+    async function toggleBotPower() {
+      const next = !botEnabled;
+      const btn = document.getElementById("botPowerBtn");
+      btn.disabled = true;
+      try {
+        await setDoc(botSettingsRef, { enabled: next, updatedAt: serverTimestamp() }, { merge: true });
+        toast(next ? "Predictions ON. The next signal starts within seconds." : "Predictions OFF. Any open signal is cancelled.");
+      } catch (e) { toast("Error: " + e.message, false); showBotRulesNoteIfDenied(e); }
+      btn.disabled = false;
+    }
+    window.toggleBotPower = toggleBotPower;
+
     async function startBotListening() {
       fillBotForm({});
-      try {
-        const snap = await getDoc(botSettingsRef);
-        if (snap.exists()) fillBotForm(snap.data());
-      } catch (e) { showBotRulesNoteIfDenied(e); }
+      let filled = false;
+      onSnapshot(botSettingsRef, snap => {
+        const s = snap.exists() ? snap.data() : {};
+        if (!filled) { fillBotForm(s); filled = true; }
+        botEnabled = s.enabled !== false;
+        renderBotPower();
+      }, e => showBotRulesNoteIfDenied(e));
       onSnapshot(botStatusRef, snap => { botStatus = snap.exists() ? snap.data() : null; renderBotStatus(); },
         e => showBotRulesNoteIfDenied(e));
       setInterval(renderBotStatus, 30000);
