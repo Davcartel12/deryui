@@ -653,12 +653,9 @@
         <div class="field"><label>Max signals per day</label><input type="number" id="bMaxSignals" min="0" step="1" value="0"></div>
       </div>
       <div class="hint">0 means no limit. When a limit is reached the bot posts "SESSION CLOSED" and waits for the next day.</div>
-      <div class="row2">
-        <div class="field"><label>Signal time from (min)</label><input type="number" id="bLeadMin" min="1" step="1" value="2"></div>
-        <div class="field"><label>Signal time to (min)</label><input type="number" id="bLeadMax" min="1" step="1" value="4"></div>
-      </div>
-      <div class="hint">How many minutes after posting the signal time is. 2 to 4 means a signal posted at 21:50 shows a time between 21:52 and 21:54.</div>
-      <div class="field"><label>Start checking (min before signal time)</label><input type="number" id="bCheckBefore" min="0" max="10" step="1" value="1"></div>
+      <div class="hint">Signal time comes from the same GET SIGNAL code as the game pages. Assurance is 2.21x - 4.10x, coefficient is assurance + 0.20 to 0.60.</div>
+      <div class="field"><label>Start checking (seconds before signal time)</label><input type="number" id="bCheckBefore" min="0" max="120" step="1" value="15"></div>
+      <div class="hint">15 means a 13:15 signal counts every round that starts from 13:14:45 until 13:15:59.</div>
       <div class="row2">
         <div class="field"><label>Wait between signals from (sec)</label><input type="number" id="bGapMin" min="0" step="1" value="10"></div>
         <div class="field"><label>to (sec)</label><input type="number" id="bGapMax" min="0" step="1" value="30"></div>
@@ -1074,8 +1071,7 @@
       document.getElementById("bEnabled").checked = s.enabled !== false;
       set("bStart", s.startTime); set("bEnd", s.endTime);
       set("bMaxValides", s.maxValides); set("bMaxSignals", s.maxSignals);
-      set("bLeadMin", s.leadMin); set("bLeadMax", s.leadMax);
-      set("bCheckBefore", s.checkBefore);
+      set("bCheckBefore", s.checkBeforeSec);
       set("bGapMin", s.gapMin); set("bGapMax", s.gapMax);
       set("bBrand", s.brand);
       const games = Array.isArray(s.games) ? s.games : BOT_GAMES;
@@ -1143,17 +1139,13 @@
         endTime: document.getElementById("bEnd").value || "23:59",
         maxValides: n("bMaxValides"),
         maxSignals: n("bMaxSignals"),
-        leadMin: n("bLeadMin"),
-        leadMax: n("bLeadMax"),
-        checkBefore: Math.min(10, n("bCheckBefore")),
+        checkBeforeSec: Math.min(120, n("bCheckBefore")),
         gapMin: n("bGapMin"),
         gapMax: n("bGapMax"),
         brand: document.getElementById("bBrand").value.trim() || "CHIKE1W",
         games: BOT_GAMES.filter((g, i) => document.getElementById("bGame" + i).checked)
       };
       if (!s.games.length) { toast("Pick at least one game", false); return; }
-      if (s.leadMin < s.checkBefore + 1) { toast("Signal time must be at least " + (s.checkBefore + 1) + " min ahead", false); return; }
-      if (s.leadMax < s.leadMin) { toast("Signal time 'to' must be at least 'from'", false); return; }
       if (s.gapMax < s.gapMin) { toast("Wait 'to' must be at least 'from'", false); return; }
       const btn = document.getElementById("bSaveBtn");
       btn.textContent = "Saving…"; btn.disabled = true;

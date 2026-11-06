@@ -56,9 +56,7 @@ const DEFAULTS = {
   endTime: "23:59",
   maxValides: 0,
   maxSignals: 0,
-  leadMin: 2,
-  leadMax: 4,
-  checkBefore: 1,
+  checkBeforeSec: 15,
   gapMin: Number(process.env.GAP_MIN_S || 10),
   gapMax: Number(process.env.GAP_MAX_S || 30),
   games: GAMES.map((g) => g.name)
@@ -95,6 +93,28 @@ async function post(text) {
     await telegram("sendMessage", { chat_id: CHAT_ID, text: text, parse_mode: "HTML", disable_web_page_preview: true });
   } catch (e) {
     log("send failed:", e.message);
+  }
+}
+
+async function gameState(game) {
+  const res = await fetch(game.gateway + "/state", {
+    headers: { accept: "application/json", "session-id": game.session, "customer-id": CUSTOMER_ID }
+  });
+  if (!res.ok) throw new Error(game.name + " state " + res.status);
+  const d = await res.json();
+  return {
+    id: d.roundConfig && d.roundConfig.id != null ? d.roundConfig.id : null,
+    phase: d.currentState || "",
+    stop: Array.isArray(d.stopCoefficients) ? d.stopCoefficients[0] : null
+  };
+}
+
+async function roundCoef(game, id) {
+  try {
+    const r = (await history(game)).find((x) => x.id === id);
+    return r ? r.coef : null;
+  } catch (e) {
+    return null;
   }
 }
 
@@ -143,9 +163,7 @@ async function loadConfig() {
     c.endTime = hhmm(c.endTime, DEFAULTS.endTime);
     c.maxValides = Math.max(0, Math.round(num(c.maxValides, 0)));
     c.maxSignals = Math.max(0, Math.round(num(c.maxSignals, 0)));
-    c.checkBefore = Math.min(10, Math.max(0, Math.round(num(c.checkBefore, 1))));
-    c.leadMin = Math.max(c.checkBefore + 1, Math.round(num(c.leadMin, 2)));
-    c.leadMax = Math.max(c.leadMin, Math.round(num(c.leadMax, 4)));
+    c.checkBeforeSec = Math.min(120, Math.max(0, Math.round(num(c.checkBeforeSec, 15))));
     c.gapMin = Math.max(0, num(c.gapMin, 10));
     c.gapMax = Math.max(c.gapMin, num(c.gapMax, 30));
     c.games = Array.isArray(c.games) ? c.games.filter((n) => GAMES.some((g) => g.name === n)) : DEFAULTS.games;
@@ -287,38 +305,41 @@ function signalApi() {
   });
 }
 
-function localCoefficients() {
-  const r = Math.random();
-  let left;
-  if (r < 0.6) left = rand(2.21, 4.1);
-  else if (r < 0.85) left = rand(3.51, 8.0);
-  else left = rand(8.0, 10.0);
-  return { assurance: left, coefficient: left + rand(0.2, 0.6) };
+// generateCoefficients() from the game pages, limited to its main 2.21x - 4.10x band.
+function generateCoefficients() {
+  const left = rand(2.21, 4.10);
+  const right = left + rand(0.20, 0.60);
+  return { leftCoeff: left.toFixed(2), rightCoeff: right.toFixed(2) };
 }
 
-// Mirrors GET SIGNAL on the game pages: API first, then the same local fallback.
+// Same steps as generateNewSignal() (GET SIGNAL) on the game pages.
 async function getSignal() {
-  let sig = null, time = null, source = "local";
+  let prediction = null, targetTime = null;
   try {
-    const d = await signalApi();
-    const left = parseFloat(d && d.manual_prediction && d.manual_prediction.coeff);
-    const right = parseFloat(d && d.ai_prediction);
-    time = parseClock(d && d.time_window);
-    if (left > 1 && right > left) sig = { assurance: left, coefficient: right };
-    else if (left > 1) sig = { assurance: left, coefficient: left + rand(0.2, 0.55) };
-    if (sig) source = "api";
-  } catch (e) {
-    log("signal api failed:", e.message);
+    const apiData = await signalApi();
+    const twStr = apiData && apiData.time_window;
+    const leftRaw = parseFloat(apiData && apiData.manual_prediction && apiData.manual_prediction.coeff);
+    const rightRaw = parseFloat(apiData && apiData.ai_prediction);
+    targetTime = parseClock(twStr);
+    if (!isNaN(leftRaw) && !isNaN(rightRaw) && leftRaw > 0 && rightRaw > leftRaw) {
+      prediction = { leftCoeff: leftRaw.toFixed(2), rightCoeff: rightRaw.toFixed(2), source: "api" };
+    } else if (!isNaN(leftRaw) && leftRaw > 0) {
+      const spread = rand(0.20, 0.55);
+      prediction = { leftCoeff: leftRaw.toFixed(2), rightCoeff: (leftRaw + spread).toFixed(2), source: "api-partial" };
+    } else { throw new Error("No valid coeff"); }
+  } catch (err) {
+    log("signal api failed:", err.message);
+    prediction = Object.assign(generateCoefficients(), { source: "local" });
   }
-  if (!sig) sig = localCoefficients();
-  const before = cfg.checkBefore * 60000;
-  const tooSoon = (t) => t.getTime() - before < Date.now() + 60000;
-  if (!time || tooSoon(time) || time.getTime() > Date.now() + (cfg.leadMax + 1) * 60000) {
-    time = new Date(Date.now() + rand(cfg.leadMin, cfg.leadMax + 1) * 60000);
+  const now = new Date();
+  let nextSignalTime;
+  if (targetTime) {
+    nextSignalTime = targetTime;
+    if (nextSignalTime.getTime() <= now.getTime() + 5000) nextSignalTime = new Date(now.getTime() + 30000);
+  } else {
+    nextSignalTime = new Date(now.getTime() + Math.floor(rand(90, 210)) * 1000);
   }
-  time.setSeconds(0, 0);
-  while (tooSoon(time)) time = new Date(time.getTime() + 60000);
-  return Object.assign(sig, { time: time, source: source });
+  return { leftCoeff: prediction.leftCoeff, rightCoeff: prediction.rightCoeff, time: nextSignalTime, source: prediction.source };
 }
 
 function pickGame(prev) {
@@ -332,22 +353,23 @@ const fmt = (v) => (Math.round(v * 100) / 100).toString();
 
 async function runSignal(game) {
   const sig = await getSignal();
-  const assurance = Math.round(sig.assurance * 100) / 100;
-  const coefficient = Math.round(sig.coefficient * 100) / 100;
-  // Window opens checkBefore minutes before the signal time and closes at hh:mm:59.
-  const windowStart = sig.time.getTime() - cfg.checkBefore * 60000;
-  const windowEnd = sig.time.getTime() + 60000;
+  const assurance = parseFloat(sig.leftCoeff);
+  // Rounds that take off from checkBeforeSec seconds before the shown hh:mm until hh:mm:59 are counted.
+  const minute = new Date(sig.time);
+  minute.setSeconds(0, 0);
+  const windowStart = minute.getTime() - cfg.checkBeforeSec * 1000;
+  const windowEnd = minute.getTime() + 60000;
   const at = clock(sig.time);
-  log(game.name, "assurance", assurance, "coefficient", coefficient, "time", at, "(" + sig.source + ")");
+  log(game.name, "assurance", sig.leftCoeff, "coefficient", sig.rightCoeff, "time", at, "(" + sig.source + ")");
 
   await post(
     "<b>" + cfg.brand + " SIGNAL</b> - Game: <b>" + game.name + "</b>\n\n" +
     "Time: <b>" + at + "</b>\n" +
-    "Assurance: <b>" + fmt(assurance) + "x</b>\n" +
-    "Coefficient: <b>" + fmt(coefficient) + "x</b>"
+    "Assurance: <b>" + sig.leftCoeff + "x</b>\n" +
+    "Coefficient: <b>" + sig.rightCoeff + "x</b>"
   );
   today.signals++;
-  botState = "Waiting for " + at + " window - " + game.name + " " + fmt(assurance) + "x / " + fmt(coefficient) + "x";
+  botState = "Waiting for " + at + " window - " + game.name + " " + sig.leftCoeff + "x / " + sig.rightCoeff + "x";
   await writeStatus();
 
   const cancel = async () => {
@@ -359,33 +381,56 @@ async function runSignal(game) {
     if (await switchedOff()) return cancel();
     await sleep(Math.min(5000, windowStart - Date.now()));
   }
-  botState = "Checking " + game.name + " rounds until " + at + ":59";
+  botState = "Checking " + game.name + " rounds starting until " + at + ":59";
   await writeStatus();
 
-  const seen = new Set();
-  try { (await history(game)).forEach((r) => seen.add(r.id)); } catch (e) { /* first poll below fills it */ }
+  const STARTED = ["flying", "ending", "ended"];
+  const pending = [];
+  const known = new Set();
+  let skipId = null;
+  let first = true;
+  const hardEnd = windowEnd + 3 * 60000;
 
-  while (Date.now() < windowEnd) {
+  while (Date.now() < hardEnd) {
     if (await switchedOff()) return cancel();
-    await sleep(1500);
-    let rounds;
-    try { rounds = await history(game); } catch (e) { continue; }
-    const fresh = rounds.filter((r) => !seen.has(r.id)).reverse();
-    for (const r of fresh) {
-      seen.add(r.id);
-      log(game.name, "round", fmt(r.coef) + "x");
-      if (r.coef >= assurance) {
-        today.valid++;
-        remember("VALIDE " + r.coef.toFixed(2) + "x - " + game.name + " " + at);
-        await post("<b>VALIDE " + r.coef.toFixed(2) + "x</b>\n" + game.name + " - " + at);
-        return;
+    let s = null;
+    try { s = await gameState(game); } catch (e) { /* transient network error */ }
+    if (s && s.id != null) {
+      // A round already in the air when the window opens started too early to count.
+      if (first) { first = false; if (STARTED.includes(s.phase)) skipId = s.id; }
+      if (STARTED.includes(s.phase) && s.id !== skipId && !known.has(s.id) && Date.now() <= windowEnd) {
+        known.add(s.id);
+        pending.push(s.id);
+        log(game.name, "round started", s.id.slice(0, 8));
+      }
+      for (const id of pending.slice()) {
+        if (id === s.id) continue;
+        const coef = await roundCoef(game, id);
+        if (coef == null) break;
+        pending.splice(pending.indexOf(id), 1);
+        if (await judge(coef)) return;
+      }
+      if (pending[0] === s.id && s.stop != null) {
+        pending.shift();
+        if (await judge(Number(s.stop))) return;
       }
     }
+    if (Date.now() > windowEnd && !pending.length) break;
+    await sleep(800);
+  }
+
+  async function judge(coef) {
+    log(game.name, "round", fmt(coef) + "x");
+    if (coef < assurance) return false;
+    today.valid++;
+    remember("VALIDE " + coef.toFixed(2) + "x - " + game.name + " " + at);
+    await post("<b>VALIDE " + coef.toFixed(2) + "x</b>\n" + game.name + " - " + at);
+    return true;
   }
 
   today.failed++;
-  remember("FAILED - " + game.name + " " + at + " (" + fmt(assurance) + "x)");
-  await post("<b>FAILED</b>\n" + game.name + " - " + at + " (no round reached " + fmt(assurance) + "x)");
+  remember("FAILED - " + game.name + " " + at + " (" + sig.leftCoeff + "x)");
+  await post("<b>FAILED</b>\n" + game.name + " - " + at + " (no round reached " + sig.leftCoeff + "x)");
 }
 
 async function printChatIds() {
