@@ -709,9 +709,17 @@
         <div class="field"><label>Session start sticker</label><input type="text" id="bStartSticker" placeholder="e.g. 1"></div>
         <div class="field"><label>Win stickers</label><input type="text" id="bWinStickers" placeholder="e.g. 2,5,8"></div>
       </div>
-      <div class="hint">Numbers are positions in the pack as Telegram shows it: 1 is the first sticker. With several numbers the bot picks one at random each time. Leave empty for no sticker.</div>
+      <div class="field"><label>Session close sticker</label><input type="text" id="bCloseSticker" placeholder="e.g. 4"></div>
+      <div class="hint">Numbers are positions in the pack as Telegram shows it: 1 is the first sticker. With several numbers the bot picks one at random each time. An image link (.jpg, .png, .gif) also works. Leave empty for nothing.</div>
       <div class="code-meta" id="stickerInfo" style="margin-bottom:14px"></div>
       <button class="btn" type="button" onclick="saveBotSettings()">Save Stickers</button>
+    </div>
+
+    <div class="form-card">
+      <h3>Game started image</h3>
+      <div class="hint" style="margin-top:-8px">Sent just before each signal. Upload a picture, or type a sticker number or image link. A game left empty uses "All games".</div>
+      <div id="mediaRows"></div>
+      <button class="btn" type="button" id="bMediaBtn" onclick="saveBotSettings()">Save Images</button>
     </div>
 
     <div class="section-title">Access Codes</div>
@@ -1121,6 +1129,9 @@
       set("bGapMin", s.gapMin); set("bGapMax", s.gapMax);
       set("bBrand", s.brand);
       set("bPack", s.stickerPack); set("bStartSticker", s.startSticker); set("bWinStickers", s.winStickers);
+      set("bCloseSticker", s.closeSticker);
+      signalMedia = s.signalMedia && typeof s.signalMedia === "object" ? Object.assign({}, s.signalMedia) : {};
+      renderMediaRows();
       botSchedule = Array.isArray(s.schedule) ? s.schedule.slice() : [];
       renderSchedule();
       const games = Array.isArray(s.games) ? s.games : BOT_GAMES;
@@ -1148,6 +1159,65 @@
       document.getElementById("botSessions").innerHTML = sessions.map(x =>
         `<div><b>${esc(x.label)}</b> &middot; ${x.valid || 0} valides / ${x.failed || 0} failed${x.closed ? " &middot; closed" : ""}</div>`).join("");
       document.getElementById("stickerInfo").textContent = s && s.stickerInfo ? s.stickerInfo : "";
+    }
+
+    const botMediaRef = doc(db, "botConfig", "media");
+    const MEDIA_KEYS = ["default"].concat(BOT_GAMES);
+    let signalMedia = {};
+    let mediaImages = {};
+    let mediaDirty = false;
+
+    function renderMediaRows() {
+      document.getElementById("mediaRows").innerHTML = MEDIA_KEYS.map((k, i) => `
+        <div class="field">
+          <label>${k === "default" ? "All games" : esc(k)}</label>
+          <div class="inline">
+            <input type="text" id="mText${i}" placeholder="sticker no. or image link" value="${esc(signalMedia[k] || "")}">
+            <button class="btn ghost" type="button" onclick="document.getElementById('mFile${i}').click()">Upload</button>
+          </div>
+          <input type="file" id="mFile${i}" accept="image/*" hidden onchange="pickMedia(${i})">
+          ${mediaImages[k] ? `<img class="preview-img" style="display:block;max-height:120px" src="${mediaImages[k]}" alt="">
+            <button class="btn ghost" type="button" style="margin-top:6px" onclick="removeMedia(${i})">Remove picture</button>` : ""}
+        </div>`).join("");
+    }
+
+    function readMediaTexts() {
+      MEDIA_KEYS.forEach((k, i) => {
+        const el = document.getElementById("mText" + i);
+        if (!el) return;
+        const v = el.value.trim();
+        if (v) signalMedia[k] = v; else delete signalMedia[k];
+      });
+    }
+
+    async function pickMedia(i) {
+      const file = document.getElementById("mFile" + i).files[0];
+      if (!file) return;
+      try {
+        readMediaTexts();
+        mediaImages[MEDIA_KEYS[i]] = await shrinkFile(file);
+        mediaDirty = true;
+        renderMediaRows();
+        toast("Picture ready. Tap Save Images.");
+      } catch (e) { toast(e.message, false); }
+    }
+    window.pickMedia = pickMedia;
+
+    function removeMedia(i) {
+      readMediaTexts();
+      delete mediaImages[MEDIA_KEYS[i]];
+      mediaDirty = true;
+      renderMediaRows();
+    }
+    window.removeMedia = removeMedia;
+
+    async function loadMediaImages() {
+      try {
+        const snap = await getDoc(botMediaRef);
+        mediaImages = snap.exists() ? snap.data() : {};
+        readMediaTexts();
+        renderMediaRows();
+      } catch (e) { showBotRulesNoteIfDenied(e); }
     }
 
     const DAY_LABELS = { all: "Every day", weekdays: "Mon-Fri", weekend: "Sat-Sun", mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
@@ -1225,12 +1295,15 @@
     }
     window.toggleBotPower = toggleBotPower;
 
+    let mediaVersion = 0;
     async function startBotListening() {
       fillBotForm({});
+      loadMediaImages();
       let filled = false;
       onSnapshot(botSettingsRef, snap => {
         const s = snap.exists() ? snap.data() : {};
         if (!filled) { fillBotForm(s); filled = true; }
+        mediaVersion = Number(s.mediaVersion) || 0;
         botEnabled = s.enabled !== false;
         renderBotPower();
       }, e => showBotRulesNoteIfDenied(e));
@@ -1254,6 +1327,7 @@
         stickerPack: document.getElementById("bPack").value.trim(),
         startSticker: document.getElementById("bStartSticker").value.trim(),
         winStickers: document.getElementById("bWinStickers").value.trim(),
+        closeSticker: document.getElementById("bCloseSticker").value.trim(),
         schedule: botSchedule,
         games: BOT_GAMES.filter((g, i) => document.getElementById("bGame" + i).checked)
       };
@@ -1262,6 +1336,16 @@
       const btn = document.getElementById("bSaveBtn");
       btn.textContent = "Saving…"; btn.disabled = true;
       try {
+        readMediaTexts();
+        s.signalMedia = signalMedia;
+        if (mediaDirty) {
+          const size = Object.values(mediaImages).reduce((t, v) => t + String(v).length, 0);
+          if (size > 900000) throw new Error("Pictures are too large together. Remove one and try again.");
+          await setDoc(botMediaRef, mediaImages);
+          mediaVersion = Date.now();
+          mediaDirty = false;
+        }
+        s.mediaVersion = mediaVersion;
         await setDoc(botSettingsRef, Object.assign(s, { updatedAt: serverTimestamp() }));
         toast("Bot settings saved. The bot applies them before its next signal.");
       } catch (e) { toast("Error: " + e.message, false); showBotRulesNoteIfDenied(e); }

@@ -63,7 +63,10 @@ const DEFAULTS = {
   schedule: [],
   stickerPack: "",
   startSticker: "",
-  winStickers: ""
+  winStickers: "",
+  closeSticker: "",
+  signalMedia: {},
+  mediaVersion: 0
 };
 const DAY_CODES = ["all", "weekdays", "weekend", "sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 const DAY_NAMES = { all: "Every day", weekdays: "Mon-Fri", weekend: "Sat-Sun", sun: "Sunday", mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday" };
@@ -188,6 +191,11 @@ async function loadConfig() {
     c.stickerPack = String(c.stickerPack || "").trim();
     c.startSticker = String(c.startSticker || "").trim();
     c.winStickers = String(c.winStickers || "").trim();
+    c.closeSticker = String(c.closeSticker || "").trim();
+    const sm = c.signalMedia && typeof c.signalMedia === "object" ? c.signalMedia : {};
+    c.signalMedia = {};
+    Object.keys(sm).forEach((k) => { if (typeof sm[k] === "string" && sm[k].trim()) c.signalMedia[k] = sm[k].trim(); });
+    c.mediaVersion = num(c.mediaVersion, 0);
     if (!configOk) log("admin settings loaded");
     cfg = c;
     configOk = true;
@@ -353,9 +361,53 @@ async function sendSticker(spec) {
   log("STICKER", pick);
   if (DRY) return;
   try {
-    await telegram("sendSticker", { chat_id: CHAT_ID, sticker: sticker });
+    if (/^https?:\/\/\S+\.(jpe?g|png)(\?\S*)?$/i.test(sticker)) await telegram("sendPhoto", { chat_id: CHAT_ID, photo: sticker });
+    else if (/^https?:\/\/\S+\.(gif|mp4)(\?\S*)?$/i.test(sticker)) await telegram("sendAnimation", { chat_id: CHAT_ID, animation: sticker });
+    else await telegram("sendSticker", { chat_id: CHAT_ID, sticker: sticker });
   } catch (e) {
     log("sticker failed:", e.message);
+  }
+}
+
+// Images uploaded in the admin panel live in botConfig/media and are only re-read when mediaVersion changes.
+let media = { version: -1, images: {} };
+async function loadMedia() {
+  if (media.version === cfg.mediaVersion) return;
+  try {
+    const res = await fetch(FIRESTORE + "media?key=" + FIREBASE_KEY);
+    const f = res.ok ? fromFields((await res.json()).fields || {}) : {};
+    const images = {};
+    Object.keys(f).forEach((k) => {
+      const m = /^data:(image\/[a-z]+);base64,(.+)$/.exec(f[k] || "");
+      if (m) images[k] = { type: m[1], buf: Buffer.from(m[2], "base64") };
+    });
+    media = { version: cfg.mediaVersion, images: images };
+  } catch (e) {
+    log("media load failed:", e.message);
+  }
+}
+
+async function sendImage(img) {
+  log("IMAGE", img.type, img.buf.length + " bytes");
+  if (DRY) return;
+  try {
+    const fd = new FormData();
+    fd.append("chat_id", CHAT_ID);
+    fd.append("photo", new Blob([img.buf], { type: img.type }), "image." + img.type.split("/")[1]);
+    const res = await fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendPhoto", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.description);
+  } catch (e) {
+    log("image failed:", e.message);
+  }
+}
+
+// Game image or sticker first, then the "All games" one.
+async function sendGameMedia(game) {
+  await loadMedia();
+  for (const key of [game.name, "default"]) {
+    if (media.images[key]) return sendImage(media.images[key]);
+    if (cfg.signalMedia[key]) return sendSticker(cfg.signalMedia[key]);
   }
 }
 
@@ -364,6 +416,7 @@ async function closeSession(key) {
   if (!st || st.closed) return;
   st.closed = true;
   await post("<b>SESSION CLOSED</b>\n" + st.label + "\nResult: " + st.valid + " valides / " + st.failed + " failed");
+  await sendSticker(cfg.closeSticker);
 }
 
 function limitReason() {
@@ -499,6 +552,7 @@ async function runSignal(game) {
   const at = clock(sig.time);
   log(game.name, "assurance", sig.leftCoeff, "coefficient", sig.rightCoeff, "time", at, "(" + sig.source + ")");
 
+  await sendGameMedia(game);
   await post(
     "<b>" + cfg.brand + " SIGNAL</b> - Game: <b>" + game.name + "</b>\n\n" +
     "Time: <b>" + at + "</b>\n" +
@@ -620,6 +674,7 @@ async function main() {
       if (limitReason() && !closedNotice) {
         closedNotice = true;
         await post("<b>SESSION CLOSED</b>\nToday: " + today.valid + " valides / " + today.failed + " failed");
+        await sendSticker(cfg.closeSticker);
       }
       botState = block;
       await writeStatus();
