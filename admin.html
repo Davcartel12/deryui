@@ -637,6 +637,7 @@
         <div class="bot-stat"><b id="botFailed" style="color:var(--red)">0</b><span>FAILED</span></div>
       </div>
       <div class="code-meta" id="botState">Waiting for the bot…</div>
+      <div class="code-meta" id="botSessions" style="margin-top:10px"></div>
       <div class="bot-recent" id="botRecent"></div>
       <button class="btn danger" id="botPowerBtn" style="margin-top:14px" onclick="toggleBotPower()">Turn Predictions OFF</button>
     </div>
@@ -666,6 +667,51 @@
         <div class="bot-games" id="bGames"></div>
       </div>
       <button class="btn" id="bSaveBtn" onclick="saveBotSettings()">Save Bot Settings</button>
+    </div>
+
+    <div class="form-card">
+      <h3>Weekly schedule</h3>
+      <div class="hint" style="margin-top:-8px">When sessions are listed here the bot only posts during them and "Active from / until" is ignored. Leave the list empty to use the hours above.</div>
+      <div id="schedList"></div>
+      <div class="row2">
+        <div class="field"><label>Day</label>
+          <select id="sDay">
+            <option value="all">Every day</option>
+            <option value="weekdays">Mon-Fri</option>
+            <option value="weekend">Sat-Sun</option>
+            <option value="mon">Monday</option>
+            <option value="tue">Tuesday</option>
+            <option value="wed">Wednesday</option>
+            <option value="thu">Thursday</option>
+            <option value="fri">Friday</option>
+            <option value="sat">Saturday</option>
+            <option value="sun">Sunday</option>
+          </select>
+        </div>
+        <div class="field"><label>Game</label><select id="sGame"></select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>From</label><input type="time" id="sStart" value="09:00"></div>
+        <div class="field"><label>Until</label><input type="time" id="sEnd" value="12:00"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Stop after valides</label><input type="number" id="sMaxValides" min="0" step="1" value="5"></div>
+        <div class="field"><label>Max signals</label><input type="number" id="sMaxSignals" min="0" step="1" value="0"></div>
+      </div>
+      <div class="hint">0 means no limit. The session ends when it reaches its valides, its max signals, or its end time, and the bot posts "SESSION CLOSED" with the result.</div>
+      <button class="btn ghost" type="button" onclick="addSession()">Add Session</button>
+    </div>
+
+    <div class="form-card">
+      <h3>Stickers</h3>
+      <div class="field"><label>Sticker pack link</label><input type="text" id="bPack" placeholder="https://t.me/addstickers/PackName"></div>
+      <div class="row2">
+        <div class="field"><label>Session start sticker</label><input type="text" id="bStartSticker" placeholder="e.g. 1"></div>
+        <div class="field"><label>Win stickers</label><input type="text" id="bWinStickers" placeholder="e.g. 2,5,8"></div>
+      </div>
+      <div class="hint">Numbers are positions in the pack as Telegram shows it: 1 is the first sticker. With several numbers the bot picks one at random each time. Leave empty for no sticker.</div>
+      <div class="code-meta" id="stickerInfo" style="margin-bottom:14px"></div>
+      <button class="btn" type="button" onclick="saveBotSettings()">Save Stickers</button>
     </div>
 
     <div class="section-title">Access Codes</div>
@@ -1074,6 +1120,9 @@
       set("bCheckBefore", s.checkBeforeSec);
       set("bGapMin", s.gapMin); set("bGapMax", s.gapMax);
       set("bBrand", s.brand);
+      set("bPack", s.stickerPack); set("bStartSticker", s.startSticker); set("bWinStickers", s.winStickers);
+      botSchedule = Array.isArray(s.schedule) ? s.schedule.slice() : [];
+      renderSchedule();
       const games = Array.isArray(s.games) ? s.games : BOT_GAMES;
       document.getElementById("bGames").innerHTML = BOT_GAMES.map((g, i) =>
         `<label class="check"><input type="checkbox" id="bGame${i}" value="${esc(g)}"${games.includes(g) ? " checked" : ""}> ${esc(g)}</label>`).join("");
@@ -1095,7 +1144,66 @@
         : "The bot has not reported yet.";
       document.getElementById("botRecent").innerHTML = sameDay && Array.isArray(s.recent)
         ? s.recent.map(esc).join("<br>") : "";
+      const sessions = sameDay && s.sessions ? Object.values(s.sessions).filter(x => x.label !== "Manual") : [];
+      document.getElementById("botSessions").innerHTML = sessions.map(x =>
+        `<div><b>${esc(x.label)}</b> &middot; ${x.valid || 0} valides / ${x.failed || 0} failed${x.closed ? " &middot; closed" : ""}</div>`).join("");
+      document.getElementById("stickerInfo").textContent = s && s.stickerInfo ? s.stickerInfo : "";
     }
+
+    const DAY_LABELS = { all: "Every day", weekdays: "Mon-Fri", weekend: "Sat-Sun", mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
+    const DAY_ORDER = ["all", "weekdays", "weekend", "mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+    let botSchedule = [];
+
+    function renderSchedule() {
+      const sel = document.getElementById("sGame");
+      if (!sel.options.length) {
+        sel.innerHTML = `<option value="any">All games (rotate)</option>` + BOT_GAMES.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join("");
+      }
+      const list = document.getElementById("schedList");
+      if (!botSchedule.length) { list.innerHTML = `<div class="empty-list" style="padding:16px">No sessions yet.</div>`; return; }
+      list.innerHTML = botSchedule.map((s, i) => `
+        <div class="code-item">
+          <div class="code-head">
+            <div><b>${esc(DAY_LABELS[s.day] || s.day)}</b> &middot; ${esc(s.start)} - ${esc(s.end)}</div>
+            <span class="status unused">${esc(s.game === "any" ? "All games" : s.game)}</span>
+          </div>
+          <div class="code-meta">
+            Stop after <b>${s.maxValides ? s.maxValides + " valides" : "no valide limit"}</b>${s.maxSignals ? " or <b>" + s.maxSignals + " signals</b>" : ""}
+          </div>
+          <div class="code-actions"><button type="button" class="warn" onclick="removeSession(${i})">Remove</button></div>
+        </div>`).join("");
+    }
+
+    async function saveSchedule(msg) {
+      botSchedule.sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day) || a.start.localeCompare(b.start));
+      renderSchedule();
+      try {
+        await setDoc(botSettingsRef, { schedule: botSchedule, updatedAt: serverTimestamp() }, { merge: true });
+        toast(msg);
+      } catch (e) { toast("Error: " + e.message, false); showBotRulesNoteIfDenied(e); }
+    }
+
+    function addSession() {
+      const n = (id) => Math.max(0, Math.round(Number(document.getElementById(id).value) || 0));
+      const s = {
+        day: document.getElementById("sDay").value,
+        game: document.getElementById("sGame").value,
+        start: document.getElementById("sStart").value,
+        end: document.getElementById("sEnd").value,
+        maxValides: n("sMaxValides"),
+        maxSignals: n("sMaxSignals")
+      };
+      if (!s.start || !s.end || s.start >= s.end) { toast("'Until' must be later than 'From' on the same day", false); return; }
+      botSchedule.push(s);
+      saveSchedule("Session added");
+    }
+    window.addSession = addSession;
+
+    function removeSession(i) {
+      botSchedule.splice(i, 1);
+      saveSchedule("Session removed");
+    }
+    window.removeSession = removeSession;
 
     let botEnabled = true;
     function renderBotPower() {
@@ -1143,6 +1251,10 @@
         gapMin: n("bGapMin"),
         gapMax: n("bGapMax"),
         brand: document.getElementById("bBrand").value.trim() || "CHIKE1W",
+        stickerPack: document.getElementById("bPack").value.trim(),
+        startSticker: document.getElementById("bStartSticker").value.trim(),
+        winStickers: document.getElementById("bWinStickers").value.trim(),
+        schedule: botSchedule,
         games: BOT_GAMES.filter((g, i) => document.getElementById("bGame" + i).checked)
       };
       if (!s.games.length) { toast("Pick at least one game", false); return; }

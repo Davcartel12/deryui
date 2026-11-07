@@ -59,17 +59,25 @@ const DEFAULTS = {
   checkBeforeSec: 15,
   gapMin: Number(process.env.GAP_MIN_S || 10),
   gapMax: Number(process.env.GAP_MAX_S || 30),
-  games: GAMES.map((g) => g.name)
+  games: GAMES.map((g) => g.name),
+  schedule: [],
+  stickerPack: "",
+  startSticker: "",
+  winStickers: ""
 };
+const DAY_CODES = ["all", "weekdays", "weekend", "sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+const DAY_NAMES = { all: "Every day", weekdays: "Mon-Fri", weekend: "Sat-Sun", sun: "Sunday", mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday" };
 let cfg = Object.assign({}, DEFAULTS);
 let configOk = null;
 
 const FIRESTORE = "https://firestore.googleapis.com/v1/projects/chike1w/databases/(default)/documents/botConfig/";
 const FIREBASE_KEY = "AIzaSyCWOqTsV4Nhd6axIPyTWWI-PFo2HOd_KV0";
 
-const today = { day: "", signals: 0, valid: 0, failed: 0, recent: [] };
+const today = { day: "", signals: 0, valid: 0, failed: 0, recent: [], sessions: {} };
 let botState = "Starting";
 let closedNotice = false;
+let openKey = "";
+let stickerInfo = "";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const rand = (min, max) => Math.random() * (max - min) + min;
@@ -139,6 +147,7 @@ function toValue(x) {
   if (typeof x === "boolean") return { booleanValue: x };
   if (typeof x === "number") return Number.isInteger(x) ? { integerValue: String(x) } : { doubleValue: x };
   if (Array.isArray(x)) return { arrayValue: { values: x.map(toValue) } };
+  if (typeof x === "object") return { mapValue: { fields: toFields(x) } };
   return { stringValue: String(x) };
 }
 function toFields(obj) {
@@ -149,6 +158,7 @@ function toFields(obj) {
 
 const num = (v, d) => (isFinite(Number(v)) ? Number(v) : d);
 const hhmm = (v, d) => (/^\d{2}:\d{2}$/.test(v || "") ? v : d);
+const toMin = (s) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
 
 async function loadConfig() {
   try {
@@ -167,6 +177,17 @@ async function loadConfig() {
     c.gapMin = Math.max(0, num(c.gapMin, 10));
     c.gapMax = Math.max(c.gapMin, num(c.gapMax, 30));
     c.games = Array.isArray(c.games) ? c.games.filter((n) => GAMES.some((g) => g.name === n)) : DEFAULTS.games;
+    c.schedule = (Array.isArray(c.schedule) ? c.schedule : []).map((s) => ({
+      day: DAY_CODES.includes(s && s.day) ? s.day : "all",
+      start: hhmm(s && s.start, "00:00"),
+      end: hhmm(s && s.end, "23:59"),
+      game: GAMES.some((g) => g.name === (s && s.game)) ? s.game : "any",
+      maxValides: Math.max(0, Math.round(num(s && s.maxValides, 0))),
+      maxSignals: Math.max(0, Math.round(num(s && s.maxSignals, 0)))
+    })).filter((s) => toMin(s.start) < toMin(s.end));
+    c.stickerPack = String(c.stickerPack || "").trim();
+    c.startSticker = String(c.startSticker || "").trim();
+    c.winStickers = String(c.winStickers || "").trim();
     if (!configOk) log("admin settings loaded");
     cfg = c;
     configOk = true;
@@ -188,7 +209,10 @@ async function writeStatus() {
         valid: today.valid,
         failed: today.failed,
         state: botState,
-        recent: today.recent
+        recent: today.recent,
+        sessions: today.sessions,
+        openKey: openKey,
+        stickerInfo: stickerInfo
       }) })
     });
   } catch (e) { /* admin panel just shows the bot as offline */ }
@@ -205,6 +229,8 @@ async function restoreStatus() {
       today.valid = num(s.valid, 0);
       today.failed = num(s.failed, 0);
       today.recent = Array.isArray(s.recent) ? s.recent.slice(0, 10) : [];
+      today.sessions = s.sessions && typeof s.sessions === "object" ? s.sessions : {};
+      openKey = typeof s.openKey === "string" ? s.openKey : "";
     }
   } catch (e) { /* start the day from zero */ }
 }
@@ -216,17 +242,128 @@ function localDay() {
 function rollDay() {
   const d = localDay();
   if (today.day !== d) {
-    Object.assign(today, { day: d, signals: 0, valid: 0, failed: 0, recent: [] });
+    Object.assign(today, { day: d, signals: 0, valid: 0, failed: 0, recent: [], sessions: {} });
     closedNotice = false;
   }
 }
 
-function inActiveHours() {
+function localMinutes() {
   const now = new Date(Date.now() + offsetMs());
-  const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
-  const toMin = (s) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
+  return now.getUTCHours() * 60 + now.getUTCMinutes();
+}
+
+function inActiveHours() {
+  const mins = localMinutes();
   const a = toMin(cfg.startTime), b = toMin(cfg.endTime);
   return a <= b ? mins >= a && mins <= b : mins >= a || mins <= b;
+}
+
+const DOW = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+function dayMatches(code, dow) {
+  if (code === "all") return true;
+  if (code === "weekdays") return dow >= 1 && dow <= 5;
+  if (code === "weekend") return dow === 0 || dow === 6;
+  return DOW[dow] === code;
+}
+
+function sessionLabel(s) {
+  return (s.game === "any" ? "All games" : s.game) + " " + s.start + "-" + s.end;
+}
+
+// The scheduled session running now; closed sessions are skipped so a later overlapping one can run.
+function activeSession() {
+  const dow = new Date(Date.now() + offsetMs()).getUTCDay();
+  const mins = localMinutes();
+  let finished = null;
+  for (let i = 0; i < cfg.schedule.length; i++) {
+    const s = cfg.schedule[i];
+    if (!dayMatches(s.day, dow) || mins < toMin(s.start) || mins > toMin(s.end)) continue;
+    const key = today.day + "_" + i + "_" + s.start.replace(":", "");
+    const sess = Object.assign({}, s, { key: key, label: sessionLabel(s) });
+    if (today.sessions[key] && today.sessions[key].closed) { finished = finished || sess; continue; }
+    return sess;
+  }
+  return finished ? Object.assign(finished, { finished: true }) : null;
+}
+
+function nextSessionText() {
+  const now = new Date(Date.now() + offsetMs());
+  const mins = localMinutes();
+  for (let ahead = 0; ahead < 8; ahead++) {
+    const dow = (now.getUTCDay() + ahead) % 7;
+    const options = cfg.schedule
+      .filter((s) => dayMatches(s.day, dow) && (ahead > 0 || toMin(s.start) > mins))
+      .sort((a, b) => toMin(a.start) - toMin(b.start));
+    if (options.length) {
+      const s = options[0];
+      return " - next: " + (ahead === 0 ? "today" : DAY_NAMES[DOW[dow]]) + " " + s.start + " " + (s.game === "any" ? "All games" : s.game);
+    }
+  }
+  return "";
+}
+
+let packCache = { name: "", at: 0, stickers: null, error: "" };
+function packName(v) {
+  const m = /addstickers\/([A-Za-z0-9_]+)/.exec(v || "");
+  if (m) return m[1];
+  return /^[A-Za-z0-9_]+$/.test(v || "") ? v : "";
+}
+
+async function packStickers() {
+  const name = packName(cfg.stickerPack);
+  if (!name) return null;
+  if (packCache.name === name && Date.now() - packCache.at < 10 * 60000) {
+    if (packCache.error) throw new Error(packCache.error);
+    return packCache.stickers;
+  }
+  packCache = { name: name, at: Date.now(), stickers: null, error: "" };
+  try {
+    if (!BOT_TOKEN) throw new Error("no bot token");
+    const set = await telegram("getStickerSet", { name: name });
+    packCache.stickers = set.stickers.map((s) => s.file_id);
+    return packCache.stickers;
+  } catch (e) {
+    packCache.error = e.message;
+    throw e;
+  }
+}
+
+async function refreshStickerInfo() {
+  if (!cfg.stickerPack) { stickerInfo = ""; return; }
+  try {
+    const list = await packStickers();
+    stickerInfo = list ? "Sticker pack " + packName(cfg.stickerPack) + ": " + list.length + " stickers" : "Sticker pack link not recognised";
+  } catch (e) {
+    stickerInfo = "Sticker pack problem: " + e.message;
+  }
+}
+
+// spec: "3" or "2,5,9" (positions in the pack, one picked at random), or a sticker file_id / .webp URL.
+async function sendSticker(spec) {
+  const items = String(spec || "").split(",").map((x) => x.trim()).filter(Boolean);
+  if (!items.length) return;
+  const pick = items[Math.floor(Math.random() * items.length)];
+  let sticker = pick;
+  if (/^\d+$/.test(pick)) {
+    let list = null;
+    try { list = await packStickers(); } catch (e) { log("sticker pack failed:", e.message); return; }
+    sticker = list && list[Number(pick) - 1];
+    if (!sticker) { log("sticker #" + pick + " is not in the pack"); return; }
+  }
+  log("STICKER", pick);
+  if (DRY) return;
+  try {
+    await telegram("sendSticker", { chat_id: CHAT_ID, sticker: sticker });
+  } catch (e) {
+    log("sticker failed:", e.message);
+  }
+}
+
+async function closeSession(key) {
+  const st = today.sessions[key];
+  if (!st || st.closed) return;
+  st.closed = true;
+  await post("<b>SESSION CLOSED</b>\n" + st.label + "\nResult: " + st.valid + " valides / " + st.failed + " failed");
 }
 
 function limitReason() {
@@ -237,7 +374,7 @@ function limitReason() {
 
 function blockedReason() {
   if (!cfg.enabled) return "Paused from admin panel";
-  if (!inActiveHours()) return "Outside active hours (" + cfg.startTime + " - " + cfg.endTime + ")";
+  if (!cfg.schedule.length && !inActiveHours()) return "Outside active hours (" + cfg.startTime + " - " + cfg.endTime + ")";
   return limitReason();
 }
 
@@ -375,6 +512,7 @@ async function runSignal(game) {
   const cancel = async () => {
     remember("CANCELLED - " + game.name + " " + at);
     await post("<b>SIGNAL CANCELLED</b>\n" + game.name + " - " + at);
+    return "cancelled";
   };
 
   while (Date.now() < windowStart) {
@@ -408,11 +546,11 @@ async function runSignal(game) {
         const coef = await roundCoef(game, id);
         if (coef == null) break;
         pending.splice(pending.indexOf(id), 1);
-        if (await judge(coef)) return;
+        if (await judge(coef)) return "valid";
       }
       if (pending[0] === s.id && s.stop != null) {
         pending.shift();
-        if (await judge(Number(s.stop))) return;
+        if (await judge(Number(s.stop))) return "valid";
       }
     }
     if (Date.now() > windowEnd && !pending.length) break;
@@ -425,12 +563,14 @@ async function runSignal(game) {
     today.valid++;
     remember("VALIDE " + coef.toFixed(2) + "x - " + game.name + " " + at);
     await post("<b>VALIDE " + coef.toFixed(2) + "x</b>\n" + game.name + " - " + at);
+    await sendSticker(cfg.winStickers);
     return true;
   }
 
   today.failed++;
   remember("FAILED - " + game.name + " " + at + " (" + sig.leftCoeff + "x)");
   await post("<b>FAILED</b>\n" + game.name + " - " + at + " (no round reached " + sig.leftCoeff + "x)");
+  return "failed";
 }
 
 async function printChatIds() {
@@ -457,7 +597,23 @@ async function main() {
   for (;;) {
     await loadConfig();
     rollDay();
-    const block = blockedReason();
+    await refreshStickerInfo();
+
+    let block = blockedReason();
+    let sess = null;
+    if (!block && cfg.schedule.length) {
+      sess = activeSession();
+      if (!sess) block = "No session scheduled now" + nextSessionText();
+      else if (sess.finished) block = "Session finished: " + sess.label + nextSessionText();
+    }
+    const key = block ? "" : sess ? sess.key : "manual_" + today.day;
+
+    // A scheduled session that ran out of time is closed with its result; pausing does not post anything.
+    if (openKey && openKey !== key) {
+      if (cfg.enabled && openKey.indexOf("manual_") !== 0) await closeSession(openKey);
+      openKey = "";
+    }
+
     if (block) {
       if (block !== lastBlock) log(block);
       lastBlock = block;
@@ -473,16 +629,39 @@ async function main() {
     lastBlock = "";
     closedNotice = false;
 
-    const game = pickGame(prev);
+    if (!today.sessions[key]) {
+      today.sessions[key] = { label: sess ? sess.label : "Manual", valid: 0, failed: 0, signals: 0, closed: false };
+    }
+    const st = today.sessions[key];
+    if (openKey !== key) {
+      openKey = key;
+      log("session start", st.label);
+      await sendSticker(cfg.startSticker);
+      await post("<b>SESSION STARTED</b>" + (sess
+        ? "\n" + st.label + (sess.maxValides ? "\nTarget: " + sess.maxValides + " valides" : "")
+        : ""));
+    }
+
+    let game;
+    if (sess && sess.game !== "any") game = GAMES.find((g) => g.name === sess.game);
+    else game = pickGame(prev);
     prev = game;
+    let result = null;
     try {
-      await runSignal(game);
+      result = await runSignal(game);
     } catch (e) {
       log("signal error:", e.message);
     }
-    botState = "Next signal soon";
+    if (result === "valid" || result === "failed") {
+      st.signals++;
+      if (result === "valid") st.valid++; else st.failed++;
+    }
+    if (sess && ((sess.maxValides > 0 && st.valid >= sess.maxValides) || (sess.maxSignals > 0 && st.signals >= sess.maxSignals))) {
+      await closeSession(key);
+    }
+    botState = st.closed ? "Session finished: " + st.label : "Next signal soon";
     await writeStatus();
-    await sleep(rand(cfg.gapMin, cfg.gapMax) * 1000);
+    if (!st.closed) await sleep(rand(cfg.gapMin, cfg.gapMax) * 1000);
   }
 }
 
