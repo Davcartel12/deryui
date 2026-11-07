@@ -399,7 +399,7 @@ async function closeSession(key) {
   const st = today.sessions[key];
   if (!st || st.closed) return;
   st.closed = true;
-  await post("<b>SESSION CLOSED</b>\n" + st.label + "\nResult: " + st.valid + " valides / " + st.failed + " failed");
+  await post("<b>SESSION CLOSED</b>\nResult: " + st.valid + " valides / " + st.failed + " failed");
   await sendSticker(cfg.closeSticker);
 }
 
@@ -664,7 +664,7 @@ async function main() {
       openKey = key;
       log("session start", st.label);
       await sendSticker(cfg.startSticker);
-      await post("<b>SESSION STARTED</b>\n" + st.label + (sess.maxValides ? "\nTarget: " + sess.maxValides + " valides" : ""));
+      await post("<b>SESSION STARTED</b>" + (sess.maxValides ? "\nTarget: " + sess.maxValides + " valides" : ""));
     }
 
     const game = sess.game !== "any" ? GAMES.find((g) => g.name === sess.game) : pickGame(prev);
