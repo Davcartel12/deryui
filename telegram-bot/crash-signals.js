@@ -530,7 +530,6 @@ async function runSignal(game) {
   const at = clock(sig.time);
   log(game.name, "assurance", sig.leftCoeff, "coefficient", sig.rightCoeff, "time", at, "(" + sig.source + ")");
 
-  await sendGameMedia(game);
   await post(
     "<b>" + cfg.brand + " SIGNAL</b> - Game: <b>" + game.name + "</b>\n\n" +
     "Time: <b>" + at + "</b>\n" +
@@ -660,14 +659,15 @@ async function main() {
       today.sessions[key] = { label: sess.label, valid: 0, failed: 0, signals: 0, closed: false };
     }
     const st = today.sessions[key];
+    const game = sess.game !== "any" ? GAMES.find((g) => g.name === sess.game) : pickGame(prev);
     if (openKey !== key) {
       openKey = key;
       log("session start", st.label);
       await sendSticker(cfg.startSticker);
       await post("<b>SESSION STARTED</b>" + (sess.maxValides ? "\nTarget: " + sess.maxValides + " valides" : ""));
+      await sendGameMedia(game);
     }
 
-    const game = sess.game !== "any" ? GAMES.find((g) => g.name === sess.game) : pickGame(prev);
     prev = game;
     let result = null;
     try {
