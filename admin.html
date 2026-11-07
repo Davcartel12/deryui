@@ -637,6 +637,7 @@
         <div class="bot-stat"><b id="botFailed" style="color:var(--red)">0</b><span>FAILED</span></div>
       </div>
       <div class="code-meta" id="botState">Waiting for the bot…</div>
+      <div class="code-meta" id="botSend"></div>
       <div class="code-meta" id="botSessions" style="margin-top:10px"></div>
       <div class="bot-recent" id="botRecent"></div>
       <button class="btn danger" id="botPowerBtn" style="margin-top:14px" onclick="toggleBotPower()">Turn Predictions OFF</button>
@@ -1148,6 +1149,9 @@
       document.getElementById("botSessions").innerHTML = sessions.map(x =>
         `<div><b>${esc(x.label)}</b> &middot; ${x.valid || 0} valides / ${x.failed || 0} failed${x.closed ? " &middot; closed" : ""}</div>`).join("");
       document.getElementById("stickerInfo").textContent = s && s.stickerInfo ? s.stickerInfo : "";
+      const sendEl = document.getElementById("botSend");
+      sendEl.textContent = isOnline && s.sendInfo ? s.sendInfo : "";
+      sendEl.style.color = s && /refused|missing/i.test(s.sendInfo || "") ? "var(--red)" : "";
     }
 
     const botMediaRef = doc(db, "botConfig", "media");

@@ -92,13 +92,17 @@ async function telegram(method, body) {
   return data.result;
 }
 
+let sendInfo = DRY ? "Not posting: BOT_TOKEN or CHAT_ID is missing" : "Posting to chat " + CHAT_ID;
+
 async function post(text) {
   log("POST\n" + text);
   if (DRY) return;
   try {
     await telegram("sendMessage", { chat_id: CHAT_ID, text: text, parse_mode: "HTML", disable_web_page_preview: true });
+    sendInfo = "Posting to chat " + CHAT_ID + " - last message delivered " + clock(new Date());
   } catch (e) {
     log("send failed:", e.message);
+    sendInfo = "Telegram refused a message to chat " + CHAT_ID + ": " + e.message;
   }
 }
 
@@ -211,7 +215,8 @@ async function writeStatus() {
         recent: today.recent,
         sessions: today.sessions,
         openKey: openKey,
-        stickerInfo: stickerInfo
+        stickerInfo: stickerInfo,
+        sendInfo: sendInfo
       }) })
     });
   } catch (e) { /* admin panel just shows the bot as offline */ }
@@ -624,6 +629,13 @@ function startHealthServer() {
     res.writeHead(200, { "content-type": "text/plain" });
     res.end("CHIKE1W bot online\n" + botState + "\n");
   }).listen(port, () => log("health page on port " + port));
+
+  // Render's free plan sleeps after 15 minutes without outside requests, so the bot calls its own public address.
+  const url = process.env.RENDER_EXTERNAL_URL || process.env.SELF_URL;
+  if (url) {
+    setInterval(() => { fetch(url).catch(() => {}); }, 10 * 60000);
+    log("keep-awake ping to " + url);
+  }
 }
 
 async function main() {
