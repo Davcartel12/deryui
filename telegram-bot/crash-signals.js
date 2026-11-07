@@ -616,8 +616,19 @@ async function printChatIds() {
   seen.forEach((title, id) => console.log(id, "-", title));
 }
 
+// Hosts like Render need an open port; an uptime monitor pinging it keeps a free instance awake.
+function startHealthServer() {
+  const port = Number(process.env.PORT || 0);
+  if (!port) return;
+  require("http").createServer((req, res) => {
+    res.writeHead(200, { "content-type": "text/plain" });
+    res.end("CHIKE1W bot online\n" + botState + "\n");
+  }).listen(port, () => log("health page on port " + port));
+}
+
 async function main() {
   if (process.argv.includes("--chat-id")) return printChatIds();
+  startHealthServer();
   log(DRY ? "Dry mode: BOT_TOKEN or CHAT_ID missing, messages are only printed." : "Posting to chat " + CHAT_ID);
 
   await restoreStatus();

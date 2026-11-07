@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: chike1w-telegram-bot
+    runtime: node
+    plan: free
+    buildCommand: echo "no build needed"
+    startCommand: node telegram-bot/crash-signals.js
+    healthCheckPath: /
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: CHAT_ID
+        sync: false
+      - key: SIGNAL_TZ
+        value: Africa/Lome
+      - key: SIGNAL_OFFSET
+        value: "+00:00"
+      - key: BRAND
+        value: CHIKE1W
