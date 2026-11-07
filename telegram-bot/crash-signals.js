@@ -1,6 +1,6 @@
 // Automated crash-game signals for a Telegram group.
 //
-// Timing, daily limits, games and on/off are controlled from admin.html (Telegram Bot section).
+// The weekly schedule, stickers, games and on/off are controlled from admin.html (Telegram Bot section).
 //
 // Setup:
 //   1. Copy telegram-bot/.env.example to telegram-bot/.env and fill in BOT_TOKEN.
@@ -44,18 +44,14 @@ const GAMES = [
 
 const BOT_TOKEN = process.env.BOT_TOKEN || "";
 const CHAT_ID = process.env.CHAT_ID || "";
-const SIGNAL_TZ = process.env.SIGNAL_TZ || "Africa/Douala";
-const SIGNAL_OFFSET = process.env.SIGNAL_OFFSET || "+01:00";
+const SIGNAL_TZ = process.env.SIGNAL_TZ || "Africa/Lome";
+const SIGNAL_OFFSET = process.env.SIGNAL_OFFSET || "+00:00";
 const DRY = !BOT_TOKEN || !CHAT_ID;
 
 // Settings are edited from admin.html (Firestore botConfig/settings); these are used until it is reachable.
 const DEFAULTS = {
   enabled: true,
   brand: process.env.BRAND || "CHIKE1W",
-  startTime: "00:00",
-  endTime: "23:59",
-  maxValides: 0,
-  maxSignals: 0,
   checkBeforeSec: 15,
   gapMin: Number(process.env.GAP_MIN_S || 10),
   gapMax: Number(process.env.GAP_MAX_S || 30),
@@ -78,7 +74,6 @@ const FIREBASE_KEY = "AIzaSyCWOqTsV4Nhd6axIPyTWWI-PFo2HOd_KV0";
 
 const today = { day: "", signals: 0, valid: 0, failed: 0, recent: [], sessions: {} };
 let botState = "Starting";
-let closedNotice = false;
 let openKey = "";
 let stickerInfo = "";
 
@@ -172,10 +167,6 @@ async function loadConfig() {
     const c = Object.assign({}, DEFAULTS, f);
     c.enabled = c.enabled !== false;
     c.brand = String(c.brand || DEFAULTS.brand).trim() || DEFAULTS.brand;
-    c.startTime = hhmm(c.startTime, DEFAULTS.startTime);
-    c.endTime = hhmm(c.endTime, DEFAULTS.endTime);
-    c.maxValides = Math.max(0, Math.round(num(c.maxValides, 0)));
-    c.maxSignals = Math.max(0, Math.round(num(c.maxSignals, 0)));
     c.checkBeforeSec = Math.min(120, Math.max(0, Math.round(num(c.checkBeforeSec, 15))));
     c.gapMin = Math.max(0, num(c.gapMin, 10));
     c.gapMax = Math.max(c.gapMin, num(c.gapMax, 30));
@@ -251,19 +242,12 @@ function rollDay() {
   const d = localDay();
   if (today.day !== d) {
     Object.assign(today, { day: d, signals: 0, valid: 0, failed: 0, recent: [], sessions: {} });
-    closedNotice = false;
   }
 }
 
 function localMinutes() {
   const now = new Date(Date.now() + offsetMs());
   return now.getUTCHours() * 60 + now.getUTCMinutes();
-}
-
-function inActiveHours() {
-  const mins = localMinutes();
-  const a = toMin(cfg.startTime), b = toMin(cfg.endTime);
-  return a <= b ? mins >= a && mins <= b : mins >= a || mins <= b;
 }
 
 const DOW = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -419,16 +403,10 @@ async function closeSession(key) {
   await sendSticker(cfg.closeSticker);
 }
 
-function limitReason() {
-  if (cfg.maxValides > 0 && today.valid >= cfg.maxValides) return "Daily target reached: " + today.valid + " valides";
-  if (cfg.maxSignals > 0 && today.signals >= cfg.maxSignals) return "Daily signal limit reached: " + today.signals + " signals";
-  return "";
-}
-
 function blockedReason() {
   if (!cfg.enabled) return "Paused from admin panel";
-  if (!cfg.schedule.length && !inActiveHours()) return "Outside active hours (" + cfg.startTime + " - " + cfg.endTime + ")";
-  return limitReason();
+  if (!cfg.schedule.length) return "No sessions in the weekly schedule";
+  return "";
 }
 
 let lastCfgCheck = 0;
@@ -655,51 +633,41 @@ async function main() {
 
     let block = blockedReason();
     let sess = null;
-    if (!block && cfg.schedule.length) {
+    if (!block) {
       sess = activeSession();
       if (!sess) block = "No session scheduled now" + nextSessionText();
       else if (sess.finished) block = "Session finished: " + sess.label + nextSessionText();
     }
-    const key = block ? "" : sess ? sess.key : "manual_" + today.day;
+    const key = block ? "" : sess.key;
 
-    // A scheduled session that ran out of time is closed with its result; pausing does not post anything.
+    // A session that ran out of time is closed with its result; pausing does not post anything.
     if (openKey && openKey !== key) {
-      if (cfg.enabled && openKey.indexOf("manual_") !== 0) await closeSession(openKey);
+      if (cfg.enabled) await closeSession(openKey);
       openKey = "";
     }
 
     if (block) {
       if (block !== lastBlock) log(block);
       lastBlock = block;
-      if (limitReason() && !closedNotice) {
-        closedNotice = true;
-        await post("<b>SESSION CLOSED</b>\nToday: " + today.valid + " valides / " + today.failed + " failed");
-        await sendSticker(cfg.closeSticker);
-      }
       botState = block;
       await writeStatus();
       await sleep(10000);
       continue;
     }
     lastBlock = "";
-    closedNotice = false;
 
     if (!today.sessions[key]) {
-      today.sessions[key] = { label: sess ? sess.label : "Manual", valid: 0, failed: 0, signals: 0, closed: false };
+      today.sessions[key] = { label: sess.label, valid: 0, failed: 0, signals: 0, closed: false };
     }
     const st = today.sessions[key];
     if (openKey !== key) {
       openKey = key;
       log("session start", st.label);
       await sendSticker(cfg.startSticker);
-      await post("<b>SESSION STARTED</b>" + (sess
-        ? "\n" + st.label + (sess.maxValides ? "\nTarget: " + sess.maxValides + " valides" : "")
-        : ""));
+      await post("<b>SESSION STARTED</b>\n" + st.label + (sess.maxValides ? "\nTarget: " + sess.maxValides + " valides" : ""));
     }
 
-    let game;
-    if (sess && sess.game !== "any") game = GAMES.find((g) => g.name === sess.game);
-    else game = pickGame(prev);
+    const game = sess.game !== "any" ? GAMES.find((g) => g.name === sess.game) : pickGame(prev);
     prev = game;
     let result = null;
     try {
@@ -711,7 +679,7 @@ async function main() {
       st.signals++;
       if (result === "valid") st.valid++; else st.failed++;
     }
-    if (sess && ((sess.maxValides > 0 && st.valid >= sess.maxValides) || (sess.maxSignals > 0 && st.signals >= sess.maxSignals))) {
+    if (((sess.maxValides > 0 && st.valid >= sess.maxValides) || (sess.maxSignals > 0 && st.signals >= sess.maxSignals))) {
       await closeSession(key);
     }
     botState = st.closed ? "Session finished: " + st.label : "Next signal soon";

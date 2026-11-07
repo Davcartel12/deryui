@@ -644,16 +644,7 @@
     <div class="form-card">
       <h3>Bot settings</h3>
       <input type="checkbox" id="bEnabled" checked hidden>
-      <div class="row2">
-        <div class="field"><label>Active from</label><input type="time" id="bStart" value="00:00"></div>
-        <div class="field"><label>Active until</label><input type="time" id="bEnd" value="23:59"></div>
-      </div>
-      <div class="hint">Cameroon time. Outside these hours the bot stays quiet.</div>
-      <div class="row2">
-        <div class="field"><label>Stop after valides</label><input type="number" id="bMaxValides" min="0" step="1" value="0"></div>
-        <div class="field"><label>Max signals per day</label><input type="number" id="bMaxSignals" min="0" step="1" value="0"></div>
-      </div>
-      <div class="hint">0 means no limit. When a limit is reached the bot posts "SESSION CLOSED" and waits for the next day.</div>
+      <div class="hint" style="margin-top:-8px">When and how long the bot posts is set in the Weekly schedule below.</div>
       <div class="hint">Signal time comes from the same GET SIGNAL code as the game pages. Assurance is 2.21x - 4.10x, coefficient is assurance + 0.20 to 0.60.</div>
       <div class="field"><label>Start checking (seconds before signal time)</label><input type="number" id="bCheckBefore" min="0" max="120" step="1" value="15"></div>
       <div class="hint">15 means a 13:15 signal counts every round that starts from 13:14:45 until 13:15:59.</div>
@@ -671,7 +662,7 @@
 
     <div class="form-card">
       <h3>Weekly schedule</h3>
-      <div class="hint" style="margin-top:-8px">When sessions are listed here the bot only posts during them and "Active from / until" is ignored. Leave the list empty to use the hours above.</div>
+      <div class="hint" style="margin-top:-8px">Times are Togo time. The bot only posts during these sessions; with no sessions listed it stays quiet.</div>
       <div id="schedList"></div>
       <div class="row2">
         <div class="field"><label>Day</label>
@@ -1123,8 +1114,6 @@
     function fillBotForm(s) {
       const set = (id, v) => { if (v != null) document.getElementById(id).value = v; };
       document.getElementById("bEnabled").checked = s.enabled !== false;
-      set("bStart", s.startTime); set("bEnd", s.endTime);
-      set("bMaxValides", s.maxValides); set("bMaxSignals", s.maxSignals);
       set("bCheckBefore", s.checkBeforeSec);
       set("bGapMin", s.gapMin); set("bGapMax", s.gapMax);
       set("bBrand", s.brand);
@@ -1316,10 +1305,6 @@
       const n = (id) => Math.max(0, Math.round(Number(document.getElementById(id).value) || 0));
       const s = {
         enabled: document.getElementById("bEnabled").checked,
-        startTime: document.getElementById("bStart").value || "00:00",
-        endTime: document.getElementById("bEnd").value || "23:59",
-        maxValides: n("bMaxValides"),
-        maxSignals: n("bMaxSignals"),
         checkBeforeSec: Math.min(120, n("bCheckBefore")),
         gapMin: n("bGapMin"),
         gapMax: n("bGapMax"),
