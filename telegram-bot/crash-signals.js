@@ -52,6 +52,8 @@ const DRY = !BOT_TOKEN || !CHAT_ID;
 const DEFAULTS = {
   enabled: true,
   brand: process.env.BRAND || "CHIKE1W",
+  registerLink: process.env.REGISTER_LINK || "https://1win.ng/?open=register&p=qd8e",
+  promoCode: process.env.PROMO_CODE || "CHIKE1W",
   checkBeforeSec: 15,
   gapMin: Number(process.env.GAP_MIN_S || 10),
   gapMax: Number(process.env.GAP_MAX_S || 30),
@@ -171,6 +173,8 @@ async function loadConfig() {
     const c = Object.assign({}, DEFAULTS, f);
     c.enabled = c.enabled !== false;
     c.brand = String(c.brand || DEFAULTS.brand).trim() || DEFAULTS.brand;
+    c.registerLink = String(c.registerLink ?? DEFAULTS.registerLink).trim();
+    c.promoCode = String(c.promoCode ?? DEFAULTS.promoCode).trim();
     c.checkBeforeSec = Math.min(120, Math.max(0, Math.round(num(c.checkBeforeSec, 15))));
     c.gapMin = Math.max(0, num(c.gapMin, 10));
     c.gapMax = Math.max(c.gapMin, num(c.gapMax, 30));
@@ -522,6 +526,8 @@ function pickGame(prev) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+const escHtml = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
 const fmt = (v) => (Math.round(v * 100) / 100).toString();
 
 async function runSignal(game) {
@@ -536,7 +542,9 @@ async function runSignal(game) {
   log(game.name, "assurance", sig.leftCoeff, "coefficient", sig.rightCoeff, "time", at, "(" + sig.source + ")");
 
   await post(
-    "<b>" + cfg.brand + " SIGNAL</b> - Game: <b>" + game.name + "</b>\n\n" +
+    "<b>" + escHtml(cfg.brand) + " SIGNAL</b> - Game: <b>" + game.name + "</b>\n\n" +
+    (cfg.registerLink ? "Register with this link: " + escHtml(cfg.registerLink) + "\n\n" : "") +
+    (cfg.promoCode ? "Promo code: <b>" + escHtml(cfg.promoCode) + "</b>\n\n" : "") +
     "Time: <b>" + at + "</b>\n" +
     "Assurance: <b>" + sig.leftCoeff + "x</b>\n" +
     "Coefficient: <b>" + sig.rightCoeff + "x</b>"
