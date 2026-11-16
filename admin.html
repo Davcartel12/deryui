@@ -654,6 +654,8 @@
         <div class="field"><label>to (sec)</label><input type="number" id="bGapMax" min="0" step="1" value="30"></div>
       </div>
       <div class="field"><label>Signal title</label><input type="text" id="bBrand" value="CHIKE1W"></div>
+      <div class="field"><label>Register link (leave empty to hide)</label><input type="text" id="bRegisterLink" value="https://1win.ng/?open=register&amp;p=qd8e"></div>
+      <div class="field"><label>Promo code (leave empty to hide)</label><input type="text" id="bPromoCode" value="CHIKE1W"></div>
       <div class="field">
         <label>Games</label>
         <div class="bot-games" id="bGames"></div>
@@ -1118,6 +1120,7 @@
       set("bCheckBefore", s.checkBeforeSec);
       set("bGapMin", s.gapMin); set("bGapMax", s.gapMax);
       set("bBrand", s.brand);
+      set("bRegisterLink", s.registerLink); set("bPromoCode", s.promoCode);
       set("bPack", s.stickerPack); set("bStartSticker", s.startSticker); set("bWinStickers", s.winStickers);
       set("bCloseSticker", s.closeSticker);
       signalMedia = s.signalMedia && typeof s.signalMedia === "object" ? Object.assign({}, s.signalMedia) : {};
@@ -1313,6 +1316,8 @@
         gapMin: n("bGapMin"),
         gapMax: n("bGapMax"),
         brand: document.getElementById("bBrand").value.trim() || "CHIKE1W",
+        registerLink: document.getElementById("bRegisterLink").value.trim(),
+        promoCode: document.getElementById("bPromoCode").value.trim(),
         stickerPack: document.getElementById("bPack").value.trim(),
         startSticker: document.getElementById("bStartSticker").value.trim(),
         winStickers: document.getElementById("bWinStickers").value.trim(),
